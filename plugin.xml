@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.eclipse.ui.commands">
+      <category id="DEH.Capella.Commands.CommandsCategory"
+            name="Commands category">
+      </category>
+      <command categoryId="DEH.Capella.Commands.CommandsCategory"
+            name="Open Hub Panel"
+            id="DEH.Capella.OpenHubPanel">
+      </command>
+   </extension>
+   <extension point="org.eclipse.ui.handlers">
+      <handler class="Commands.OpenHubPanelCommand"
+            commandId="DEH.Capella.OpenHubPanel">
+      </handler>
+   </extension>
+   <extension point="org.eclipse.ui.menus">
+      <menuContribution locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu id="DEH.Capella.DEHMenu"
+               label="DEHP"
+               mnemonic="M">
+            <command commandId="DEH.Capella.OpenHubPanel"
+                  id="DEH.Capella.Menus.OpenHubPanel"
+                  mnemonic="S">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar id="Test.toolbars.sampleToolbar">
+            <command id="DEH.Capella.Toolbars.OpenHubPanel"
+                  commandId="DEH.Capella.OpenHubPanel"
+                  icon="icons/icon16.png"
+                  tooltip="Open/Close the Hub panel">
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+
+</plugin>
