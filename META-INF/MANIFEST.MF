@@ -18,4 +18,12 @@ Bundle-ClassPath: .,
  lib/log4j-core-2.11.2.jar,
  lib/log4j-slf4j-impl-2.11.2.jar,
  lib/DEHCommonJ-1.0.0.jar
-Export-Package: App
+Export-Package: App,
+ Commands,
+ DstController,
+ Services.CapellaLog,
+ Services.MappingConfiguration,
+ ViewModels,
+ ViewModels.Interfaces,
+ Views,
+ Views.ViewParts
