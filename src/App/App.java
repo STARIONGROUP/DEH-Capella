@@ -39,6 +39,10 @@ import DstController.IDstController;
 import HubController.IHubController;
 import Services.CapellaLog.CapellaLogService;
 import Services.CapellaLog.ICapellaLogService;
+import Services.CapellaSession.CapellaSessionListenerService;
+import Services.CapellaSession.CapellaSessionService;
+import Services.CapellaSession.ICapellaSessionListenerService;
+import Services.CapellaSession.ICapellaSessionService;
 import Services.MappingConfiguration.CapellaMappingConfigurationService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingEngineService.IMappingEngineService;
@@ -128,10 +132,11 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.addConfig(MappingEngineService.AssemblyParameterName, this.getClass().getPackage());
             AppContainer.Container.as(CACHE, Characteristics.USE_NAMES).addComponent(IMappingEngineService.class, MappingEngineService.class);
             AppContainer.Container.addComponent(ICapellaMappingConfigurationService.class, CapellaMappingConfigurationService.class);
-            
             AppContainer.Container.addConfig("platformLogger", Platform.getLog(FrameworkUtil.getBundle(CapellaLogService.class)));
-            AppContainer.Container.as(Characteristics.USE_NAMES).addComponent(ICapellaLogService.class, CapellaLogService.class);
-
+            AppContainer.Container.as(Characteristics.USE_NAMES).addComponent(ICapellaLogService.class, CapellaLogService.class);            
+            AppContainer.Container.as(CACHE).addComponent(ICapellaSessionService.class, CapellaSessionService.class);
+            AppContainer.Container.addComponent(ICapellaSessionListenerService.class, CapellaSessionListenerService.class);
+           
             AppContainer.Container.addComponent(IElementDefinitionImpactViewViewModel.class, ElementDefinitionImpactViewViewModel.class);
             AppContainer.Container.addComponent(IRequirementImpactViewViewModel.class, RequirementImpactViewViewModel.class);
             AppContainer.Container.addComponent(IHubBrowserPanelViewModel.class, HubBrowserPanelViewModel.class);

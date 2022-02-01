@@ -37,6 +37,7 @@ import org.mockito.internal.verification.Times;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaLog.ICapellaLogService;
+import Services.CapellaSession.ICapellaSessionService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
@@ -58,6 +59,7 @@ class DstControllerTestFixture
     private IHubController hubController;
     private ICapellaLogService logService;
     private ICapellaMappingConfigurationService mappingConfigurationService;
+    private ICapellaSessionService capellaSessionService;
 
     /**
      * @throws java.lang.Exception
@@ -69,6 +71,7 @@ class DstControllerTestFixture
         this.hubController = mock(IHubController.class);
         this.logService = mock(ICapellaLogService.class);
         this.mappingConfigurationService = mock(ICapellaMappingConfigurationService.class);
+        this.capellaSessionService = mock(ICapellaSessionService.class);
 
         var mappedThings0 = (MappedElementRowViewModel<ElementDefinition, EObject>) mock(MappedElementRowViewModel.class);
         var mappedThings1 = (MappedElementRowViewModel<RequirementsSpecification, EObject>) mock(MappedElementRowViewModel.class);
@@ -79,7 +82,8 @@ class DstControllerTestFixture
         RequirementsSpecification requirementsSpecification = new RequirementsSpecification();
         when(mappedThings1.GetHubElement()).thenReturn(requirementsSpecification);
         
-        this.controller = new DstController(this.mappingEngine, this.hubController, this.logService, this.mappingConfigurationService);
+        this.controller = new DstController(this.mappingEngine, this.hubController, this.logService, 
+                this.mappingConfigurationService, this.capellaSessionService);
         
         this.controller.GetDstMapResult().add(mappedThings0);
         this.controller.GetDstMapResult().add(mappedThings1);
