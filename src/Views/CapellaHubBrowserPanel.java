@@ -28,7 +28,6 @@ import org.eclipse.ui.part.ViewPart;
 
 import App.AppContainer;
 import ViewModels.Interfaces.IHubBrowserPanelViewModel;
-import Views.HubBrowserPanel;
 import Views.ViewParts.BaseViewPart;
 
 /**

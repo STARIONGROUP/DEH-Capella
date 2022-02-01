@@ -42,6 +42,7 @@ import HubController.IHubController;
 import Reactive.ObservableCollection;
 import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
+import Services.CapellaSession.ICapellaSessionService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
@@ -98,12 +99,17 @@ public final class DstController implements IDstController
     /**
      * The {@linkplain ICapellaLogService} instance
      */
-    private ICapellaLogService logService;
+    private final ICapellaLogService logService;
 
     /**
      * The {@linkplain IMappingConfigurationService} instance
      */
-    private ICapellaMappingConfigurationService mappingConfigurationService;
+    private final ICapellaMappingConfigurationService mappingConfigurationService;
+    
+    /**
+     * the {@linkplain ICapellaSessionService} instance 
+     */
+    private final ICapellaSessionService capellaSessionService;
     
     /**
      * Backing field for {@linkplain GetDstMapResult}
@@ -213,22 +219,34 @@ public final class DstController implements IDstController
     }
     
     /**
+     * Gets an {@linkplain Observable} of value indicating whether there is any session open in Capella
+     * 
+     * @return {@linkplain Observable} of {@linkplain Boolean} 
+     */
+    public Observable<Boolean> HasAnyOpenSession()
+    {
+        return this.capellaSessionService.HasAnyOpenSession();
+    }
+    
+    /**
      * Initializes a new {@linkplain DstController}
      * 
      * @param mappingEngine the {@linkplain IMappingEngine} instance
      * @param HubController the {@linkplain IHubController} instance
      * @param logService the {@linkplain ICapellaLogService} instance
      * @param mappingConfigurationService the {@linkplain ICapellaMappingConfigurationService} instance
+     * @param mappingConfigurationService the {@linkplain ICapellaSessionService} instance
      */
     public DstController(IMappingEngineService mappingEngine, IHubController hubController, ICapellaLogService logService, 
-            ICapellaMappingConfigurationService mappingConfigurationService)
+            ICapellaMappingConfigurationService mappingConfigurationService, ICapellaSessionService capellaSessionService)
     {
         this.mappingEngine = mappingEngine;
         this.hubController = hubController;
         this.logService = logService;
         this.mappingConfigurationService = mappingConfigurationService;
+        this.capellaSessionService = capellaSessionService;
     }
-    
+        
     /**
      * Loads the saved mapping and applies the mapping rule to the loaded things
      * 
