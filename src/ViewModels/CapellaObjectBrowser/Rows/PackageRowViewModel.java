@@ -84,15 +84,10 @@ public class PackageRowViewModel extends ElementRowViewModel<ComponentPkg> imple
     /**
      * Computes the contained rows of this row view model based on the provided {@linkplain Element}
      * 
-     * @param element the {@linkplain Element}
+     * @param element the {@linkplain CapellaElement}
      */
     protected void ComputeContainedRow(CapellaElement element)
     {
-//        if (element instanceof Component)
-//        {
-//            this.containedRows.add(new PackageRowViewModel(this, (ComponentPkg)element));
-//        }
-//        else
         if(element instanceof ComponentPkg)
         {
             this.containedRows.add(new PackageRowViewModel(this, (ComponentPkg)element));
