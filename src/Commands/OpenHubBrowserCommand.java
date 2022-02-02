@@ -28,6 +28,7 @@ import Views.CapellaHubBrowserPanel;
 /**
  * The {@linkplain OpenHubBrowserCommand} is the command handler for {@linkplain CapellaHubBrowserPanel}
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public final class OpenHubBrowserCommand extends OpenAdapterPanelCommand<CapellaHubBrowserPanel>
 {
     /**

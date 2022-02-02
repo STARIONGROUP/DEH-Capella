@@ -61,6 +61,7 @@ import ViewModels.Interfaces.ITransferControlViewModel;
 /**
  * The {@linkplain App} class is the main entry point for the DEH-Capella adapter
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class App extends AbstractUIPlugin
 {
     /**
@@ -131,17 +132,17 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.as(CACHE).addComponent(IDstController.class, DstController.class);
             AppContainer.Container.addConfig(MappingEngineService.AssemblyParameterName, this.getClass().getPackage());
             AppContainer.Container.as(CACHE, Characteristics.USE_NAMES).addComponent(IMappingEngineService.class, MappingEngineService.class);
-            AppContainer.Container.addComponent(ICapellaMappingConfigurationService.class, CapellaMappingConfigurationService.class);
-            AppContainer.Container.addConfig("platformLogger", Platform.getLog(FrameworkUtil.getBundle(CapellaLogService.class)));
-            AppContainer.Container.as(Characteristics.USE_NAMES).addComponent(ICapellaLogService.class, CapellaLogService.class);            
+            AppContainer.Container.addComponent(ICapellaMappingConfigurationService.class, CapellaMappingConfigurationService.class);    
             AppContainer.Container.as(CACHE).addComponent(ICapellaSessionService.class, CapellaSessionService.class);
             AppContainer.Container.addComponent(ICapellaSessionListenerService.class, CapellaSessionListenerService.class);
+            AppContainer.Container.addConfig("platformLogger", Platform.getLog(FrameworkUtil.getBundle(CapellaLogService.class)));
+            AppContainer.Container.as(Characteristics.USE_NAMES).addComponent(ICapellaLogService.class, CapellaLogService.class);    
            
             AppContainer.Container.addComponent(IElementDefinitionImpactViewViewModel.class, ElementDefinitionImpactViewViewModel.class);
             AppContainer.Container.addComponent(IRequirementImpactViewViewModel.class, RequirementImpactViewViewModel.class);
             AppContainer.Container.addComponent(IHubBrowserPanelViewModel.class, HubBrowserPanelViewModel.class);
             AppContainer.Container.addComponent(ICapellaImpactViewPanelViewModel.class, CapellaImpactViewPanelViewModel.class);
-            AppContainer.Container.addComponent(ITransferControlViewModel.class, TransferControlViewModel.class);
+            AppContainer.Container.addComponent(ITransferControlViewModel.class, TransferControlViewModel.class);    
         }
         catch (Exception exception) 
         {
