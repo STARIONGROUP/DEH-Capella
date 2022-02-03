@@ -183,7 +183,5 @@ class ComponentToElementMappingRuleTestFixture
         assertDoesNotThrow(() -> this.mappingRule.Transform(null));
         assertDoesNotThrow(() -> this.mappingRule.Transform(mock(List.class)));
         assertDoesNotThrow(() -> this.mappingRule.Transform(this.elements));
-//        when(this.hubController.TryGetThingFromChainOfRdlBy(any(Predicate.class), any(Ref.class))).thenReturn(false);
-//        assertDoesNotThrow(() -> this.mappingRule.Transform(this.elements));
     }
 }
