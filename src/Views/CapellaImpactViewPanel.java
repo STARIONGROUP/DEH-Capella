@@ -26,6 +26,7 @@ package Views;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 
+import Annotations.ExludeFromCodeCoverageGeneratedReport;
 import App.AppContainer;
 import ViewModels.Interfaces.ICapellaImpactViewPanelViewModel;
 import Views.ImpactViewPanel;
@@ -37,6 +38,7 @@ import io.reactivex.Observable;
  * The {@linkplain CapellaImpactViewPanel} is the main panel view for the Hub controls like session controls and tree views.
  * This view is meant to be integrated into another container view specific to DST * 
  */
+@ExludeFromCodeCoverageGeneratedReport
 public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanelViewModel, ImpactViewPanel>
 {
     /**

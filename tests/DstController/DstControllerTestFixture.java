@@ -43,6 +43,7 @@ import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
 import Services.MappingEngineService.IMappingEngineService;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
+import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.Thing;
@@ -73,8 +74,8 @@ class DstControllerTestFixture
         this.mappingConfigurationService = mock(ICapellaMappingConfigurationService.class);
         this.capellaSessionService = mock(ICapellaSessionService.class);
 
-        var mappedThings0 = (MappedElementRowViewModel<ElementDefinition, EObject>) mock(MappedElementRowViewModel.class);
-        var mappedThings1 = (MappedElementRowViewModel<RequirementsSpecification, EObject>) mock(MappedElementRowViewModel.class);
+        var mappedThings0 = mock(MappedElementRowViewModel.class);
+        var mappedThings1 = mock(MappedElementRowViewModel.class);
         
         ElementDefinition elementDefinition = new ElementDefinition();
         when(mappedThings0.GetHubElement()).thenReturn(elementDefinition);

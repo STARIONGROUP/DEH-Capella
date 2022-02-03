@@ -1,5 +1,5 @@
 /*
- * OpenImpactViewCommand.java
+ * StereotypeUtils.java
  *
  * Copyright (c) 2020-2021 RHEA System S.A.
  *
@@ -21,21 +21,34 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package Commands;
+package Utils.Stereotypes;
 
-import Views.CapellaImpactViewPanel;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 
 /**
- * The {@linkplain OpenImpactViewCommand} is the command handler for {@linkplain CapellaImpactViewPanel}
+ * The {@linkplain StereotypeUtils}  provides useful methods on Capella components
  */
-@Annotations.ExludeFromCodeCoverageGeneratedReport
-public final class OpenImpactViewCommand extends OpenAdapterPanelCommand<CapellaImpactViewPanel>
-{
+public final class StereotypeUtils
+{ 
     /**
-     * Initializes a new {@linkplain OpenImpactViewCommand}
+     * Gets a 10-25 compliant short name from the provided stereotype name
+     * 
+     * @param name the {@linkplain String} name to base the short name on
+     * @return a {@linkplain string}
      */
-    public OpenImpactViewCommand()
+    public static String GetShortName(String name)
     {
-        super(new CapellaImpactViewPanel());
+        return name.replaceAll("[^a-zA-Z0-9]|\\s", "");
+    }
+
+    /**
+     * Gets a 10-25 compliant short name from the provided stereotype name
+     * 
+     * @param namedElement the {@linkplain NamedElement} to base the short name on its name
+     * @return a {@linkplain string}
+     */
+    public static String GetShortName(NamedElement namedElement)
+    {
+        return GetShortName(namedElement.getName());
     }
 }

@@ -37,6 +37,7 @@ import Views.ViewParts.BaseViewPart;
  * 
  * @param <TViewPart> the type of {@linkplain BaseViewPart} that this handler handles
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public abstract class OpenAdapterPanelCommand<TViewPart extends BaseViewPart<?,?>> extends AbstractHandler
 {
     /**

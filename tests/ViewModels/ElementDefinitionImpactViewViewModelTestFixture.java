@@ -42,6 +42,7 @@ import Reactive.ObservableCollection;
 import Utils.Ref;
 import ViewModels.ObjectBrowser.Rows.IterationRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
+import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.Iteration;

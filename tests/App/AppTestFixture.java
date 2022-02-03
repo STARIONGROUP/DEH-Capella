@@ -32,12 +32,12 @@ import org.junit.jupiter.api.Test;
 class AppTestFixture
 {
     @BeforeEach
-    void setUp() throws Exception
+    public void setUp() throws Exception
     {
     }
 
     @Test
-    void test()
+    public void VerifyStartStop()
     {
         assertThrows(NullPointerException.class, () -> new App().start(null));
         assertThrows(Exception.class, () -> new App().stop(null));

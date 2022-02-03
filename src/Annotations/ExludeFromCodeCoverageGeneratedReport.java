@@ -1,5 +1,5 @@
 /*
- * OpenImpactViewCommand.java
+ * ExludeFromCodeCoverageGenerated.java
  *
  * Copyright (c) 2020-2021 RHEA System S.A.
  *
@@ -21,21 +21,20 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package Commands;
+package Annotations;
 
-import Views.CapellaImpactViewPanel;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+@Documented
+@Retention(RUNTIME)
+@Target({PACKAGE, TYPE, METHOD})
 /**
- * The {@linkplain OpenImpactViewCommand} is the command handler for {@linkplain CapellaImpactViewPanel}
+ * The {@linkplain Generated} is the annotation that allows jacoco to ignore the annotated class in the report,
+ * the annotation MUST have "GENERATED" in its name in order for jacoco to ignore the class or method, doesn't work on package level
  */
-@Annotations.ExludeFromCodeCoverageGeneratedReport
-public final class OpenImpactViewCommand extends OpenAdapterPanelCommand<CapellaImpactViewPanel>
-{
-    /**
-     * Initializes a new {@linkplain OpenImpactViewCommand}
-     */
-    public OpenImpactViewCommand()
-    {
-        super(new CapellaImpactViewPanel());
-    }
-}
+public @interface ExludeFromCodeCoverageGeneratedReport { }

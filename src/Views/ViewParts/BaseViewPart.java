@@ -44,6 +44,7 @@ import Views.Interfaces.IView;
  * @param <TViewModel> the type of the view model the inheriting view belongs to
  * @param <TView> the type of the view that is enclosed by the inheriting view
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public abstract class BaseViewPart<TViewModel extends IViewModel, TView extends JPanel> extends ViewPart implements IView<TViewModel>
 {
     /**
