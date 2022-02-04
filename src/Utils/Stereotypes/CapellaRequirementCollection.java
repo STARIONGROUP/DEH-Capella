@@ -1,5 +1,5 @@
 /*
- * CapellaComponentCollection.java
+ * CapellaRequirementCollection.java
  *
  * Copyright (c) 2020-2021 RHEA System S.A.
  *
@@ -26,16 +26,16 @@ package Utils.Stereotypes;
 import java.util.ArrayList;
 
 import Services.MappingEngineService.IMappableThingCollection;
-import ViewModels.Rows.MappedElementDefinitionRowViewModel;
+import ViewModels.Rows.MappedRequirementRowViewModel;
 
 /**
- * The {@linkplain CapellaComponentCollection} class represents a collection of {@linkplain MappedElementDefinitionRowViewModel}.
- * The {@linkplain CapellaComponentCollection} is usable by the {@linkplain MappingEngine} and 
+ * The {@linkplain CapellaRequirementCollection} class represents a collection of {@linkplain MappedRequirementRowViewModel}.
+ * The {@linkplain CapellaRequirementCollection} is usable by the {@linkplain MappingEngine} and 
  * each item of the collection represents a mapping in the {@linkplain MappingDirection.FromDstToHub}
  * 
- * Wrapping CapellaComponentCollection this way solves the following problem,
+ * Wrapping CapellaRequirementCollection this way solves the following problem,
  * The {@linkplain IMappingEngine} having to know the type of things to transform at runtime to be able to invoke the right rule; 
  * Meaning that defining a rule that takes as input a {@linkplain ArrayList} of any type isn't supported because of the java generic implementation.
  */
 @SuppressWarnings("serial")
-public class CapellaComponentCollection extends ArrayList<MappedElementDefinitionRowViewModel> implements IMappableThingCollection { }
+public class CapellaRequirementCollection extends ArrayList<MappedRequirementRowViewModel> implements IMappableThingCollection { }
