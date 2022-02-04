@@ -1,5 +1,5 @@
 /*
- * MappedElementDefinitionRowViewModel.java
+ * MappedRequirementRowViewModel.java
  *
  * Copyright (c) 2020-2021 RHEA System S.A.
  *
@@ -23,41 +23,41 @@
  */
 package ViewModels.Rows;
 
-import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.requirement.Requirement;
+
 import Enumerations.MappingDirection;
-import cdp4common.engineeringmodeldata.ElementDefinition;
+import cdp4common.engineeringmodeldata.RequirementsSpecification;
 
 /**
- * The {@linkplain MappedElementDefinitionRowViewModel} is the row view model that represents a mapping between an {@linkplain ElementDefinition} and a {@linkplain Component}
+ * The {@linkplain MappedRequirementsSpecificationRowViewModel} is the row view model that represents a mapping between a {@linkplain RequirementsSpecification} and a 
  */
-public class MappedElementDefinitionRowViewModel extends MappedElementRowViewModel<ElementDefinition, Component>
+public class MappedRequirementRowViewModel extends MappedElementRowViewModel<RequirementsSpecification, Requirement>
 {
     /**
-     * Initializes a new {@linkplain MappedElementDefinitionRowViewModel}
+     * Initializes a new {@linkplain MappedRequirementsSpecificationRowViewModel}
      * 
      * @param thing the {@linkplain TThing} that is at one end of the mapping
      * @param dstElement the {@linkplain TDstElement} that is at the other end
      * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
      */
-    public MappedElementDefinitionRowViewModel(ElementDefinition thing, Component dstElement,
-            MappingDirection mappingDirection)
+    public MappedRequirementRowViewModel(RequirementsSpecification thing, Requirement dstElement, MappingDirection mappingDirection)
     {
-        super(thing, ElementDefinition.class, dstElement, mappingDirection);
-    }    
-
-    /**
-     * Initializes a new {@linkplain MappedElementDefinitionRowViewModel} with {@linkplain MappingDirection}.{@code FromDstToHub}
-     * 
-     * @param dstElement the {@linkplain TDstElement}
-     * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
-     */
-    public MappedElementDefinitionRowViewModel(Component dstElement, MappingDirection mappingDirection)
-    {
-        super(ElementDefinition.class, dstElement, mappingDirection);
+        super(thing, RequirementsSpecification.class, dstElement, mappingDirection);
     }
 
     /**
-     * Gets the string representation of the represented DST element
+     * Initializes a new {@linkplain MappedRequirementsSpecificationRowViewModel} with {@linkplain MappingDirection}.{@code FromDstToHub}
+     * 
+     * @param dstElement the {@linkplain TDstElement} that is at the other end
+     * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
+     */
+    public MappedRequirementRowViewModel(Requirement dstElement, MappingDirection mappingDirection)
+    {
+        super(RequirementsSpecification.class, dstElement, mappingDirection);
+    }
+    
+    /**
+     * Gets the string representation of the represented DST element    
      * 
      * @return a {@linkplain String}
      */
@@ -65,7 +65,7 @@ public class MappedElementDefinitionRowViewModel extends MappedElementRowViewMod
     public String GetDstElementRepresentation()
     {
         return this.GetElementRepresentation(this.GetDstElement() == null ? "-" : this.GetDstElement().getName(),
-                "Component", MappingDirection.FromHubToDst);
+                "Requirement", MappingDirection.FromHubToDst);
     }
     
     /**
@@ -76,6 +76,6 @@ public class MappedElementDefinitionRowViewModel extends MappedElementRowViewMod
     @Override
     public String GetHubElementRepresentation()
     {
-        return this.GetHubElementRepresentation(ElementDefinition.class);
+        return this.GetHubElementRepresentation(RequirementsSpecification.class);
     }
 }

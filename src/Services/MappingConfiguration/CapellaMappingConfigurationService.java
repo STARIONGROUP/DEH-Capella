@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2020-2021 RHEA System S.A.
  *
- * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
+ * Author: Sam GerenÃ©, Alex Vorobiev, Nathanael Smiechowski, Antoine ThÃ©ate
  *
  * This file is part of DEH-Capella
  *
