@@ -1,5 +1,5 @@
 /*
- * IElementRowViewModel.java
+ * IMappingService.java
  *
  * Copyright (c) 2020-2021 RHEA System S.A.
  *
@@ -21,35 +21,28 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package ViewModels.CapellaObjectBrowser.Interfaces;
+package Services.Mapping;
 
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
-
-import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
+import Enumerations.MappingDirection;
+import io.reactivex.Observable;
 
 /**
- * The {@linkplain IElementRowViewModel} is the interface definition for all {@linkplain ElementRowViewModel}
+ * The {@linkplain IMapCommandService} is the interface definition for {@linkplain MapCommandService}
  */
-public interface IElementRowViewModel<TElement extends CapellaElement> extends IRowViewModel
+public interface IMapCommandService
 {
-    /**
-     * Gets the type of thing represented
-     * 
-     * @return a {@linkplain Class}
-     */
-    Class<? extends CapellaElement> GetClassKind();
 
     /**
-     * Gets the DST {@linkplain Element} represented by this row view model
+     * Maps the selection from the {@linkplain ISelectionService} to the specified {@linkplain MappingDirection}
      * 
-     * @return the represented {@linkplain Element}
+     * @param mappingDirection the {@linkplain MappingDirection}
      */
-    TElement GetElement();
+    void MapSelection(MappingDirection mappingDirection);
 
     /**
-     * Gets the name of the {@linkplain Element} represented by this row view model
+     * Gets an {@linkplain Observable} of {@linkplain Boolean} indicating whether the map action can be executed
      * 
-     * @return a {@linkplain String}
+     * @return an {@linkplain Observable} of {@linkplain Boolean}
      */
-    String GetName();
+    Observable<Boolean> CanExecuteObservable();
 }

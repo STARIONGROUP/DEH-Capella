@@ -35,7 +35,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.emf.ecore.EObject;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
@@ -48,7 +48,6 @@ import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
 import Services.MappingEngineService.IMappingEngineService;
 import Utils.Ref;
-
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.ClassKind;
@@ -72,7 +71,7 @@ import cdp4dal.operations.ThingTransaction;
 import io.reactivex.Observable;
 
 /**
- * The {@linkplain DstController} is a class that manage transfer and connection to attached running instance of Cameo/MagicDraw
+ * The {@linkplain DstController} is a class that manage transfer and connection to attached running instance of Capella
  */
 public final class DstController implements IDstController
 {
@@ -114,7 +113,7 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetDstMapResult}
      */
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>> hubMapResult = new ObservableCollection<>();
+    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> hubMapResult = new ObservableCollection<>();
     
     /**
      * Gets The {@linkplain ObservableCollection} of Hub map result
@@ -122,7 +121,7 @@ public final class DstController implements IDstController
      * @return an {@linkplain ObservableCollection} of {@linkplain Class}
      */
     @Override
-    public ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>> GetHubMapResult()
+    public ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetHubMapResult()
     {
         return this.hubMapResult;
     }    
@@ -130,7 +129,7 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetDstMapResult}
      */
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>> dstMapResult = new ObservableCollection<>();
+    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> dstMapResult = new ObservableCollection<>();
 
     /**
      * Gets The {@linkplain ObservableCollection} of DST map result
@@ -138,7 +137,7 @@ public final class DstController implements IDstController
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
     @Override
-    public ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>> GetDstMapResult()
+    public ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetDstMapResult()
     {
         return this.dstMapResult;
     }
@@ -146,15 +145,15 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetSelectedHubMapResultForTransfer}
      */    
-    private ObservableCollection<EObject> selectedHubMapResultForTransfer = new ObservableCollection<>(EObject.class);
+    private ObservableCollection<CapellaElement> selectedHubMapResultForTransfer = new ObservableCollection<>(CapellaElement.class);
     
     /**
-     * Gets the {@linkplain ObservableCollection} of that are selected for transfer to the Cameo/MagicDraw
+     * Gets the {@linkplain ObservableCollection} of that are selected for transfer to the Capella
      * 
-     * @return an {@linkplain ObservableCollection} of {@linkplain Class}
+     * @return an {@linkplain ObservableCollection} of {@linkplain CapellaElement}
      */
     @Override
-    public ObservableCollection<EObject> GetSelectedHubMapResultForTransfer()
+    public ObservableCollection<CapellaElement> GetSelectedHubMapResultForTransfer()
     {
         return this.selectedHubMapResultForTransfer;
     }
@@ -223,6 +222,7 @@ public final class DstController implements IDstController
      * 
      * @return {@linkplain Observable} of {@linkplain Boolean} 
      */
+    @Override
     public Observable<Boolean> HasAnyOpenSession()
     {
         return this.capellaSessionService.HasAnyOpenSession();
@@ -418,7 +418,7 @@ public final class DstController implements IDstController
     {
         ArrayList<Thing> thingsToTransfer = new ArrayList<>(this.selectedDstMapResultForTransfer);
         
-        Predicate<? super MappedElementRowViewModel<? extends Thing, EObject>> selectedMappedElement = 
+        Predicate<? super MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> selectedMappedElement = 
                 x -> this.selectedDstMapResultForTransfer.stream().anyMatch(t -> t.getIid().equals(x.GetHubElement().getIid()));
                 
         Collection<Relationship> relationships = this.dstMapResult.stream()

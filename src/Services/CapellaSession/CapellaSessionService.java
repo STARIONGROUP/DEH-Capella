@@ -25,10 +25,12 @@ package Services.CapellaSession;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.business.api.session.SessionManager;
 
 import Reactive.ObservableValue;
+import Services.CapellaSelection.ICapellaSelectionService;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
 
@@ -45,23 +47,50 @@ public class CapellaSessionService implements ICapellaSessionService
     /**
      * The {@linkplain ICapellaSessionListenerService} that observe changes on the {@linkplain SessionManager}
      */
-    private ICapellaSessionListenerService sessionListener;
+    private final ICapellaSessionListenerService sessionListener;
+
+    /**
+     * The {@linkplain ICapellaSelectionService} instance
+     */
+    private final ICapellaSelectionService selectionService;
     
     /**
      * The active session
      */
     private Session activeSession;
+
+    /**
+     * Gets the active {@linkplain Session}
+     * 
+     * @return a {@linkplain Session}
+     */
+    @Override
+    public Session GetActiveSession()
+    {
+        if(this.activeSession == null)
+        {
+            this.SetActiveSession(null);
+        }
+        
+        return this.activeSession;
+    }
         
     /**
      * Initializes a new {@linkplain CapellaSessionService}
      * 
      * @param sessionListener the {@linkplain ICapellaSessionListenerService} instance
+     * @param selectionService the {@linkplain ICapellaSelectionService} instance
      */
-    public CapellaSessionService(ICapellaSessionListenerService sessionListener)
+    public CapellaSessionService(ICapellaSessionListenerService sessionListener, ICapellaSelectionService selectionService)
     {
         this.sessionListener = sessionListener;
+        this.selectionService = selectionService;
+        
         SessionManager.INSTANCE.addSessionsListener(this.sessionListener);
         
+        this.selectionService.SelectionChanged().subscribe(x -> 
+            this.SetActiveSession(SessionManager.INSTANCE.getSession(x)));
+              
         this.sessionListener.SessionAdded()
             .subscribe(x -> this.SetActiveSession(x));
         
@@ -69,6 +98,18 @@ public class CapellaSessionService implements ICapellaSessionService
             .subscribe(x -> this.SetActiveSession(null));
     }
 
+    /**
+     * Gets the session corresponding to a semantic {@linkplain EObject} 
+     * 
+     * @param object the {@linkplain EObject} to retrieve the session it belongs to
+     * @return the corresponding {@linkplain Session}
+     */
+    @Override
+    public Session GetSession(EObject object)
+    {
+        return SessionManager.INSTANCE.getSession(object);
+    }
+    
     /**
      * Sets the active session
      * 
@@ -92,7 +133,7 @@ public class CapellaSessionService implements ICapellaSessionService
         
         this.hasAnyOpenSession.Value(this.HasAnyActiveSession());
     }
-
+    
     /**
      * Backing field for {@linkplain HasAnyOpenSession}
      */
@@ -141,7 +182,7 @@ public class CapellaSessionService implements ICapellaSessionService
             return null;
         }
         
-        return new RootRowViewModel(this.activeSession.getSessionResource().getURI().toFileString(), 
-                this.activeSession.getTransactionalEditingDomain().getResourceSet().getAllContents());
+        return new RootRowViewModel(this.GetActiveSession().getSessionResource().getURI().toFileString(), 
+                this.GetActiveSession().getTransactionalEditingDomain().getResourceSet().getAllContents());
     }
 }
