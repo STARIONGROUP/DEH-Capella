@@ -36,15 +36,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import Reactive.ObservableValue;
+import Services.CapellaSelection.ICapellaSelectionService;
+import io.reactivex.Observable;
 
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.business.api.session.SessionManager;
 
 class CapellaSessionServiceTestFixture
 {
-    private CapellaSessionService service;
+    private ICapellaSessionService service;
     private ObservableValue<Session> sessionAdded;
     private ObservableValue<Session> sessionRemoved;
 
@@ -55,11 +58,13 @@ class CapellaSessionServiceTestFixture
         this.sessionRemoved = new ObservableValue<Session>(Session.class);
                 
         var sessionListener = mock(ICapellaSessionListenerService.class);
+        var selectionService = mock(ICapellaSelectionService.class);
         
+        when(selectionService.SelectionChanged()).thenReturn(Observable.fromArray(mock(EObject.class)));
         when(sessionListener.SessionAdded()).thenReturn(this.sessionAdded.Observable());
         when(sessionListener.SessionRemoved()).thenReturn(this.sessionRemoved.Observable());
                 
-        this.service = new CapellaSessionService(sessionListener);
+        this.service = new CapellaSessionService(sessionListener, selectionService);
     }
 
     @Test

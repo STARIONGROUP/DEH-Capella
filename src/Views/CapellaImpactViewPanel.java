@@ -83,8 +83,8 @@ public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanel
        });
 
        Observable.combineLatest(Observable.fromArray(true), this.DataContext.GetIsSessionOpen(),
-               (hasOneMagicDrawModelOpen, isHubSessionOpen) -> 
-                   hasOneMagicDrawModelOpen && isHubSessionOpen)
+               (hasAnyCapellaModelOpen, isHubSessionOpen) -> 
+                   hasAnyCapellaModelOpen && isHubSessionOpen)
            .subscribe(x -> this.View.SetLoadMappingControlsIsEnable(x));
        
        this.View.AttachOnSaveLoadMappingConfiguration(x -> this.DataContext.OnSaveLoadMappingConfiguration(x));

@@ -23,6 +23,9 @@
  */
 package Services.CapellaSession;
 
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.sirius.business.api.session.Session;
+
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
 
@@ -44,4 +47,19 @@ public interface ICapellaSessionService
      * @return a {@linkplain RootRowViewModel}, or null if no active session is found
      */
     RootRowViewModel GetModel();
+
+    /**
+     * Gets the active {@linkplain Session}
+     * 
+     * @return a {@linkplain Session}
+     */
+    Session GetActiveSession();
+
+    /**
+     * Gets the session corresponding to a semantic {@linkplain EObject} 
+     * 
+     * @param object the {@linkplain EObject} to retrieve the session it belongs to
+     * @return the corresponding {@linkplain Session}
+     */
+    Session GetSession(EObject object);
 }

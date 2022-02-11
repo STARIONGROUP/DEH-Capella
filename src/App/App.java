@@ -39,10 +39,14 @@ import DstController.IDstController;
 import HubController.IHubController;
 import Services.CapellaLog.CapellaLogService;
 import Services.CapellaLog.ICapellaLogService;
+import Services.CapellaSelection.CapellaSelectionService;
+import Services.CapellaSelection.ICapellaSelectionService;
 import Services.CapellaSession.CapellaSessionListenerService;
 import Services.CapellaSession.CapellaSessionService;
 import Services.CapellaSession.ICapellaSessionListenerService;
 import Services.CapellaSession.ICapellaSessionService;
+import Services.Mapping.IMapCommandService;
+import Services.Mapping.MapCommandService;
 import Services.MappingConfiguration.CapellaMappingConfigurationService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingEngineService.IMappingEngineService;
@@ -52,6 +56,10 @@ import ViewModels.ElementDefinitionImpactViewViewModel;
 import ViewModels.HubBrowserPanelViewModel;
 import ViewModels.RequirementImpactViewViewModel;
 import ViewModels.TransferControlViewModel;
+import ViewModels.CapellaObjectBrowser.CapellaObjectBrowserViewModel;
+import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
+import ViewModels.Dialogs.DstMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.Interfaces.IDstMappingConfigurationDialogViewModel;
 import ViewModels.Interfaces.ICapellaImpactViewPanelViewModel;
 import ViewModels.Interfaces.IElementDefinitionImpactViewViewModel;
 import ViewModels.Interfaces.IHubBrowserPanelViewModel;
@@ -132,17 +140,21 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.as(CACHE).addComponent(IDstController.class, DstController.class);
             AppContainer.Container.addConfig(MappingEngineService.AssemblyParameterName, this.getClass().getPackage());
             AppContainer.Container.as(CACHE, Characteristics.USE_NAMES).addComponent(IMappingEngineService.class, MappingEngineService.class);
-            AppContainer.Container.addComponent(ICapellaMappingConfigurationService.class, CapellaMappingConfigurationService.class);    
+            AppContainer.Container.addComponent(ICapellaMappingConfigurationService.class, CapellaMappingConfigurationService.class);
             AppContainer.Container.as(CACHE).addComponent(ICapellaSessionService.class, CapellaSessionService.class);
             AppContainer.Container.addComponent(ICapellaSessionListenerService.class, CapellaSessionListenerService.class);
             AppContainer.Container.addConfig("platformLogger", Platform.getLog(FrameworkUtil.getBundle(CapellaLogService.class)));
-            AppContainer.Container.as(Characteristics.USE_NAMES).addComponent(ICapellaLogService.class, CapellaLogService.class);    
-           
+            AppContainer.Container.as(Characteristics.USE_NAMES).addComponent(ICapellaLogService.class, CapellaLogService.class);
+            AppContainer.Container.addComponent(ICapellaSelectionService.class, CapellaSelectionService.class);
+            AppContainer.Container.addComponent(IMapCommandService.class, MapCommandService.class);
+
             AppContainer.Container.addComponent(IElementDefinitionImpactViewViewModel.class, ElementDefinitionImpactViewViewModel.class);
             AppContainer.Container.addComponent(IRequirementImpactViewViewModel.class, RequirementImpactViewViewModel.class);
             AppContainer.Container.addComponent(IHubBrowserPanelViewModel.class, HubBrowserPanelViewModel.class);
             AppContainer.Container.addComponent(ICapellaImpactViewPanelViewModel.class, CapellaImpactViewPanelViewModel.class);
-            AppContainer.Container.addComponent(ITransferControlViewModel.class, TransferControlViewModel.class);    
+            AppContainer.Container.addComponent(ITransferControlViewModel.class, TransferControlViewModel.class);
+            AppContainer.Container.addComponent(ICapellaObjectBrowserViewModel.class, CapellaObjectBrowserViewModel.class);
+            AppContainer.Container.addComponent(IDstMappingConfigurationDialogViewModel.class, DstMappingConfigurationDialogViewModel.class);
         }
         catch (Exception exception) 
         {

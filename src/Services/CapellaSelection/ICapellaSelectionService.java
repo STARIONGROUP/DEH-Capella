@@ -1,5 +1,5 @@
 /*
- * IElementRowViewModel.java
+ * ICapellaSelectionService.java
  *
  * Copyright (c) 2020-2021 RHEA System S.A.
  *
@@ -21,35 +21,32 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package ViewModels.CapellaObjectBrowser.Interfaces;
+package Services.CapellaSelection;
 
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import java.util.Collection;
 
-import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.ui.ISelectionService;
+
+import io.reactivex.Observable;
 
 /**
- * The {@linkplain IElementRowViewModel} is the interface definition for all {@linkplain ElementRowViewModel}
+ * The {@linkplain ICapellaSelectionService} is the interface definition for the {@linkplain CapellaSelectionService}
  */
-public interface IElementRowViewModel<TElement extends CapellaElement> extends IRowViewModel
+public interface ICapellaSelectionService
 {
-    /**
-     * Gets the type of thing represented
-     * 
-     * @return a {@linkplain Class}
-     */
-    Class<? extends CapellaElement> GetClassKind();
 
     /**
-     * Gets the DST {@linkplain Element} represented by this row view model
+     * Gets an {@linkplain Observable} of {@linkplain EObject} that yields whenever the selection has changed
      * 
-     * @return the represented {@linkplain Element}
+     * @return an {@linkplain Observable} of {@linkplain EObject}
      */
-    TElement GetElement();
+    Observable<EObject> SelectionChanged();
 
     /**
-     * Gets the name of the {@linkplain Element} represented by this row view model
+     * Gets the selected items from the {@linkplain ISelectionService}
      * 
-     * @return a {@linkplain String}
+     * @return a {@linkplain Collection} of {@linkplain EObject}
      */
-    String GetName();
+    Collection<EObject> GetSelection();
 }

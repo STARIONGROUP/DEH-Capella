@@ -56,7 +56,7 @@ class CapellaSessionListenerServiceTestFixture
     {
         this.sessionAdded = new ObservableValue<Session>(Session.class);
         this.sessionRemoved = new ObservableValue<Session>(Session.class);
-                
+
         var sessionListener = mock(ICapellaSessionListenerService.class);
         
         when(sessionListener.SessionAdded()).thenReturn(this.sessionAdded.Observable());

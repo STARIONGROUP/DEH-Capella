@@ -34,6 +34,7 @@ import java.util.concurrent.Callable;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import DstController.IDstController;
 import HubController.IHubController;
@@ -51,10 +52,10 @@ class RequirementImpactViewViewModelTestFixture
     private IDstController dstController;
     private IHubController hubController;
     private RequirementImpactViewViewModel viewModel;
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>> elements;
+    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> elements;
     private Iteration iteration;
     private ObservableCollection<Thing> selectedDstMapResultForTransfer;
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>> dstMapResult;
+    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> dstMapResult;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -69,7 +70,7 @@ class RequirementImpactViewViewModelTestFixture
         when(this.hubController.GetIsSessionOpen()).thenReturn(true);
         when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
         
-        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>>();
+        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
         when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
         
         this.selectedDstMapResultForTransfer = new ObservableCollection<Thing>();
@@ -98,16 +99,16 @@ class RequirementImpactViewViewModelTestFixture
         RequirementsSpecification RequirementsSpecification2 = new RequirementsSpecification();
         RequirementsSpecification2.setIid(UUID.randomUUID());
         
-        var mappedElement0 = (MappedElementRowViewModel<RequirementsSpecification, EObject>)mock(MappedElementRowViewModel.class);
+        var mappedElement0 = (MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement0.GetHubElement()).thenReturn(RequirementsSpecification0);
-        var mappedElement1 = (MappedElementRowViewModel<RequirementsSpecification, EObject>)mock(MappedElementRowViewModel.class);
+        var mappedElement1 = (MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement1.GetHubElement()).thenReturn(RequirementsSpecification1);
-        var mappedElement2 = (MappedElementRowViewModel<RequirementsSpecification, EObject>)mock(MappedElementRowViewModel.class);
+        var mappedElement2 = (MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement2.GetHubElement()).thenReturn(RequirementsSpecification2);
     
         assertEquals(1, this.viewModel.GetBrowserTreeModel().getRowCount());
                 
-        var elements = new ArrayList<MappedElementRowViewModel<RequirementsSpecification, EObject>>();
+        var elements = new ArrayList<MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement>>();
         elements.add(mappedElement0);
         elements.add(mappedElement1);
         elements.add(mappedElement2);

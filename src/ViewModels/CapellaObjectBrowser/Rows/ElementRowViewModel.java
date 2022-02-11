@@ -132,8 +132,9 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
     /**
      * Gets the name of the {@linkplain Element} represented by this row view model
      * 
-     * @return
+     * @return a {@linkplain String}
      */
+    @Override
     public String GetName()
     {
         return this.name;
@@ -219,7 +220,7 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
     /**
      * Updates this view model properties
      */ 
-    public void UpdateProperties()
+    protected void UpdateProperties()
     {
         if(element != null)
         {

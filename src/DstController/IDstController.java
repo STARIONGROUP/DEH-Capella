@@ -26,6 +26,7 @@ package DstController;
 import java.util.Collection;
 
 import org.eclipse.emf.ecore.EObject;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
@@ -99,23 +100,30 @@ public interface IDstController extends IDstControllerBase
     ObservableCollection<Thing> GetSelectedDstMapResultForTransfer();
 
     /**
-     * Gets the {@linkplain ObservableCollection} of that are selected for transfer to the Cameo/MagicDraw
+     * Gets the {@linkplain ObservableCollection} of that are selected for transfer to the 
      * 
-     * @return an {@linkplain ObservableCollection} of {@linkplain Class}
+     * @return an {@linkplain ObservableCollection} of {@linkplain CapellaElement}
      */
-    ObservableCollection<EObject> GetSelectedHubMapResultForTransfer();
+    ObservableCollection<CapellaElement> GetSelectedHubMapResultForTransfer();
 
     /**
      * Gets The {@linkplain ObservableCollection} of DST map result
      * 
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
-    ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>> GetDstMapResult();
+    ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetDstMapResult();
 
     /**
      * Gets The {@linkplain ObservableCollection} of Hub map result
      * 
-     * @return an {@linkplain ObservableCollection} of {@linkplain Class}
+     * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
-    ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>> GetHubMapResult();
+    ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetHubMapResult();
+
+    /**
+     * Gets an {@linkplain Observable} of value indicating whether there is any session open in Capella
+     * 
+     * @return {@linkplain Observable} of {@linkplain Boolean} 
+     */
+    Observable<Boolean> HasAnyOpenSession();
 }

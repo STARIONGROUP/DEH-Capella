@@ -1,5 +1,5 @@
 /*
- * IElementRowViewModel.java
+ * package-info.java
  *
  * Copyright (c) 2020-2021 RHEA System S.A.
  *
@@ -22,34 +22,3 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 package ViewModels.CapellaObjectBrowser.Interfaces;
-
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
-
-import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
-
-/**
- * The {@linkplain IElementRowViewModel} is the interface definition for all {@linkplain ElementRowViewModel}
- */
-public interface IElementRowViewModel<TElement extends CapellaElement> extends IRowViewModel
-{
-    /**
-     * Gets the type of thing represented
-     * 
-     * @return a {@linkplain Class}
-     */
-    Class<? extends CapellaElement> GetClassKind();
-
-    /**
-     * Gets the DST {@linkplain Element} represented by this row view model
-     * 
-     * @return the represented {@linkplain Element}
-     */
-    TElement GetElement();
-
-    /**
-     * Gets the name of the {@linkplain Element} represented by this row view model
-     * 
-     * @return a {@linkplain String}
-     */
-    String GetName();
-}

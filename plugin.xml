@@ -13,6 +13,10 @@
             name="Open/Close Impact Views Panel"
             id="DEH.Capella.OpenImpactViewPanel">
       </command>
+      <command categoryId="DEH.Capella.Commands.CommandsCategory"
+            id="DEH.Capella.MapToHub"
+            name="Map Selection To Hub">
+      </command>
    </extension>
    <extension point="org.eclipse.ui.handlers">
       <handler class="Commands.OpenHubBrowserCommand"
@@ -20,6 +24,9 @@
       </handler>
       <handler class="Commands.OpenImpactViewCommand"
             commandId="DEH.Capella.OpenImpactViewPanel">
+      </handler>
+      <handler class="Commands.MapToHubCommand"
+            commandId="DEH.Capella.MapToHub">
       </handler>
    </extension>
    <extension point="org.eclipse.ui.menus">
@@ -62,7 +69,14 @@
                    id="DEH.Capella.Toolbars.OpenImpactViewPanel"
                    tooltip="Open/Close the Impact View Panel">
 	        </command>
-     	</menuContribution> 		
+     	</menuContribution>
+		<menuContribution allPopups="false" locationURI="popup:org.eclipse.ui.popup.any">
+		      <command commandId="DEH.Capella.MapToHub"
+		      			style="push"
+	      			 	icon="icons/icon16.png"
+                   		id="DEH.Capella.ContextMenu.MapToHub"
+                   		tooltip="Map the selected element to the Hub"/>
+	   	</menuContribution>
    	</extension>
 	<extension point="org.eclipse.ui.views">
     	<category id="DEH.Capella.Views" name="DEH Capella adapter"/>
