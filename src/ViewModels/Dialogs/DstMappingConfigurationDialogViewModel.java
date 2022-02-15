@@ -30,7 +30,6 @@ import static Utils.Stereotypes.StereotypeUtils.GetShortName;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,7 +51,6 @@ import Utils.Ref;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
-import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import ViewModels.Dialogs.Interfaces.IDstMappingConfigurationDialogViewModel;
 import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
 import ViewModels.Interfaces.IRequirementBrowserViewModel;
@@ -357,8 +355,12 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
     private void PreMap(Collection<EObject> selectedElements)
     {
         for (var element : selectedElements)
-        {            
-            if (element instanceof CapellaElement)
+        {
+            if(element instanceof Structure)
+            {
+                this.PreMap(GetChildren(element));
+            }    
+            else if (element instanceof CapellaElement)
             {
                 var mappedElement = this.GetMappedElementRowViewModel((CapellaElement)element);
          
@@ -367,12 +369,8 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
                     this.mappedElements.add(mappedElement);
                 }
             }
-            else if(element instanceof Structure)
-            {
-                this.PreMap(GetChildren(element));
-            }             
         }
-    }    
+    }
 
     /**
      * Get a {@linkplain MappedElementRowViewModel} that represents a pre-mapped {@linkplain Class}
@@ -413,7 +411,6 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
             return mappedElementRowViewModel;
         }
         
-        this.logger.warn(String.format("Impossible to map the provided class %s as it doesn't have a supported stereotype or is already present in the mapped rows", ((NamedElement) capellaElement).getName()));
         return null;
     }
 
@@ -534,7 +531,7 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
             
             RequirementsSpecification requirementsSpecification = new RequirementsSpecification();
             requirementsSpecification.setName(possibleParentName.HasValue() ? possibleParentName.Get() : "new RequirementsSpecification");
-            requirementsSpecification.setShortName(GetShortName("-"));
+            requirementsSpecification.setShortName(GetShortName(possibleParentName.HasValue() ? possibleParentName.Get() : requirementsSpecification.getName()));
             requirementsSpecification.setIid(UUID.randomUUID());
             requirementsSpecification.setOwner(this.hubController.GetCurrentDomainOfExpertise());
             refRequirementSpecification.Set(requirementsSpecification);            
@@ -555,7 +552,7 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
     {
         try
         {
-            possibleParentName.Set(((NamedElement)requirement.eContainer().eContainer()).getName());
+            possibleParentName.Set(((NamedElement)requirement.eContainer()).getName());
         }
         catch(Exception exception)
         {

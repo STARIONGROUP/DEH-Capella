@@ -101,4 +101,11 @@ public interface ICapellaImpactViewPanelViewModel extends IViewModel
      * @return the {@linkplain IElementDefinitionImpactViewViewModel}
      */
     IElementDefinitionImpactViewViewModel GetElementDefinitionImpactViewViewModel();
+
+    /**
+     * Gets the {@linkplain ICapellaImpactViewViewModel} instance
+     * 
+     * @return the {@linkplain ICapellaImpactViewViewModel}
+     */
+    ICapellaImpactViewViewModel GetCapellaImpactViewViewModel();
 }

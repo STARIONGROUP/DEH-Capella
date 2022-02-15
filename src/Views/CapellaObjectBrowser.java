@@ -57,6 +57,7 @@ public class CapellaObjectBrowser extends ObjectBrowser
     {
         super();
         this.objectBrowserTree.setRenderDataProvider(new CapellaObjectBrowserRenderDataProvider());
+        this.objectBrowserTree.setRootVisible(false);
     }
 
     /**

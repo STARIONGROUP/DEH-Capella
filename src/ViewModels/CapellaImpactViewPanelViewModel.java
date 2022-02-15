@@ -40,6 +40,7 @@ import Services.CapellaLog.ICapellaLogService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Utils.Tasks.Task;
 import ViewModels.Interfaces.ICapellaImpactViewPanelViewModel;
+import ViewModels.Interfaces.ICapellaImpactViewViewModel;
 import ViewModels.Interfaces.IElementDefinitionImpactViewViewModel;
 import ViewModels.Interfaces.IImpactViewContextMenuViewModel;
 import ViewModels.Interfaces.IRequirementImpactViewViewModel;
@@ -135,6 +136,22 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
     {
         return requirementDefinitionImpactViewViewModel;
     }
+
+    /**
+     * The {@linkplain ICapellaImpactViewViewModel}
+     */
+    private ICapellaImpactViewViewModel capellaImpactViewViewModel;
+
+    /**
+     * Gets the {@linkplain ICapellaImpactViewViewModel} instance
+     * 
+     * @return the {@linkplain ICapellaImpactViewViewModel}
+     */
+    @Override
+    public ICapellaImpactViewViewModel GetCapellaImpactViewViewModel()
+    {
+        return capellaImpactViewViewModel;
+    }
     
     /**
      * Gets the {@linkplain Observable} of {@linkplain Boolean} indicating whether MagicDraw
@@ -144,7 +161,7 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
     @Override
     public Observable<Boolean> GetHasOneCapellaModelOpen()
     {
-        return Observable.fromArray(true);
+        return this.dstController.HasAnyOpenSessionObservable();
     }
 
     /**
@@ -167,13 +184,14 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
      * @param requirementImpactViewModel the {@linkplain IRequirementImpactViewViewModel}
      * @param transferControlViewModel the {@linkplain ITransferControlViewModel}
      * @param contextMenuViewModel the {@linkplain IImpactViewContextMenuViewModel}
-     * @param mappingConfigurationService the {@linkplain IMagicDrawMappingConfigurationService}
+     * @param capellaImpactViewViewModel the {@linkplain ICapellaImpactViewViewModel}
+     * @param mappingConfigurationService the {@linkplain ICapellaMappingConfigurationService}
      * @param logService the {@linkplain IMagicDrawUILogService}
      */
     public CapellaImpactViewPanelViewModel(IHubController hubController, IDstController dstController,
             IElementDefinitionImpactViewViewModel elementDefinitionImpactViewModel, IRequirementImpactViewViewModel requirementImpactViewModel,
             ITransferControlViewModel transferControlViewModel, IImpactViewContextMenuViewModel contextMenuViewModel,
-            ICapellaMappingConfigurationService mappingConfigurationService, ICapellaLogService logService)
+            ICapellaImpactViewViewModel capellaImpactViewViewModel, ICapellaMappingConfigurationService mappingConfigurationService, ICapellaLogService logService)
     {
         super(hubController);
         this.dstController = dstController;
@@ -184,6 +202,7 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
         this.isSessionOpen = this.HubController.GetIsSessionOpenObservable();
         this.elementDefinitionImpactViewViewModel = elementDefinitionImpactViewModel;
         this.requirementDefinitionImpactViewViewModel = requirementImpactViewModel;
+        this.capellaImpactViewViewModel = capellaImpactViewViewModel;
     }
 
     /**

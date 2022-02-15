@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.RequirementPackage;
+import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
@@ -148,9 +148,14 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
             else
             {
                 while (!(this.CanBeARequirementSpecification(parent)
-                        && parent != null && parent instanceof RequirementPackage
-                        && this.TryGetOrCreateRequirementSpecification((RequirementPackage)parent, refRequirementsSpecification)))
+                        && parent != null && parent instanceof RequirementsPkg
+                        && this.TryGetOrCreateRequirementSpecification((RequirementsPkg)parent, refRequirementsSpecification)))
                 {
+                    if(parent == null)
+                    {
+                        break;
+                    }
+                    
                     parent = parent.eContainer();
                 }
             }
@@ -158,7 +163,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
             if(!refRequirementsSpecification.HasValue())
             {
                 this.Logger.error(
-                        String.format("The mapping of the current requirement %s is no possible, because no eligible parent could be found current RequirementPackage name %s", 
+                        String.format("The mapping of the current requirement %s is no possible, because no eligible parent could be found current RequirementsPkg name %s", 
                                 mappedRequirement.GetDstElement().getName(), mappedRequirement.GetDstElement().eContainer()));
                 
                 continue;
@@ -181,7 +186,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
      * and creates the {@linkplain Requirement}. This method is called recursively until the methods reaches the {@linkplain Requirement}
      *
      * @param requirement the {@linkplain Requirement} requirement from Capella
-     * @param elements the children of the current {@linkplain RequirementPackage} being processed
+     * @param elements the children of the current {@linkplain RequirementsPkg} being processed
      * @param refRequirementsSpecification the {@linkplain Ref} of {@linkplain RequirementsSpecification}
      * @param refRequirementsGroup the {@linkplain Ref} of {@linkplain RequirementsGroup}, 
      * holds the last group that was created, also the closest to the {@linkplain Requirement}
@@ -197,10 +202,10 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
         {
             if(IsParentOf(element, requirement))
             {                
-                if(!this.TryGetOrCreateRequirementGroup((RequirementPackage)element, refRequirementsSpecification, refRequirementsGroup))
+                if(!this.TryGetOrCreateRequirementGroup((RequirementsPkg)element, refRequirementsSpecification, refRequirementsGroup))
                 {
                     this.Logger.error(String.format("Could not create the requirement %s, because the creation/update of the requirement group %s failed", 
-                            requirement.getName(), ((RequirementPackage)element).getName()));
+                            requirement.getName(), ((RequirementsPkg)element).getName()));
                     
                     break;
                 }
@@ -305,14 +310,14 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
     }
 
     /**
-     * Try to create the {@linkplain RequirementsSpecification} represented by the provided {@linkplain RequirementPackage}
+     * Try to create the {@linkplain RequirementsSpecification} represented by the provided {@linkplain RequirementsPkg}
      * 
-     * @param currentParent the {@linkplain RequirementPackage} to create or retrieve the {@linkplain RequirementsSpecification} that represents it
+     * @param currentParent the {@linkplain RequirementsPkg} to create or retrieve the {@linkplain RequirementsSpecification} that represents it
      * @param refRequirementsSpecification the {@linkplain Ref} parent {@linkplain RequirementsSpecification}
      * @param refRequirementsGroup the {@linkplain Ref} of {@linkplain RequirementsGroup}
      * @return a value indicating whether the {@linkplain RequirementsGroup} has been found or created
      */
-    private boolean TryGetOrCreateRequirementGroup(RequirementPackage currentParent, Ref<RequirementsSpecification> refRequirementsSpecification, Ref<RequirementsGroup> refRequirementsGroup)
+    private boolean TryGetOrCreateRequirementGroup(RequirementsPkg currentParent, Ref<RequirementsSpecification> refRequirementsSpecification, Ref<RequirementsGroup> refRequirementsGroup)
     {
         Ref<RequirementsGroup> refCurrentRequirementsGroup = new Ref<RequirementsGroup>(RequirementsGroup.class);
         
@@ -345,14 +350,14 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
     }
     
     /**
-     * Tries to find the group represented by / representing the provided {@linkplain RequirementPackage}
+     * Tries to find the group represented by / representing the provided {@linkplain RequirementsPkg}
      * 
-     * @param currentPackage the {@linkplain RequirementPackage}
+     * @param currentPackage the {@linkplain RequirementsPkg}
      * @param refRequirementsSpecification the {@linkplain Ref} of the current {@linkplain RequirementsSpecification}
      * @param refRequirementsGroup the {@linkplain Ref} of {@linkplain RequirementsGroup}
      * @return a value indicating whether the {@linkplain RequirementsGroup} has been found
      */
-    private boolean TryToFindGroup(RequirementPackage currentPackage, Ref<RequirementsSpecification> refRequirementsSpecification, Ref<RequirementsGroup> refRequirementsGroup)
+    private boolean TryToFindGroup(RequirementsPkg currentPackage, Ref<RequirementsSpecification> refRequirementsSpecification, Ref<RequirementsGroup> refRequirementsGroup)
     {
         Optional<RequirementsGroup> optionalRequirementsGroup = Stream.concat(this.temporaryRequirementsGroups.stream(), 
                 refRequirementsSpecification.Get().getAllContainedGroups().stream())
@@ -370,13 +375,13 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
     }
 
     /**
-     * Try to create the {@linkplain RequirementsSpecification} represented by the provided {@linkplain RequirementPackage}
+     * Try to create the {@linkplain RequirementsSpecification} represented by the provided {@linkplain RequirementsPkg}
      * 
-     * @param currentPackage the {@linkplain RequirementPackage} to create or retrieve the {@linkplain RequirementsSpecification} that represents it
+     * @param currentPackage the {@linkplain RequirementsPkg} to create or retrieve the {@linkplain RequirementsSpecification} that represents it
      * @param refRequirementSpecification the {@linkplain Ref} of {@linkplain RequirementsSpecification}
      * @return a value indicating whether the {@linkplain RequirementsGroup} has been found or created
      */
-    private boolean TryGetOrCreateRequirementSpecification(RequirementPackage currentPackage, Ref<RequirementsSpecification> refRequirementSpecification)
+    private boolean TryGetOrCreateRequirementSpecification(RequirementsPkg currentPackage, Ref<RequirementsSpecification> refRequirementSpecification)
     {
         Optional<RequirementsSpecification> optionalRequirementsSpecification = this.requirementsSpecifications
                 .stream()
@@ -423,6 +428,6 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
      */
     public boolean CanBeARequirementSpecification(EObject eObject)
     {
-        return eObject instanceof RequirementPackage && GetChildren(eObject, RequirementPackage.class).size() > 0;
+        return eObject instanceof RequirementsPkg && GetChildren(eObject, RequirementsPkg.class).size() > 0;
     }
 }

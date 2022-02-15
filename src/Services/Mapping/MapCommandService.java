@@ -124,8 +124,9 @@ public class MapCommandService implements IMapCommandService
     @Override
     public Observable<Boolean> CanExecuteObservable()
     {
-        return Observable.combineLatest(this.dstController.HasAnyOpenSession(), this.hubController.GetIsSessionOpenObservable(),
-                (hasAnyOpenSession, isHubSessionOpen) -> hasAnyOpenSession && isHubSessionOpen);
+        return Observable.combineLatest(this.dstController.HasAnyOpenSessionObservable(), this.hubController.GetIsSessionOpenObservable(),
+                (hasAnyOpenSession, isHubSessionOpen) -> 
+                        hasAnyOpenSession && isHubSessionOpen);
     }
     
     /**

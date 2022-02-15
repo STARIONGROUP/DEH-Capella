@@ -100,7 +100,7 @@ class DstControllerTestFixture
     @Test
     public void VerifyMap()
     {
-        assertTrue(this.controller.Map(mock(IMappableThingCollection.class), MappingDirection.FromDstToHub));
+        assertFalse(this.controller.Map(mock(IMappableThingCollection.class), MappingDirection.FromDstToHub));
     }
     
     @Test

@@ -42,6 +42,11 @@ import io.reactivex.Observable;
 public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanelViewModel, ImpactViewPanel>
 {
     /**
+     * The {@linkplain capellaObjectBrowser} to display impact on capella models
+     */
+    private CapellaObjectBrowser capellaObjectBrowser;
+    
+    /**
      * The {@linkplain ImpactViewContextMenu} context menu view for the Capella impact view
      */
     private ImpactViewContextMenu capellaContextMenu;
@@ -65,6 +70,8 @@ public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanel
     {
         this.CreateBasePartControl(parent);
         this.View = new ImpactViewPanel();
+        this.capellaObjectBrowser = new CapellaObjectBrowser();
+        this.View.SetDstImpactViewView(this.capellaObjectBrowser);
         this.SetDataContext(AppContainer.Container.getComponent(ICapellaImpactViewPanelViewModel.class));
         this.Container.add(this.View);
     }
@@ -93,6 +100,7 @@ public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanel
 
        this.View.GetElementDefinitionBrowser().SetDataContext(this.DataContext.GetElementDefinitionImpactViewViewModel());
        this.View.GetRequirementBrowser().SetDataContext(this.DataContext.GetRequirementDefinitionImpactViewViewModel());
+       this.capellaObjectBrowser.SetDataContext(this.DataContext.GetCapellaImpactViewViewModel());
        this.capellaContextMenu.SetDataContext(this.DataContext.GetContextMenuViewModel());
        this.View.BindNumberOfSelectedThingToTransfer(this.DataContext.GetTransferControlViewModel().GetNumberOfSelectedThing());
        this.View.SetContextMenuDataContext(this.DataContext.GetContextMenuViewModel());

@@ -28,14 +28,21 @@ import java.awt.Color;
 
 import javax.swing.Icon;
 
+import org.polarsys.capella.core.data.capellacore.AbstractPropertyValue;
+import org.polarsys.capella.core.data.capellacore.Structure;
+import org.polarsys.capella.core.data.capellamodeller.Project;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
+import org.polarsys.capella.core.data.fa.ComponentPort;
 import org.polarsys.capella.core.data.information.Property;
+import org.polarsys.capella.core.data.information.datavalue.DataValue;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementPackage;
+import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 
 import Utils.ImageLoader.ImageLoader;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.RequirementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 import ViewModels.ObjectBrowser.RenderDataProvider.ObjectBrowserRenderDataProvider;
 import cdp4common.commondata.ClassKind;
@@ -72,7 +79,7 @@ public class CapellaObjectBrowserRenderDataProvider extends ObjectBrowserRenderD
     @Override
     public boolean isHtmlDisplayName(Object rowViewModel)
     {
-        return false;
+        return rowViewModel instanceof RequirementRowViewModel;
     }
 
     /**
@@ -140,9 +147,17 @@ public class CapellaObjectBrowserRenderDataProvider extends ObjectBrowserRenderD
         {
             var element = (IElementRowViewModel<?>)rowViewModel;
             
-            if(element.GetElement() instanceof ComponentPkg)
+            if(element.GetElement() instanceof Project)
+            {
+                return ImageLoader.GetIcon(ClassKind.Iteration);
+            }
+            else if(element.GetElement() instanceof Structure)
             {
                 return ImageLoader.GetIcon(ImageLoader.ThingFolder, "parametergroup.png");
+            }
+            else if(element.GetElement() instanceof ComponentPort)
+            {
+                return ImageLoader.GetIcon(ClassKind.ElementUsage);
             }
             else if(element.GetElement() instanceof Component)
             {
@@ -152,7 +167,7 @@ public class CapellaObjectBrowserRenderDataProvider extends ObjectBrowserRenderD
             {
                 return ImageLoader.GetIcon(ClassKind.Requirement);
             }
-            else if(element.GetElement() instanceof RequirementPackage)
+            else if(element.GetElement() instanceof RequirementsPkg)
             {
                 return ImageLoader.GetIcon(ClassKind.RequirementsSpecification);
             }
@@ -160,8 +175,16 @@ public class CapellaObjectBrowserRenderDataProvider extends ObjectBrowserRenderD
             {
                 return ImageLoader.GetIcon(ClassKind.Parameter);
             }
+            else if(element.GetElement() instanceof AbstractPropertyValue)
+            {
+                return ImageLoader.GetIcon(ClassKind.Parameter);
+            }
+            else if(element.GetElement() instanceof DataValue)
+            {
+                return ImageLoader.GetIcon(ClassKind.Parameter);
+            }
         }
         
-        return ImageLoader.GetIcon();
+        return ImageLoader.GetDstIcon();
     }
 }

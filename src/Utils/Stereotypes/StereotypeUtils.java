@@ -33,8 +33,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.requirement.RequirementPackage;
-
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 
 /**
  * The {@linkplain StereotypeUtils}  provides useful methods on Capella components
@@ -49,7 +48,7 @@ public final class StereotypeUtils
      */
     public static String GetShortName(String name)
     {
-        return name.replaceAll("[^a-zA-Z0-9]|\\s", "");
+        return name.replaceAll("[^a-zA-Z0-9-]|\\s", "");
     }
 
     /**
@@ -123,8 +122,8 @@ public final class StereotypeUtils
      */
     public static boolean IsParentOf(EObject parent, CapellaElement child)
     {
-        return child.eContainer() instanceof RequirementPackage &&
-               parent instanceof RequirementPackage &&
+        return child.eContainer() instanceof RequirementsPkg &&
+               parent instanceof RequirementsPkg &&
                AreTheseEquals(child.eContainer().eResource().getURI(), parent.eResource().getURI());
     }
 }

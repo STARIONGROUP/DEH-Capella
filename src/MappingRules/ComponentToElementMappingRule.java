@@ -30,12 +30,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datatype.BooleanType;
-import org.polarsys.capella.core.data.information.datatype.NumericType;
 import org.polarsys.capella.core.data.information.datatype.StringType;
+import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
 import org.polarsys.capella.core.data.information.datavalue.NumericValue;
 
 import Enumerations.MappingDirection;
@@ -48,6 +49,7 @@ import Utils.Stereotypes.CapellaComponentCollection;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
+import cdp4common.engineeringmodeldata.ElementUsage;
 import cdp4common.engineeringmodeldata.Parameter;
 import cdp4common.engineeringmodeldata.ParameterSwitchKind;
 import cdp4common.engineeringmodeldata.ParameterValueSet;
@@ -150,10 +152,72 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
                 mappedElement.SetHubElement(this.GetOrCreateElementDefinition(mappedElement.GetDstElement()));
             }
             
+            this.MapContainedElement(mappedElement);
+            
             this.MapProperties(mappedElement.GetHubElement(), mappedElement.GetDstElement());
         }
     }
+
+    /**
+     * @param mappedElement
+     */
+    private void MapContainedElement(MappedElementDefinitionRowViewModel mappedElement)
+    {
+        for (var containedElement : mappedElement.GetDstElement().eContents()
+                .stream().filter(x -> x instanceof Component)
+                .map(x -> (Component)x)
+                .collect(Collectors.toList()))
+        {
+            this.MapContainedElement(mappedElement.GetHubElement(), containedElement);
+        }
+    }
     
+    /**
+     * @param mappedElement
+     */
+    private void MapContainedElement(ElementDefinition container, Component component)
+    {
+        MappedElementDefinitionRowViewModel mappedElement = this.elements.stream()
+                .filter(x -> AreTheseEquals(x.GetDstElement().getId(), component.getId()))
+                .findFirst()
+                .orElseGet(() -> 
+                {
+                    MappedElementDefinitionRowViewModel element = 
+                            new MappedElementDefinitionRowViewModel(component, MappingDirection.FromDstToHub);
+                    
+                    this.elements.add(element);
+                    this.MapContainedElement(element);
+                    return element;
+        
+                });
+        
+        if(mappedElement.GetHubElement() == null)
+        {
+            mappedElement.SetHubElement(this.GetOrCreateElementDefinition(component));
+        }
+        else
+        {
+            mappedElement.SetHubElement(mappedElement.GetHubElement().clone(true));
+        }
+
+        this.MapProperties(mappedElement.GetHubElement(), component);
+        
+        if(container.getContainedElement()
+                .stream().anyMatch(x -> AreTheseEquals(x.getName(), mappedElement.GetHubElement().getName())))
+        {
+            return;
+        }
+        
+        var elementUsage = new ElementUsage();
+        elementUsage.setName(mappedElement.GetHubElement().getName());
+        elementUsage.setShortName(mappedElement.GetHubElement().getShortName());
+        elementUsage.setIid(UUID.randomUUID());
+        elementUsage.setOwner(this.hubController.GetCurrentDomainOfExpertise());
+        elementUsage.setElementDefinition(mappedElement.GetHubElement());
+        
+        container.getContainedElement().add(elementUsage);
+    }
+
     /**
      * Gets an existing or creates an {@linkplain ElementDefinition} that will be mapped to the {@linkplain Component} 
      * represented in the provided {@linkplain MappedElementDefinitionRowViewModel}
@@ -238,7 +302,7 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
             }
             else
             {
-                this.Logger.error(String.format("Could not map attribute %s for element definition %s", property.getName(), elementDefinition.getName()));
+                this.Logger.error(String.format("Could not map property %s for element definition %s", property.getName(), elementDefinition.getName()));
                 continue;
             }
 
@@ -256,9 +320,12 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
      */
     private boolean TryGetValueFromProperty(Property property, Ref<String> refValue)
     {
-        var valueSpecification = property.getOwnedMinValue();
+        var valueSpecification = property.getOwnedDefaultValue();
         
-        refValue.Set(valueSpecification.getLabel());
+        if(valueSpecification instanceof LiteralNumericValue)
+        {
+            refValue.Set(((LiteralNumericValue)valueSpecification).getValue());
+        }
         
         return refValue.HasValue();
     }
@@ -270,18 +337,17 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
      * @param refParameterType the {@linkplain Ref} of {@linkplain ParameterType} 
      * @return a value indicating whether the {@linkplain ParameterType} has been successfully created or retrieved from the chain of rdls
      */
-    @SuppressWarnings("resource")
     private boolean TryCreateParameterType(Property property, Ref<ParameterType> refParameterType)
     {
         try
         {
             String shortName = GetShortName(property.getName());
             
-            if(!this.hubController.TryGetThingFromChainOfRdlBy(x -> this.AreShortNamesEquals(x, shortName), refParameterType))
+            if(!this.hubController.TryGetThingFromChainOfRdlBy(x -> this.AreShortNamesEquals(x, shortName) || this.AreShortNamesEquals(x, shortName.substring(0, 1)), refParameterType))
             {
                 ParameterType parameterType = null;
                 
-                if(property.getType() instanceof NumericType)
+                if(property.getOwnedDefaultValue() instanceof NumericValue)
                 {
                     parameterType = new SimpleQuantityKind();
 
@@ -289,20 +355,17 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
                     
                     Ref<MeasurementScale> refScale = new Ref<>(MeasurementScale.class);
                     
-                    if(!this.TryCreateOrGetMeasurementScale(property, refScale))
+                    if(this.TryCreateOrGetMeasurementScale(property, refScale))
                     {
-                        this.Logger.error(String.format("Could not map the property %s because no measurement scale could be found or created", shortName));
-                        return false;
+                        quantityKind.getAllPossibleScale().add(refScale.Get());
+                        quantityKind.setDefaultScale(refScale.Get());
                     }
-                    
-                    quantityKind.getAllPossibleScale().add(refScale.Get());
-                    quantityKind.setDefaultScale(refScale.Get());
                 }                
-                else if(property.getType() instanceof BooleanType)
+                else if(property.getOwnedDefaultValue() instanceof BooleanType)
                 {
                     parameterType = new BooleanParameterType();
                 }
-                else if(property.getType() instanceof StringType)
+                else if(property.getOwnedDefaultValue() instanceof StringType)
                 {
                     parameterType = new TextParameterType();
                 }                
@@ -346,26 +409,32 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
     @SuppressWarnings("resource")
     private boolean TryCreateOrGetMeasurementScale(Property property, Ref<MeasurementScale> refScale)
     {
-        var unit = property.getOwnedMinValue() instanceof NumericValue 
-                ? ((NumericValue)property.getOwnedMinValue()).getUnit() 
-                : null; 
+        var unit = ((LiteralNumericValue)property.getOwnedDefaultValue()).getUnit();
+        
+        String unitName;
+        String scaleShortName;
         
         if(unit == null || unit.getName() == null)
         {
-            return false;
+            unitName = "1";
+            scaleShortName = "-";
+        }
+        else
+        {
+            unitName = unit.getName();
+            scaleShortName = GetShortName(unitName);
         }
         
-        String scaleShortName = GetShortName(unit.getName());
         
         if(!this.hubController.TryGetThingFromChainOfRdlBy(x -> x.getShortName().equals(scaleShortName), refScale))
         {
             MeasurementScale newScale = new RatioScale();
-            newScale.setName(unit.getName());
+            newScale.setName(unitName);
             newScale.setNumberSet(NumberSetKind.REAL_NUMBER_SET);
             
             Ref<MeasurementUnit> refMeasurementUnit = new Ref<>(MeasurementUnit.class);
             
-            if(!this.TryCreateOrGetMeasurementUnit(unit.getName(), refMeasurementUnit))
+            if(!this.TryCreateOrGetMeasurementUnit(unitName, refMeasurementUnit))
             {   
                 return false;
             }
@@ -393,7 +462,7 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
     {
         String unitShortName = GetShortName(unitName);
         
-        if(!this.hubController.TryGetThingFromChainOfRdlBy(x -> x.getShortName().equals(unitShortName) || x.getName().equals(unitName), refMeasurementUnit))
+        if(!this.hubController.TryGetThingFromChainOfRdlBy(x -> x.getShortName().equals(unitShortName) || x.getName().equals(unitName) || x.getShortName().equals("-"), refMeasurementUnit))
         {
             var newMeasurementUnit = new SimpleUnit();
             newMeasurementUnit.setName(unitName);

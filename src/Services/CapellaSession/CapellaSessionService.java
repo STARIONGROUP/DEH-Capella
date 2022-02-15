@@ -23,14 +23,19 @@
  */
 package Services.CapellaSession;
 
+import java.util.ArrayList;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.emf.common.notify.Notifier;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.business.api.session.SessionManager;
 
 import Reactive.ObservableValue;
 import Services.CapellaSelection.ICapellaSelectionService;
+import ViewModels.CapellaObjectBrowser.Rows.ProjectRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
 
@@ -145,9 +150,20 @@ public class CapellaSessionService implements ICapellaSessionService
      * @return an {@linkplain Observable} of {@linkplain Boolean}
      */
     @Override
-    public Observable<Boolean> HasAnyOpenSession()
+    public Observable<Boolean> HasAnyOpenSessionObservable()
     {
         return this.hasAnyOpenSession.Observable();
+    }
+    
+    /**
+     * Gets the value emitted by {@linkplain HasAnyOpenSessionObservable} indicating whether there is any session open
+     * 
+     * @return a {@linkplain Boolean} value
+     */
+    @Override
+    public boolean HasAnyOpenSession()
+    {
+        return this.HasAnyActiveSession();
     }
     
     /**
@@ -169,12 +185,12 @@ public class CapellaSessionService implements ICapellaSessionService
     }
     
     /**
-     * Gets the model of the active session
+     * Gets the models of the active sessions
      * 
      * @return a {@linkplain RootRowViewModel}, or null if no active session is found
      */
     @Override
-    public RootRowViewModel GetModel()
+    public RootRowViewModel GetModels()
     {
         if(!this.HasAnyActiveSession())
         {
@@ -182,7 +198,22 @@ public class CapellaSessionService implements ICapellaSessionService
             return null;
         }
         
-        return new RootRowViewModel(this.GetActiveSession().getSessionResource().getURI().toFileString(), 
-                this.GetActiveSession().getTransactionalEditingDomain().getResourceSet().getAllContents());
+        var rootRowViewModel = new RootRowViewModel("Capella Models");
+        
+        for (var session : SessionManager.INSTANCE.getSessions())
+        {
+            Notifier element;
+            var elements = new ArrayList<Notifier>();
+            var contents = session.getTransactionalEditingDomain().getResourceSet().getAllContents();
+            
+            while((element = contents.next()) !=null)
+            {
+                elements.add((Notifier)element);
+            }
+            
+            rootRowViewModel.GetContainedRows().add(new RootRowViewModel(URI.decode(session.getSessionResource().getURI().lastSegment()) ,elements));
+        }
+        
+        return rootRowViewModel;
     }
 }

@@ -67,8 +67,8 @@ import cdp4common.commondata.Thing;
  * The {@linkplain DstMappingConfigurationDialog} is the dialog view to allow to configure a mapping 
  * to be defined between a selection of DST elements and the hub element
  */
-@ExludeFromCodeCoverageGeneratedReport
 @SuppressWarnings("serial")
+@ExludeFromCodeCoverageGeneratedReport
 public class DstMappingConfigurationDialog extends JDialog implements IDialog<IDstMappingConfigurationDialogViewModel, Boolean>
 {
     /**

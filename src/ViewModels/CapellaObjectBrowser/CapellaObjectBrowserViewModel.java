@@ -46,7 +46,7 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
     /**
      * The {@linkplain ICapellaSessionService} instance
      */
-    private final ICapellaSessionService sessionService;
+    protected final ICapellaSessionService SessionService;
     
     /**
      * Backing field for {@linkplain GetSelectedElement}
@@ -71,7 +71,7 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
      */
     public CapellaObjectBrowserViewModel(ICapellaSessionService sessionService)
     {
-        this.sessionService = sessionService;
+        this.SessionService = sessionService;
     }
     
     /**
@@ -94,29 +94,11 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
     public void BuildTree(Collection<EObject> elements)
     {
         this.BrowserTreeModel.Value(DefaultOutlineModel.createOutlineModel(
-                new CapellaObjectBrowserTreeViewModel(this.sessionService, elements),
+                new CapellaObjectBrowserTreeViewModel(this.SessionService.GetModels()),
                 new CapellaObjectBrowserTreeRowViewModel(), true));
-        
+                
         this.IsTheTreeVisible.Value(true);
     }
-            
-    /**
-     * Creates the {@linkplain OutlineModel} tree from the provided {@linkplain Collection} of {@linkplain EObject},
-     * With the specified name
-     * 
-     * @param name the name of the root element of the tree
-     * @param elements the {@linkplain Collection} of {@linkplain EObject}
-     */
-    @Override
-    public void BuildTree(String name, Collection<EObject> elements)
-    {
-        this.BrowserTreeModel.Value(DefaultOutlineModel.createOutlineModel(
-                new CapellaObjectBrowserTreeViewModel(name, elements),
-                new CapellaObjectBrowserTreeRowViewModel(), true));
-    
-        this.IsTheTreeVisible.Value(true);
-    }
-
 
     /**
      * Updates this view model {@linkplain TreeModel}
