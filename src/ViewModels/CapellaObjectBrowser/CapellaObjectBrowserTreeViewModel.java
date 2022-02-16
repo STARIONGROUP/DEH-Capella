@@ -57,22 +57,11 @@ public class CapellaObjectBrowserTreeViewModel extends BrowserTreeBaseViewModel
     /**
      * Initializes a new {@linkplain MagicDrawObjectBrowserTreeRowViewModel}
      * 
-     * @param modelName the {@linkplain String} model name
-     * @param elements the {@linkplain Collection} of {@linkplain EObject} that composes the tree
-     */
-    public CapellaObjectBrowserTreeViewModel(String modelName, Collection<EObject> elements)
-    {
-        this.root = new RootRowViewModel(modelName, elements);
-    }
-    
-    /**
-     * Initializes a new {@linkplain MagicDrawObjectBrowserTreeRowViewModel}
-     * 
      * @param sessionService the {@linkplain ICapellaSessionService} instance
      * @param elements the {@linkplain Collection} of {@linkplain EObject} that composes the tree
      */
-    public CapellaObjectBrowserTreeViewModel(ICapellaSessionService sessionService, Collection<EObject> elements)
+    public CapellaObjectBrowserTreeViewModel(RootRowViewModel rootRowViewModel)
     {
-        this.root = new RootRowViewModel(sessionService, elements);
+        this.root = rootRowViewModel;
     }
 }

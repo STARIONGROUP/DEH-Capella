@@ -28,7 +28,10 @@ import org.apache.logging.log4j.Logger;
 import org.netbeans.swing.outline.RowModel;
 
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.PropertyValueBaseRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.RequirementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
+import Views.CapellaObjectBrowser;
 
 /**
  * The {@linkplain CapellaObjectBrowserTreeRowViewModel} is the {@linkplain RowModel} implementation for the {@linkplain CapellaObjectBrowser}
@@ -48,7 +51,7 @@ public class CapellaObjectBrowserTreeRowViewModel implements RowModel
     @Override
     public int getColumnCount()
     {
-        return 1;
+        return 2;
     }
 
     /**
@@ -63,14 +66,31 @@ public class CapellaObjectBrowserTreeRowViewModel implements RowModel
     {
         if(rowViewModel instanceof RootRowViewModel)
         {
-            return "";
+            switch (column)
+            {
+                default: return "";
+            }
         }
         
         if(rowViewModel instanceof ElementRowViewModel)
         {
             switch (column)
             {
-                case 0 : return ((ElementRowViewModel<?>) rowViewModel).GetClassKind().getSimpleName();                
+                case 0 : 
+                {
+                    if(rowViewModel instanceof PropertyValueBaseRowViewModel)
+                    {
+                        return ((PropertyValueBaseRowViewModel<?>)rowViewModel).GetValueRepresentation();
+                    }
+                    else if(rowViewModel instanceof RequirementRowViewModel)
+                    {
+                        return ((RequirementRowViewModel)rowViewModel).GetDescription();
+                    }
+                    
+                    return "";
+                }
+                                
+                case 1 : return ((ElementRowViewModel<?>) rowViewModel).GetClassKind().getSimpleName().replace("Impl", "");
                 default : return "-";
             }
         }
@@ -90,6 +110,7 @@ public class CapellaObjectBrowserTreeRowViewModel implements RowModel
         switch (column)
         {
             case 0 : return String.class;
+            case 1 : return String.class;
             default : return null;
         }
     }
@@ -106,7 +127,6 @@ public class CapellaObjectBrowserTreeRowViewModel implements RowModel
     {
         return false;
     }
-
 
     /**
      * Sets the value provided by {@linkplain value} to the node view model, typically it should call a setter on the row view model
@@ -128,7 +148,8 @@ public class CapellaObjectBrowserTreeRowViewModel implements RowModel
     {
         switch (column) 
         {
-            case 0 : return "Row Type";
+            case 0 : return "Value";
+            case 1 : return "Row Type";
             default : return null;
         }
     }

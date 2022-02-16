@@ -23,6 +23,8 @@
  */
 package DstController;
 
+import static Utils.Operators.Operators.AreTheseEquals;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -35,6 +37,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.emf.common.notify.Notifier;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Enumerations.MappingDirection;
@@ -223,9 +228,9 @@ public final class DstController implements IDstController
      * @return {@linkplain Observable} of {@linkplain Boolean} 
      */
     @Override
-    public Observable<Boolean> HasAnyOpenSession()
+    public Observable<Boolean> HasAnyOpenSessionObservable()
     {
-        return this.capellaSessionService.HasAnyOpenSession();
+        return this.capellaSessionService.HasAnyOpenSessionObservable();
     }
     
     /**
@@ -287,7 +292,44 @@ public final class DstController implements IDstController
     @Override
     public boolean Map(IMappableThingCollection input, MappingDirection mappingDirection)
     {
-        return true;
+        if(mappingDirection == null)
+        {
+            mappingDirection = this.CurrentMappingDirection();
+        }
+        
+        Object resultAsObject = this.mappingEngine.Map(input);
+
+        if(!(resultAsObject instanceof ArrayList<?>))
+        {
+            return false;
+        }
+
+        @SuppressWarnings("unchecked")
+        var resultAsCollection = (ArrayList<MappedElementRowViewModel<? extends Thing, CapellaElement>>) resultAsObject;
+        
+        if(!resultAsCollection.isEmpty())
+        {
+            if (mappingDirection == MappingDirection.FromDstToHub
+                    && resultAsCollection.stream().allMatch(x -> x.GetHubElement() instanceof Thing))
+            {
+                this.dstMapResult.removeIf(x -> resultAsCollection.stream()
+                        .anyMatch(d -> AreTheseEquals(((Thing) d.GetHubElement()).getIid(), x.GetHubElement().getIid())));
+    
+                this.selectedDstMapResultForTransfer.clear();                
+                return this.dstMapResult.addAll(resultAsCollection);
+            }
+            else if (mappingDirection == MappingDirection.FromHubToDst
+                    && resultAsCollection.stream().allMatch(CapellaElement.class::isInstance))
+            {
+                this.hubMapResult.removeIf(x -> resultAsCollection.stream()
+                        .anyMatch(d -> AreTheseEquals(d.GetDstElement().getId(), x.GetDstElement().getId())));
+
+                this.selectedHubMapResultForTransfer.clear();
+                return this.hubMapResult.addAll(resultAsCollection);
+            }            
+        }
+        
+        return false;
     }
     
     /**

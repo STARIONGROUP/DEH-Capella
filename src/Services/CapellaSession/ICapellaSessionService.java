@@ -39,14 +39,7 @@ public interface ICapellaSessionService
      * 
      * @return an {@linkplain Observable} of {@linkplain Boolean}
      */
-    Observable<Boolean> HasAnyOpenSession();
-
-    /**
-     * Gets the model of the active session
-     * 
-     * @return a {@linkplain RootRowViewModel}, or null if no active session is found
-     */
-    RootRowViewModel GetModel();
+    Observable<Boolean> HasAnyOpenSessionObservable();
 
     /**
      * Gets the active {@linkplain Session}
@@ -56,10 +49,24 @@ public interface ICapellaSessionService
     Session GetActiveSession();
 
     /**
+     * Gets the models of the active sessions
+     * 
+     * @return a {@linkplain RootRowViewModel}, or null if no active session is found
+     */
+    RootRowViewModel GetModels();
+
+    /**
      * Gets the session corresponding to a semantic {@linkplain EObject} 
      * 
      * @param object the {@linkplain EObject} to retrieve the session it belongs to
      * @return the corresponding {@linkplain Session}
      */
     Session GetSession(EObject object);
+
+    /**
+     * Gets the value emitted by {@linkplain HasAnyOpenSessionObservable} indicating whether there is any session open
+     * 
+     * @return a {@linkplain Boolean} value
+     */
+    boolean HasAnyOpenSession();
 }

@@ -33,9 +33,10 @@ import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
 
 import Services.CapellaSession.ICapellaSessionService;
-import ViewModels.CapellaObjectBrowser.Rows.PackageRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.ComponentRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 
 class CapellaObjectBrowserTreeRowViewModelTestFixture
@@ -54,11 +55,11 @@ class CapellaObjectBrowserTreeRowViewModelTestFixture
     @Test
     public void VerifyGetValueFor()
     {
-        var componentPkg = mock(ComponentPkg.class);
-        when(componentPkg.eContents()).thenReturn(new BasicEList<EObject>());
-        var rowViewModel = new PackageRowViewModel(null, componentPkg);
-        assertEquals(componentPkg.getClass().getSimpleName(), this.rowModel.getValueFor(rowViewModel, 0));
-        assertEquals("", this.rowModel.getValueFor(new RootRowViewModel(mock(ICapellaSessionService.class), new ArrayList<EObject>()), 0));
+        var component = mock(PhysicalComponent.class);
+        when(component.eContents()).thenReturn(new BasicEList<EObject>());
+        var rowViewModel = new ComponentRowViewModel(null, component);
+        assertNotEquals(component.getClass().getSimpleName(), this.rowModel.getValueFor(rowViewModel, 0));
+        assertEquals(component.getClass().getSimpleName(), this.rowModel.getValueFor(rowViewModel, 1));
         assertEquals("-", this.rowModel.getValueFor("s", 0));
         assertEquals("-", this.rowModel.getValueFor(rowViewModel, 2));
     }
@@ -66,7 +67,7 @@ class CapellaObjectBrowserTreeRowViewModelTestFixture
     @Test
     public void VerifyGetColumnCount()
     {
-        assertEquals(1, this.rowModel.getColumnCount());
+        assertEquals(2, this.rowModel.getColumnCount());
     }
     
     @Test
@@ -85,7 +86,7 @@ class CapellaObjectBrowserTreeRowViewModelTestFixture
     @Test
     public void VerifyGetColumnName()
     {
-        assertEquals("Row Type", this.rowModel.getColumnName(0));
+        assertEquals("Value", this.rowModel.getColumnName(0));
         assertNull(this.rowModel.getColumnName(42));
     }
     

@@ -39,6 +39,7 @@ import DstController.IDstController;
 import HubController.IHubController;
 import Services.CapellaLog.ICapellaLogService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
+import ViewModels.Interfaces.ICapellaImpactViewViewModel;
 import ViewModels.Interfaces.IElementDefinitionImpactViewViewModel;
 import ViewModels.Interfaces.IImpactViewContextMenuViewModel;
 import ViewModels.Interfaces.IRequirementImpactViewViewModel;
@@ -56,6 +57,7 @@ class CapellaImpactViewPanelViewModelTestFixture
     private ICapellaLogService capellaLogService;
     private ICapellaMappingConfigurationService capellaMappingConfigurationService;
     private CapellaImpactViewPanelViewModel viewModel;
+    private ICapellaImpactViewViewModel capellaImpactViewViewModel;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -66,12 +68,13 @@ class CapellaImpactViewPanelViewModelTestFixture
         this.requirementImpactViewViewModel = mock(IRequirementImpactViewViewModel.class);
         this.transferControlViewModel = mock(ITransferControlViewModel.class);
         this.impactViewContextMenuViewModel = mock(IImpactViewContextMenuViewModel.class);
+        this.capellaImpactViewViewModel = mock(ICapellaImpactViewViewModel.class);
         this.capellaMappingConfigurationService = mock(ICapellaMappingConfigurationService.class);
         this.capellaLogService = mock(ICapellaLogService.class);
         
         this.viewModel = new CapellaImpactViewPanelViewModel(this.hubController, this.dstController, 
                 this.elementDefinitionImpactViewViewModel, this.requirementImpactViewViewModel,
-                this.transferControlViewModel, this.impactViewContextMenuViewModel,
+                this.transferControlViewModel, this.impactViewContextMenuViewModel, this.capellaImpactViewViewModel,
                 this.capellaMappingConfigurationService, this.capellaLogService);
     }
     

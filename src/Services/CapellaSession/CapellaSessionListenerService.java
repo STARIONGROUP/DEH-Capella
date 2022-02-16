@@ -32,7 +32,7 @@ import io.reactivex.Observable;
 
 /**
  * The {@linkplain CapellaSessionListenerService} is an implementation of the {@linkplain SessionManagerListener} for the Capella adapter.
- * This class observe changes in sirius {@linkplain SessionManager}.
+ * This class observes changes in sirius {@linkplain SessionManager}.
  */
 public class CapellaSessionListenerService implements ICapellaSessionListenerService
 {    

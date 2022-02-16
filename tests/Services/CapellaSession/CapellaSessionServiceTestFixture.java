@@ -71,7 +71,7 @@ class CapellaSessionServiceTestFixture
     public void VerifyHasAnyOpenSession()
     {
         var results = new ArrayList<Boolean>();
-        this.service.HasAnyOpenSession().subscribe(x -> results.add(x));
+        this.service.HasAnyOpenSessionObservable().subscribe(x -> results.add(x));
         this.sessionAdded.Value(mock(Session.class));
         this.sessionRemoved.Value(mock(Session.class));
         
@@ -82,10 +82,10 @@ class CapellaSessionServiceTestFixture
     @Test
     void VerifyGetModel()
     {
-        assertNull(this.service.GetModel());
+        assertNull(this.service.GetModels());
         this.sessionAdded.Value(mock(Session.class));
-        assertNull(this.service.GetModel());
+        assertNull(this.service.GetModels());
         this.sessionRemoved.Value(mock(Session.class));
-        assertNull(this.service.GetModel());
+        assertNull(this.service.GetModels());
     }
 }

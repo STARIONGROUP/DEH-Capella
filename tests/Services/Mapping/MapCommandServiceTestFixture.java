@@ -79,7 +79,7 @@ class MapCommandServiceTestFixture
         
         this.hasAnyOpenSession = new ObservableValue<Boolean>();
         this.isSessionOpen = new ObservableValue<Boolean>();
-        when(this.dstController.HasAnyOpenSession()).thenReturn(this.hasAnyOpenSession.Observable());
+        when(this.dstController.HasAnyOpenSessionObservable()).thenReturn(this.hasAnyOpenSession.Observable());
         when(this.hubController.GetIsSessionOpenObservable()).thenReturn(this.isSessionOpen.Observable());
                 
         this.service = new MapCommandService(this.selectionService, this.dstController, 

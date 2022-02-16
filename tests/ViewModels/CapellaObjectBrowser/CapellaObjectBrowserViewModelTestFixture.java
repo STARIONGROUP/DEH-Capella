@@ -74,7 +74,6 @@ class CapellaObjectBrowserViewModelTestFixture
         this.viewModel.IsTheTreeVisible().subscribe(x -> isTheTreeVisibleValues.add(x));
         var elements = new ArrayList<EObject>();
         elements.add(mock(PhysicalComponent.class));
-        assertDoesNotThrow(() -> this.viewModel.BuildTree("", elements));
 
         assertDoesNotThrow(() -> this.viewModel.BuildTree(elements));
         var session = mock(Session.class);
@@ -83,10 +82,9 @@ class CapellaObjectBrowserViewModelTestFixture
         when(session.getSessionResource()).thenReturn(sessionResource);
         when(this.capellaSessionService.GetSession(any(EObject.class))).thenReturn(session);
         assertDoesNotThrow(() -> this.viewModel.BuildTree(elements));
-        assertEquals(3, isTheTreeVisibleValues.size());
+        assertEquals(2, isTheTreeVisibleValues.size());
         assertTrue(isTheTreeVisibleValues.get(0));
         assertTrue(isTheTreeVisibleValues.get(1));
-        assertTrue(isTheTreeVisibleValues.get(2));
         
     }    
 }

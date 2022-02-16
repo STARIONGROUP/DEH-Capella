@@ -23,10 +23,10 @@
  */
 package ViewModels.CapellaObjectBrowser.Rows;
 
-import java.util.stream.Collectors;
-
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.cs.ComponentPkg;
+import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.Part;
+import org.polarsys.capella.core.data.information.Property;
 
 import Reactive.ObservableCollection;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
@@ -34,33 +34,33 @@ import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 
 /**
- * The {@linkplain PackageRowViewModel} is is the row view model that represents a {@linkplain Package}
+ * The {@linkplain ComponentRowViewModel} is is the row view model that represents a {@linkplain Component}
  */
-public class PackageRowViewModel extends ElementRowViewModel<ComponentPkg> implements IHaveContainedRows<IElementRowViewModel<?>>
+public class ComponentRowViewModel extends ElementRowViewModel<Component> implements IHaveContainedRows<IElementRowViewModel<? extends CapellaElement>>
 {
     /**
      * The {@linkplain ObservableCollection} of {@linkplain IElementRowViewModel}
      */
-    private ObservableCollection<IElementRowViewModel<?>> containedRows = new ObservableCollection<IElementRowViewModel<?>>();
-
+    private ObservableCollection<IElementRowViewModel<? extends CapellaElement>> containedRows = new ObservableCollection<IElementRowViewModel<? extends CapellaElement>>();
+        
     /**
      * Gets the contained row the implementing view model has
      * 
      * @return An {@linkplain ObservableCollection} of {@linkplain IElementRowViewModel}
      */
     @Override
-    public ObservableCollection<IElementRowViewModel<?>> GetContainedRows()
+    public ObservableCollection<IElementRowViewModel<? extends CapellaElement>> GetContainedRows()
     {
         return this.containedRows;
     }
-
+    
     /**
-     * Initializes a new {@linkplain PackageRowViewModel}
+     * Initializes a new {@linkplain ComponentRowViewModel}
      * 
      * @param parent the {@linkplain IRowViewModel} parent of this view model
-     * {@linkplain package}
+     * @param element the {@linkplain Component} represented in this row view model
      */
-    public PackageRowViewModel(IElementRowViewModel<?> parent, ComponentPkg element)
+    public ComponentRowViewModel(IElementRowViewModel<?> parent, Component element)
     {
         super(parent, element);
         this.ComputeContainedRows();
@@ -72,25 +72,20 @@ public class PackageRowViewModel extends ElementRowViewModel<ComponentPkg> imple
     @Override
     public void ComputeContainedRows() 
     {
-        for (CapellaElement element : this.GetElement().eContents().stream()
-                .filter(x -> x instanceof CapellaElement)
-                .map(x -> (CapellaElement)x)
-                .collect(Collectors.toList()))
+        for (var element : this.GetElement().eContents())
         {
-            this.ComputeContainedRow(element);
-        }
-    }
-
-    /**
-     * Computes the contained rows of this row view model based on the provided {@linkplain Element}
-     * 
-     * @param element the {@linkplain CapellaElement}
-     */
-    protected void ComputeContainedRow(CapellaElement element)
-    {
-        if(element instanceof ComponentPkg)
-        {
-            this.containedRows.add(new PackageRowViewModel(this, (ComponentPkg)element));
+            if(element instanceof Part)
+            {
+                continue;
+            }
+            if(element instanceof Property)
+            {
+                this.GetContainedRows().add(new PropertyRowViewModel(this, (Property)element));
+            }
+            else if(element instanceof Component)
+            {
+                this.GetContainedRows().add(new ComponentRowViewModel(this, (Component)element));
+            }
         }
     }
 }

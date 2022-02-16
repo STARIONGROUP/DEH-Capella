@@ -26,11 +26,13 @@ package DstController;
 import java.util.Collection;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
 import Services.MappingEngineService.IMappableThingCollection;
+import Utils.Ref;
 import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.Thing;
 import io.reactivex.Observable;
@@ -125,5 +127,5 @@ public interface IDstController extends IDstControllerBase
      * 
      * @return {@linkplain Observable} of {@linkplain Boolean} 
      */
-    Observable<Boolean> HasAnyOpenSession();
+    Observable<Boolean> HasAnyOpenSessionObservable();
 }

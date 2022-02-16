@@ -54,14 +54,6 @@ public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewMo
     void BuildTree(Collection<EObject> elements);
     
     /**
-     * Creates the {@linkplain OutlineModel} tree from the provided {@linkplain Collection} of {@linkplain Class}
-     * 
-     * @param name the name of the root element of the tree
-     * @param elements the {@linkplain Collection} of {@linkplain CapellaElement}
-     */
-    void BuildTree(String name, Collection<EObject> elements);
-
-    /**
      * Gets the {@linkplain Observable} of {@linkplain ElementRowViewModel<? extends CapellaElement>} that yields the selected element
      * 
      * @return an {@linkplain Observable} of {@linkplain ElementRowViewModel<? extends CapellaElement>}

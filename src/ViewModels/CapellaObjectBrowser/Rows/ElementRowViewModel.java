@@ -26,15 +26,15 @@ package ViewModels.CapellaObjectBrowser.Rows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.cs.ComponentPkg;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 
 /**
- * The {@linkplain ElementRowViewModel} is the row view model that represents any {@linkplain Class} in the {@linkplain MagicDrawObjectBrowser}
+ * The {@linkplain ElementRowViewModel} is the row view model that represents any {@linkplain CapellaElement} in the {@linkplain CapellaObjectBrowser}
  * 
- * @param TElement the type of {@linkplain Element} this row view model represents
+ * @param <TElement> the type of {@linkplain CapellaElement} this row view model represents
  */
 public abstract class ElementRowViewModel<TElement extends CapellaElement> implements IElementRowViewModel<TElement>
 {
@@ -224,9 +224,9 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
     {
         if(element != null)
         {
-            if(this.element instanceof ComponentPkg)
+            if(this.element instanceof NamedElement)
             {
-                this.name = ((ComponentPkg)this.element).getName();
+                this.name = ((NamedElement)this.element).getName();
             }
             else
             {
@@ -244,5 +244,17 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
     public Class<? extends CapellaElement> GetClassKind()
     {
         return this.GetElement().getClass();
+    }
+
+    /**
+     * Updates the represented {@linkplain CapellaElement} with the specified one
+     * 
+     * @param capellaElement the new {@linkplain CapellaElement}
+     */
+    @SuppressWarnings("unchecked")
+    public void UpdateElement(CapellaElement capellaElement)
+    {
+        this.element = (TElement)capellaElement;
+        this.UpdateProperties();
     }
 }
