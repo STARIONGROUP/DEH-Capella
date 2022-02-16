@@ -78,6 +78,12 @@ public enum RequirementType
      */
     public final String Label;
     
+    /**
+     * Initializes a new {@linkplain RequirementType}
+     * 
+     * @param label the label associated to the enumeration value
+     * @param clazz the class associated to the enumeration value
+     */
     private RequirementType(String label, Class<? extends Requirement> clazz)
     {
         this.Label = label;
@@ -94,6 +100,7 @@ public enum RequirementType
     {
         return this.Label;
     }
+    
     /**
      * Gets an instance of {@linkplain RequirementType} with the {@linkplain clazz} matching the provided {@linkplain Class} 
      * 
@@ -108,6 +115,7 @@ public enum RequirementType
                 .findFirst()
                 .orElse(RequirementType.Undefined);
     }
+    
     /**
      * Gets an instance of {@linkplain RequirementType} with the value or {@linkplain Label} matching the provided {@linkplain String} 
      * 

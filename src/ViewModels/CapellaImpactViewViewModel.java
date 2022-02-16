@@ -120,7 +120,6 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
             });
     }
 
-
     /**
      * Sets is selected property on the row view model that represents the provided {@linkplain Class}
      * 

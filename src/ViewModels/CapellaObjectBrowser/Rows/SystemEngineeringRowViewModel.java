@@ -45,7 +45,6 @@ public class SystemEngineeringRowViewModel extends ProjectStructuralElementRowVi
         super(parent, element, ComponentArchitecture.class);
     }
     
-
     /**
      * Adds to the contained element the corresponding row view model representing the provided {@linkplain TContainedElement}
      * 
