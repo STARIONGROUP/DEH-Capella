@@ -11,11 +11,11 @@ gen
 *.log
 
 # jar and class file
-/bin/*
+*/bin/*
 
 # lib
 
-/lib/*
+*/lib/*
 
 # BlueJ files
 *.ctxt
