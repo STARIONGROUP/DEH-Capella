@@ -12,6 +12,7 @@ gen
 
 # jar and class file
 */bin/*
+*/tests/bin/*
 
 # lib
 
