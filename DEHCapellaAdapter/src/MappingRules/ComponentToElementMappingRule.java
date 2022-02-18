@@ -1,7 +1,7 @@
 /*
  * ComponentToElementMappingRule.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -36,7 +36,9 @@ import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datatype.BooleanType;
 import org.polarsys.capella.core.data.information.datatype.StringType;
+import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
+import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
 import org.polarsys.capella.core.data.information.datavalue.NumericValue;
 
 import Enumerations.MappingDirection;
@@ -159,12 +161,15 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
     }
 
     /**
-     * @param mappedElement
+     * Maps the contained element of the provided {@linkplain mappedElement}
+     * 
+     * @param mappedElement the {@linkplain MappedElementDefinitionRowViewModel}
      */
     private void MapContainedElement(MappedElementDefinitionRowViewModel mappedElement)
     {
         for (var containedElement : mappedElement.GetDstElement().eContents()
-                .stream().filter(x -> x instanceof Component)
+                .stream()
+                .filter(x -> x instanceof Component)
                 .map(x -> (Component)x)
                 .collect(Collectors.toList()))
         {
@@ -173,7 +178,10 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
     }
     
     /**
-     * @param mappedElement
+     * Maps the provided contained element
+     * 
+     * @param container the {@linkplain ElementDefinition} container
+     * @param component the contained element to map
      */
     private void MapContainedElement(ElementDefinition container, Component component)
     {
@@ -183,7 +191,8 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
                 .orElseGet(() -> 
                 {
                     MappedElementDefinitionRowViewModel element = 
-                            new MappedElementDefinitionRowViewModel(component, MappingDirection.FromDstToHub);
+                            new MappedElementDefinitionRowViewModel(
+                                    this.GetOrCreateElementDefinition(component), component, MappingDirection.FromDstToHub);
                     
                     this.elements.add(element);
                     this.MapContainedElement(element);
@@ -326,6 +335,14 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
         {
             refValue.Set(((LiteralNumericValue)valueSpecification).getValue());
         }
+        else if(valueSpecification instanceof LiteralBooleanValue) 
+        {
+            refValue.Set(String.valueOf(((LiteralBooleanValue)valueSpecification).isValue()));
+        }
+        else if(valueSpecification instanceof LiteralStringValue) 
+        {
+            refValue.Set(((LiteralStringValue)valueSpecification).getValue());
+        }        
         
         return refValue.HasValue();
     }
@@ -347,7 +364,7 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
             {
                 ParameterType parameterType = null;
                 
-                if(property.getOwnedDefaultValue() instanceof NumericValue)
+                if(property.getOwnedDefaultValue() instanceof LiteralNumericValue)
                 {
                     parameterType = new SimpleQuantityKind();
 
@@ -361,11 +378,11 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
                         quantityKind.setDefaultScale(refScale.Get());
                     }
                 }                
-                else if(property.getOwnedDefaultValue() instanceof BooleanType)
+                else if(property.getOwnedDefaultValue() instanceof LiteralBooleanValue)
                 {
                     parameterType = new BooleanParameterType();
                 }
-                else if(property.getOwnedDefaultValue() instanceof StringType)
+                else if(property.getOwnedDefaultValue() instanceof LiteralStringValue)
                 {
                     parameterType = new TextParameterType();
                 }                

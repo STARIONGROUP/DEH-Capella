@@ -1,7 +1,7 @@
 /*
  * DstMappingConfigurationDialog.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -125,6 +125,7 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
     /**
      * Initializes this view visual components and properties
      */
+    @ExludeFromCodeCoverageGeneratedReport
     private void Initialize()
     {
         setTitle("Capella Mapping Configuration");
@@ -255,7 +256,7 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
         gbc_cancelButton.gridy = 0;
         buttonPane.add(this.cancelButton, gbc_cancelButton);
         
-        this.addComponentListener(new ComponentAdapter() 
+        this.addComponentListener(new @ExludeFromCodeCoverageGeneratedReport ComponentAdapter() 
         {
             /**
              * Invoked when the component's size changes
@@ -263,6 +264,7 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
              * @param componentEvent the {@linkplain ComponentEvent}
              */
             @Override
+            @ExludeFromCodeCoverageGeneratedReport
             public void componentResized(ComponentEvent componentEvent) 
             {
                 super.componentResized(componentEvent);

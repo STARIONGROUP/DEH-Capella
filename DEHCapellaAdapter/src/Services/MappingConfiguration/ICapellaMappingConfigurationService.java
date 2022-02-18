@@ -1,7 +1,7 @@
 /*
  * ICapellaMappingConfigurationService.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -26,6 +26,7 @@ package Services.MappingConfiguration;
 import java.util.Collection;
 
 import org.eclipse.emf.ecore.EObject;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 
@@ -37,8 +38,7 @@ public interface ICapellaMappingConfigurationService extends IMappingConfigurati
     /**
      * Loads the mapping configuration and generates the map result respectively
      * 
-     * @param elements a {@linkplain Collection} of {@code TDstElement}
      * @return a {@linkplain Collection} of {@linkplain IMappedElementRowViewModel}
      */
-    Collection<IMappedElementRowViewModel> LoadMapping(Collection<EObject> elements);
+    Collection<IMappedElementRowViewModel> LoadMapping();
 }

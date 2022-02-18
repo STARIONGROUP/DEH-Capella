@@ -1,7 +1,7 @@
 /*
  * ICapellaSessionService.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -23,8 +23,13 @@
  */
 package Services.CapellaSession;
 
+import java.util.HashMap;
+import java.util.List;
+
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
@@ -40,13 +45,6 @@ public interface ICapellaSessionService
      * @return an {@linkplain Observable} of {@linkplain Boolean}
      */
     Observable<Boolean> HasAnyOpenSessionObservable();
-
-    /**
-     * Gets the active {@linkplain Session}
-     * 
-     * @return a {@linkplain Session}
-     */
-    Session GetActiveSession();
 
     /**
      * Gets the models of the active sessions
@@ -69,4 +67,11 @@ public interface ICapellaSessionService
      * @return a {@linkplain Boolean} value
      */
     boolean HasAnyOpenSession();
+
+    /**
+     * Gets all the {@linkplain CapellaElement} from the currently open {@linkplain Session}s
+     * 
+     * @return a {@linkplain HashMap} of {@linkplain URI} and a {@linkplain List} of {@linkplain CapellaElement}
+     */
+    HashMap<URI, List<CapellaElement>> GetAllCapellaElementsFromOpenSessions();
 }

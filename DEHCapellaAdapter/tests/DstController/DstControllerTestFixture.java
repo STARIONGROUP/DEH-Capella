@@ -1,7 +1,7 @@
 /*
  * DstControllerTestFixture.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -25,14 +25,24 @@ package DstController;
 
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.pde.internal.core.project.RequirementSpecification;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.verification.Times;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.polarsys.capella.core.data.requirement.SystemUserRequirement;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
@@ -42,18 +52,26 @@ import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
 import Services.MappingEngineService.IMappingEngineService;
+import Utils.Ref;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
+import ViewModels.Rows.MappedRequirementRowViewModel;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
+import cdp4common.engineeringmodeldata.ElementUsage;
 import cdp4common.engineeringmodeldata.Iteration;
+import cdp4common.engineeringmodeldata.Parameter;
+import cdp4common.engineeringmodeldata.ParameterValueSet;
+import cdp4common.engineeringmodeldata.Requirement;
+import cdp4common.engineeringmodeldata.RequirementsGroup;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
+import cdp4common.types.ValueArray;
 import cdp4dal.exceptions.TransactionException;
 import cdp4dal.operations.ThingTransaction;
 
-class DstControllerTestFixture
+public class DstControllerTestFixture
 {
     private IMappingEngineService mappingEngine;
     private DstController controller;
@@ -94,18 +112,85 @@ class DstControllerTestFixture
     public void VerifyLoadMapping()
     {
         assertDoesNotThrow(() -> this.controller.LoadMapping());
-        verify(this.mappingConfigurationService, times(1)).LoadMapping(any());
+        
+        var loadedMapping = new ArrayList<IMappedElementRowViewModel>();
+        
+        loadedMapping.addAll(
+                Arrays.asList(
+                    (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
+                    new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromDstToHub),
+                    (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
+                    new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromHubToDst),
+                    (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
+                    new MappedRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
+                    (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
+                    new MappedRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
+                    ));
+        
+        when(this.mappingConfigurationService.LoadMapping()).thenReturn(loadedMapping);
+        when(this.mappingEngine.Map(any())).thenReturn(loadedMapping);
+        assertDoesNotThrow(() -> this.controller.LoadMapping());
+        
+        verify(this.mappingConfigurationService, times(2)).LoadMapping();
     }
     
     @Test
     public void VerifyMap()
     {
         assertFalse(this.controller.Map(mock(IMappableThingCollection.class), MappingDirection.FromDstToHub));
+        var mapResult = new ArrayList<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
+        
+        mapResult.addAll(
+            Arrays.asList(
+                (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
+                new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromDstToHub),
+                (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
+                new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromHubToDst),
+                (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
+                new MappedRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
+                (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
+                new MappedRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
+                ));
+        
+        when(this.mappingEngine.Map(any())).thenReturn(mapResult);
+        assertTrue(this.controller.Map(mock(IMappableThingCollection.class), MappingDirection.FromDstToHub));
+        assertTrue(this.controller.Map(mock(IMappableThingCollection.class), MappingDirection.FromHubToDst));
+        assertTrue(this.controller.Map(mock(IMappableThingCollection.class), null));
     }
     
     @Test
     public void VerifyTransfer() throws TransactionException
     {
+        var requirementSpecification = new RequirementsSpecification();
+        requirementSpecification.getGroup().add(new RequirementsGroup());
+        requirementSpecification.getRequirement().add(new Requirement());
+        
+        var elementDefinition = new ElementDefinition();
+        var elementUsage = new ElementUsage();
+        elementUsage.setElementDefinition(elementDefinition);
+        elementDefinition.getContainedElement().add(elementUsage);
+        
+        var parameter = new Parameter();
+        var parameterValueSet = new ParameterValueSet();
+        parameterValueSet.setManual(new ValueArray(Arrays.asList("-"), String.class));
+        parameterValueSet.setReference(new ValueArray(Arrays.asList("-"), String.class));
+        parameterValueSet.setComputed(new ValueArray(Arrays.asList("-"), String.class));
+        parameter.getValueSet().add(parameterValueSet);
+        elementDefinition.getParameter().add(parameter);
+        
+        when(this.hubController.TryGetThingById(any(), any())).thenAnswer(
+                new Answer()
+                {
+                    @Override
+                    public Object answer(InvocationOnMock arg0) throws Throwable
+                    {
+                        ((Ref<Parameter>)arg0.getArguments()[1]).Set(parameter);
+                        return true;
+                    }
+                });
+        
+        this.controller.GetSelectedDstMapResultForTransfer().add(requirementSpecification);
+        this.controller.GetSelectedDstMapResultForTransfer().add(elementDefinition);
         when(this.hubController.GetIterationTransaction()).thenReturn(Pair.of(new Iteration(), mock(ThingTransaction.class)));
         this.controller.ChangeMappingDirection();
         assertTrue(this.controller.Transfer());

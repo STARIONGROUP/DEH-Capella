@@ -1,7 +1,7 @@
 /*
  * PropertyValueRowViewModel.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -33,18 +33,7 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
  * The {@linkplain PropertyDataValueRowViewModel} is a row view model that represents a {@linkplain DataValue}
  */
 public class PropertyDataValueRowViewModel extends PropertyValueBaseRowViewModel<DataValue>
-{    
-    /**
-     * Initializes a new {@linkplain ComponentRowViewModel}
-     * 
-     * @param parent the {@linkplain IRowViewModel} parent of this view model
-     * @param element the {@linkplain DataValue} represented by this row view model
-     */
-    public PropertyDataValueRowViewModel(IElementRowViewModel<?> parent, DataValue element)
-    {
-        super(parent, element);
-    }
-    
+{
     /**
      * Initializes a new {@linkplain ComponentRowViewModel}
      * 

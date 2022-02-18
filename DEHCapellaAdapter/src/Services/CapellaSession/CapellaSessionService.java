@@ -1,7 +1,7 @@
 /*
  * CapellaModelService.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -24,6 +24,10 @@
 package Services.CapellaSession;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,11 +35,9 @@ import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
-import org.eclipse.sirius.business.api.session.SessionManager;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Reactive.ObservableValue;
-import Services.CapellaSelection.ICapellaSelectionService;
-import ViewModels.CapellaObjectBrowser.Rows.ProjectRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
 
@@ -55,95 +57,15 @@ public class CapellaSessionService implements ICapellaSessionService
     private final ICapellaSessionListenerService sessionListener;
 
     /**
-     * The {@linkplain ICapellaSelectionService} instance
+     * The {@linkplain ISiriusSessionManagerWrapper} instance
      */
-    private final ICapellaSelectionService selectionService;
+    private ISiriusSessionManagerWrapper sessionManager;
     
     /**
-     * The active session
-     */
-    private Session activeSession;
-
-    /**
-     * Gets the active {@linkplain Session}
-     * 
-     * @return a {@linkplain Session}
-     */
-    @Override
-    public Session GetActiveSession()
-    {
-        if(this.activeSession == null)
-        {
-            this.SetActiveSession(null);
-        }
-        
-        return this.activeSession;
-    }
-        
-    /**
-     * Initializes a new {@linkplain CapellaSessionService}
-     * 
-     * @param sessionListener the {@linkplain ICapellaSessionListenerService} instance
-     * @param selectionService the {@linkplain ICapellaSelectionService} instance
-     */
-    public CapellaSessionService(ICapellaSessionListenerService sessionListener, ICapellaSelectionService selectionService)
-    {
-        this.sessionListener = sessionListener;
-        this.selectionService = selectionService;
-        
-        SessionManager.INSTANCE.addSessionsListener(this.sessionListener);
-        
-        this.selectionService.SelectionChanged().subscribe(x -> 
-            this.SetActiveSession(SessionManager.INSTANCE.getSession(x)));
-              
-        this.sessionListener.SessionAdded()
-            .subscribe(x -> this.SetActiveSession(x));
-        
-        this.sessionListener.SessionRemoved()
-            .subscribe(x -> this.SetActiveSession(null));
-    }
-
-    /**
-     * Gets the session corresponding to a semantic {@linkplain EObject} 
-     * 
-     * @param object the {@linkplain EObject} to retrieve the session it belongs to
-     * @return the corresponding {@linkplain Session}
-     */
-    @Override
-    public Session GetSession(EObject object)
-    {
-        return SessionManager.INSTANCE.getSession(object);
-    }
-    
-    /**
-     * Sets the active session
-     * 
-     * @param session the new {@linkplain Session} null if one session got removed/closed
-     */
-    private void SetActiveSession(Session session)
-    {
-        if(session != null)
-        {
-            this.activeSession = session;
-        }
-        else
-        {
-            this.activeSession = this.HasAnyActiveSession() 
-                    ? SessionManager.INSTANCE.getSessions()
-                            .stream()
-                            .reduce((first, second) -> second)
-                            .get()
-                    : null;
-        }
-        
-        this.hasAnyOpenSession.Value(this.HasAnyActiveSession());
-    }
-    
-    /**
-     * Backing field for {@linkplain HasAnyOpenSession}
+     * Backing field for {@linkplain HasAnyOpenSessionObservable}
      */
     private ObservableValue<Boolean> hasAnyOpenSession = new ObservableValue<Boolean>(false, Boolean.class);
-    
+
     /**
      * Gets the {@linkplain Observable} of value indicating whether there is any session open
      * 
@@ -156,6 +78,41 @@ public class CapellaSessionService implements ICapellaSessionService
     }
     
     /**
+     * Initializes a new {@linkplain CapellaSessionService}
+     * 
+     * @param sessionListener the {@linkplain ICapellaSessionListenerService} instance
+     * @param sessionManager the {@linkplain ISiriusSessionManagerWrapper} instance
+     */
+    public CapellaSessionService(ICapellaSessionListenerService sessionListener, ISiriusSessionManagerWrapper sessionManager)
+    {
+        this.sessionListener = sessionListener;
+        this.sessionManager = sessionManager;
+
+        this.sessionManager.AddListener(this.sessionListener);
+
+        this.sessionListener.SessionUpdated()
+            .subscribe(x -> this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession()));
+            
+        this.sessionListener.SessionAdded()
+            .subscribe(x -> this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession()));
+        
+        this.sessionListener.SessionRemoved()
+            .subscribe(x -> this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession()));
+    }
+
+    /**
+     * Gets the session corresponding to a semantic {@linkplain EObject} 
+     * 
+     * @param object the {@linkplain EObject} to retrieve the session it belongs to
+     * @return the corresponding {@linkplain Session}
+     */
+    @Override
+    public Session GetSession(EObject object)
+    {
+        return this.sessionManager.GetSession(object);
+    }
+        
+    /**
      * Gets the value emitted by {@linkplain HasAnyOpenSessionObservable} indicating whether there is any session open
      * 
      * @return a {@linkplain Boolean} value
@@ -163,26 +120,9 @@ public class CapellaSessionService implements ICapellaSessionService
     @Override
     public boolean HasAnyOpenSession()
     {
-        return this.HasAnyActiveSession();
+        return this.sessionManager.HasAnyOpenSession();
     }
     
-    /**
-     * Gets a value indicating whether there is any active session in the workspace
-     * 
-     * @return a {@linkplain boolean}
-     */
-    private boolean HasAnyActiveSession()
-    {
-        try
-        {
-            return !SessionManager.INSTANCE.getSessions().isEmpty();
-        }
-        catch(Exception exception)
-        {
-            this.logger.catching(exception);
-            return false;
-        }
-    }
     
     /**
      * Gets the models of the active sessions
@@ -192,7 +132,7 @@ public class CapellaSessionService implements ICapellaSessionService
     @Override
     public RootRowViewModel GetModels()
     {
-        if(!this.HasAnyActiveSession())
+        if(!this.sessionManager.HasAnyOpenSession())
         {
             this.logger.info("No active session has been found!");
             return null;
@@ -200,20 +140,55 @@ public class CapellaSessionService implements ICapellaSessionService
         
         var rootRowViewModel = new RootRowViewModel("Capella Models");
         
-        for (var session : SessionManager.INSTANCE.getSessions())
+        this.ProcessSessionsElements((uri, notifiers) -> rootRowViewModel.GetContainedRows().add(new RootRowViewModel(URI.decode(uri.lastSegment()), notifiers)));
+        
+        return rootRowViewModel;
+    }
+
+    /**
+     * Loops through all {@linkplain Notifier} element from all the open {@linkplain Session}s
+     * and accept a {@linkplain BiConsumer} on them
+     * 
+     * @param action the {@linkplain BiConsumer} of {@linkplain URI} and {@linkplain ArrayList} of {@linkplain Notifier}.
+     * The {@linkplain URI} identifies the {@linkplain Session} to which the elements from the array belongs to
+     */
+    private void ProcessSessionsElements(BiConsumer<URI, ArrayList<Notifier>> action)
+    {
+        for (var session : this.sessionManager.GetSessions())
         {
             Notifier element;
             var elements = new ArrayList<Notifier>();
             var contents = session.getTransactionalEditingDomain().getResourceSet().getAllContents();
             
-            while((element = contents.next()) !=null)
+            while(contents.hasNext() && (element = contents.next()) !=null)
             {
                 elements.add((Notifier)element);
             }
             
-            rootRowViewModel.GetContainedRows().add(new RootRowViewModel(URI.decode(session.getSessionResource().getURI().lastSegment()) ,elements));
+            action.accept(session.getSessionResource().getURI(), elements);
         }
+    }
+    
+    /**
+     * Gets all the {@linkplain CapellaElement} from the currently open {@linkplain Session}s
+     * 
+     * @return a {@linkplain HashMap} of {@linkplain URI} and a {@linkplain List} of {@linkplain CapellaElement}
+     */
+    @Override
+    public HashMap<URI, List<CapellaElement>> GetAllCapellaElementsFromOpenSessions()
+    {
+        var sessionAndObjectsMap = new HashMap<URI, List<CapellaElement>>();
         
-        return rootRowViewModel;
+        this.ProcessSessionsElements((uri, notifiers) -> 
+        {
+            var elements = notifiers.stream()
+                    .filter(x -> x instanceof CapellaElement)
+                    .map(x -> (CapellaElement)x)
+                    .collect(Collectors.toList());
+            
+            sessionAndObjectsMap.putIfAbsent(uri, elements);
+        });
+        
+        return sessionAndObjectsMap;
     }
 }
