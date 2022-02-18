@@ -1,7 +1,7 @@
 /*
  * ElementDefinitionImpactViewViewModelTestFixture.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -41,12 +41,14 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Reactive.ObservableCollection;
 import Utils.Ref;
+import ViewModels.ObjectBrowser.ElementDefinitionTree.Rows.ElementDefinitionRowViewModel;
 import ViewModels.ObjectBrowser.Rows.IterationRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.Iteration;
+import cdp4common.sitedirectorydata.DomainOfExpertise;
 import io.reactivex.Observable;
 import DstController.IDstController;
 import HubController.IHubController;
@@ -56,10 +58,16 @@ class ElementDefinitionImpactViewViewModelTestFixture
     private IDstController dstController;
     private IHubController hubController;
     private ElementDefinitionImpactViewViewModel viewModel;
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, EObject>> elements;
+    private ArrayList<MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>> elements;
     private Iteration iteration;
     private ObservableCollection<Thing> selectedDstMapResultForTransfer;
     private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> dstMapResult;
+    private ElementDefinition elementDefinition0;
+    private ElementDefinition elementDefinition1;
+    private ElementDefinition elementDefinition2;
+    private MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement> mappedElement0;
+    private MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement> mappedElement1;
+    private MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement> mappedElement2;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -69,7 +77,7 @@ class ElementDefinitionImpactViewViewModelTestFixture
         
         this.SetupMockedHubModel();
         
-        when(this.hubController.GetIsSessionOpenObservable()).thenReturn(Observable.fromArray(true, true));
+        when(this.hubController.GetIsSessionOpenObservable()).thenReturn(Observable.fromArray(false, true));
         when(this.hubController.GetSessionEventObservable()).thenReturn(Observable.fromArray(false, false));
         when(this.hubController.GetIsSessionOpen()).thenReturn(true);
         when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
@@ -91,39 +99,84 @@ class ElementDefinitionImpactViewViewModelTestFixture
     @Test
     public void VerifyComputeDifferences() throws Exception
     {
+        this.SetupModelElements();
+        
         var timesTheBrowserTreeModelHasBeenUpdated = new Ref<Integer>(Integer.class, 0);
         
         this.viewModel.BrowserTreeModel.Observable().subscribe(x -> 
             timesTheBrowserTreeModelHasBeenUpdated.Set(timesTheBrowserTreeModelHasBeenUpdated.Get() + 1));
         
-        ElementDefinition elementDefinition0 = new ElementDefinition();
-        elementDefinition0.setIid(UUID.randomUUID());
-        ElementDefinition elementDefinition1 = new ElementDefinition();
-        elementDefinition1.setIid(UUID.randomUUID());
-        ElementDefinition elementDefinition2 = new ElementDefinition();
-        elementDefinition2.setIid(UUID.randomUUID());
+        this.dstMapResult.addAll(this.elements);
+        Callable<Integer> treeRows = () -> ((IterationRowViewModel)(this.viewModel.GetBrowserTreeModel().getRoot()))
+                                            .GetContainedRows().size();
+        assertEquals(2, treeRows.call());
+        this.dstMapResult.clear();
+        assertEquals(0, treeRows.call());
+        this.iteration.getElement().add(elementDefinition0);
+        when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
+        this.dstMapResult.addAll(elements);
+        assertEquals(3, treeRows.call());
         
-        var mappedElement0 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
-        when(mappedElement0.GetHubElement()).thenReturn(elementDefinition0);
-        var mappedElement1 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        assertEquals(3, timesTheBrowserTreeModelHasBeenUpdated.Get());
+    }
+    
+    @Test
+    public void VerifySwitchIsSelected()
+    {
+        this.SetupModelElements();
+        this.iteration.getElement().addAll(Arrays.asList(this.elementDefinition0, this.elementDefinition1, this.elementDefinition2));
+        var dstMapResultToTransfer = new ObservableCollection<Thing>();
+        when(this.dstController.GetSelectedDstMapResultForTransfer()).thenReturn(dstMapResultToTransfer);
+        when(this.hubController.GetIsSessionOpenObservable()).thenReturn(Observable.fromArray(false, true));
+        when(this.hubController.GetIsSessionOpen()).thenReturn(false);
+        this.viewModel = new ElementDefinitionImpactViewViewModel(this.hubController, this.dstController);
+        assertDoesNotThrow(() -> dstMapResultToTransfer.addAll(Arrays.asList(this.elementDefinition0)));
+        assertDoesNotThrow(() -> dstMapResultToTransfer.Remove(this.elementDefinition0));
+    }
+
+    @Test
+    public void VerifyOnSelectionChanged()
+    {
+        this.SetupModelElements();
+        var elementDefinitionRow = new ElementDefinitionRowViewModel(this.elementDefinition0, null);
+        assertFalse(elementDefinitionRow.GetIsSelected());
+        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(elementDefinitionRow));
+        assertFalse(elementDefinitionRow.GetIsSelected());
+        this.dstMapResult.add(this.mappedElement0);
+        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(elementDefinitionRow));
+        assertTrue(elementDefinitionRow.GetIsSelected());
+        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(elementDefinitionRow));
+        assertFalse(elementDefinitionRow.GetIsSelected());
+        verify(this.dstController, times(4)).GetSelectedDstMapResultForTransfer();
+    }
+    
+    private void SetupModelElements()
+    {
+        var owner = new DomainOfExpertise();
+        owner.setName("Owner");
+        owner.setShortName("o");
+        this.elementDefinition0 = new ElementDefinition();
+        this.elementDefinition0.setIid(UUID.randomUUID());
+        this.elementDefinition0.setOwner(owner);
+        this.elementDefinition1 = new ElementDefinition();
+        this.elementDefinition1.setIid(UUID.randomUUID());
+        this.elementDefinition1.setOwner(owner);
+        this.elementDefinition2 = new ElementDefinition();
+        this.elementDefinition2.setIid(UUID.randomUUID());
+        this.elementDefinition2.setOwner(owner);
+        
+        this.mappedElement0 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        when(mappedElement0.GetHubElement()).thenReturn(elementDefinition0.clone(false));
+        this.mappedElement1 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement1.GetHubElement()).thenReturn(elementDefinition1);
-        var mappedElement2 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement2 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement2.GetHubElement()).thenReturn(elementDefinition2);
 
         assertEquals(1, this.viewModel.GetBrowserTreeModel().getRowCount());
                 
-        var elements = new ArrayList<MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>>();
-        elements.add(mappedElement0);
-        elements.add(mappedElement1);
-        elements.add(mappedElement2);
-        
-        this.dstMapResult.addAll(elements);
-        Callable<Integer> treeRows = () -> ((IterationRowViewModel)(this.viewModel.GetBrowserTreeModel().getRoot()))
-                                            .GetContainedRows().size();
-        assertEquals(0, treeRows.call());
-        this.dstMapResult.clear();
-        assertEquals(0, treeRows.call());
-        
-        assertEquals(1, timesTheBrowserTreeModelHasBeenUpdated.Get());
+        this.elements = new ArrayList<MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>>();
+        elements.add(this.mappedElement0);
+        elements.add(this.mappedElement1);
+        elements.add(this.mappedElement2);
     }
 }

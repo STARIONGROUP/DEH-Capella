@@ -1,7 +1,7 @@
 /*
  * RootRowViewModel.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -50,6 +50,7 @@ public class RootRowViewModel extends ProjectStructuralElementRowViewModel<Struc
      * Initializes a new {@linkplain RootRowViewModel}
      * 
      * @param name the name of this row
+     * @param elements the {@linkplain Collection} of {@linkplain Notifier}
      */
     public RootRowViewModel(String name, Collection<Notifier> elements)
     {
@@ -76,7 +77,9 @@ public class RootRowViewModel extends ProjectStructuralElementRowViewModel<Struc
     }
 
     /**
-     * @param element
+     * Adds to the contained element the corresponding row view model representing the provided {@linkplain CapellaElement}
+     * 
+     * @param element the {@linkplain CapellaElement}
      */
     @Override
     protected void AddToContainedRows(CapellaElement element)

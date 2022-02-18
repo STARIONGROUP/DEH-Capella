@@ -1,7 +1,7 @@
 /*
  * DstController.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski 
  *
@@ -37,9 +37,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.emf.common.notify.Notifier;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Enumerations.MappingDirection;
@@ -53,8 +50,14 @@ import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
 import Services.MappingEngineService.IMappingEngineService;
 import Utils.Ref;
+import Utils.Stereotypes.CapellaComponentCollection;
+import Utils.Stereotypes.CapellaRequirementCollection;
+import Utils.Stereotypes.HubElementCollection;
+import Utils.Stereotypes.HubRequirementCollection;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
+import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
+import ViewModels.Rows.MappedRequirementRowViewModel;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.Definition;
 import cdp4common.commondata.Thing;
@@ -262,25 +265,62 @@ public final class DstController implements IDstController
     {
         StopWatch timer = StopWatch.createStarted();
         
-        Collection<IMappedElementRowViewModel> things = this.mappingConfigurationService.LoadMapping(null);
-            
-        boolean result = true;
+        var mappedElements = this.mappingConfigurationService.LoadMapping();
         
+        var allMappedCapellaComponents = new CapellaComponentCollection();
+        var allMappedCapellaRequirements = new CapellaRequirementCollection();
+        var allMappedHubElements = new HubElementCollection();
+        var allMappedHubRequirements = new HubRequirementCollection();
+        
+        mappedElements.stream()
+            .filter(x -> x.GetMappingDirection() == MappingDirection.FromDstToHub)
+            .forEach(x -> SortMappedElementByType(allMappedCapellaComponents, allMappedCapellaRequirements, x));
+    
+        mappedElements.stream()
+            .filter(x -> x.GetMappingDirection() == MappingDirection.FromHubToDst)
+            .forEach(x -> SortMappedElementByType(allMappedHubElements, allMappedHubRequirements, x));
+    
         this.dstMapResult.clear();
         this.hubMapResult.clear();
-                
+        
+        var result = this.Map(allMappedCapellaComponents, MappingDirection.FromDstToHub)
+                   & this.Map(allMappedCapellaRequirements, MappingDirection.FromDstToHub)
+                   & this.Map(allMappedHubElements, MappingDirection.FromHubToDst)
+                   & this.Map(allMappedHubRequirements, MappingDirection.FromHubToDst);
+    
         timer.stop();
+    
         
         if(!result)
         {
-            this.logService.Append(String.format("Could not load %s saved mapped things for some reason, check the log for details", things.size()), Level.ERROR);
-            things.clear();
+            this.logService.Append(String.format("Could not load %s saved mapped things for some reason, check the log for details", mappedElements.size()), Level.ERROR);
+            mappedElements.clear();
             return;
         }
         
-        this.logService.Append(String.format("Loaded %s saved mapping, done in %s ms", things.size(), timer.getTime(TimeUnit.MILLISECONDS)));
+        this.logService.Append(String.format("Loaded %s saved mapping, done in %s ms", mappedElements.size(), timer.getTime(TimeUnit.MILLISECONDS)));
     }
 
+    /**
+     * Sorts the {@linkplain IMappedElementRowViewModel} and adds it to the relevant collection of one of the two provided
+     * 
+     * @param allMappedElement the {@linkplain Collection} of {@linkplain MappedElementDefinitionRowViewModel}
+     * @param allMappedRequirements the {@linkplain Collection} of {@linkplain MappedRequirementRowViewModel}
+     * @param mappedRowViewModel the {@linkplain IMappedElementRowViewModel} to sort
+     */
+    private void SortMappedElementByType(ArrayList<MappedElementDefinitionRowViewModel> allMappedElement,
+            ArrayList<MappedRequirementRowViewModel> allMappedRequirements, IMappedElementRowViewModel mappedRowViewModel)
+    {
+        if(mappedRowViewModel.GetTThingClass().isAssignableFrom(ElementDefinition.class))
+        {
+            allMappedElement.add((MappedElementDefinitionRowViewModel) mappedRowViewModel);
+        }
+        else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(RequirementsSpecification.class))
+        {
+            allMappedRequirements.add((MappedRequirementRowViewModel) mappedRowViewModel);
+        }
+    }
+    
     /**
      * Maps the {@linkplain input} by calling the {@linkplain IMappingEngine}
      * and assign the map result to the dstMapResult or the hubMapResult
@@ -292,6 +332,11 @@ public final class DstController implements IDstController
     @Override
     public boolean Map(IMappableThingCollection input, MappingDirection mappingDirection)
     {
+        if(input.isEmpty())
+        {
+            return true;
+        }
+        
         if(mappingDirection == null)
         {
             mappingDirection = this.CurrentMappingDirection();
@@ -319,7 +364,7 @@ public final class DstController implements IDstController
                 return this.dstMapResult.addAll(resultAsCollection);
             }
             else if (mappingDirection == MappingDirection.FromHubToDst
-                    && resultAsCollection.stream().allMatch(CapellaElement.class::isInstance))
+                    && resultAsCollection.stream().allMatch(x -> x.GetDstElement() instanceof CapellaElement))
             {
                 this.hubMapResult.removeIf(x -> resultAsCollection.stream()
                         .anyMatch(d -> AreTheseEquals(d.GetDstElement().getId(), x.GetDstElement().getId())));

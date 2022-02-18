@@ -1,7 +1,7 @@
 /*
  * CapellaImpactViewViewModel.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -25,32 +25,30 @@ package ViewModels;
 
 import static Utils.Operators.Operators.AreTheseEquals;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Optional;
 
-import org.eclipse.emf.common.notify.Notifier;
-import org.eclipse.sirius.business.api.session.Session;
+import javax.swing.tree.TreeModel;
+
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import DstController.IDstController;
-import Reactive.ObservableCollection;
+import Enumerations.MappingDirection;
+import HubController.IHubController;
 import Services.CapellaSession.ICapellaSessionService;
 import Utils.Ref;
 import ViewModels.CapellaObjectBrowser.CapellaObjectBrowserTreeRowViewModel;
 import ViewModels.CapellaObjectBrowser.CapellaObjectBrowserTreeViewModel;
 import ViewModels.CapellaObjectBrowser.CapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
-import ViewModels.CapellaObjectBrowser.Rows.ComponentRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import ViewModels.Interfaces.ICapellaImpactViewViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
-import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
-import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.Thing;
+import cdp4common.engineeringmodeldata.Iteration;
+import io.reactivex.Observable;
 
 /**
  * The {@linkplain CapellaImpactViewViewModel} is the main view model for the requirement impact view in the impact view panel
@@ -121,7 +119,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     }
 
     /**
-     * Sets is selected property on the row view model that represents the provided {@linkplain Class}
+     * Sets is selected property on the row view model that represents the provided {@linkplain CapellaElement}
      * 
      * @param element The {@linkplain CapellaElement} to find the corresponding row view model
      * @param shouldSelect A value indicating whether the row view model should set as selected
@@ -179,8 +177,8 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
      * @param refElement the {@linkplain Ref} of {@linkplain TElementRowViewModel} as ref parameter
      */
     @SuppressWarnings("unchecked")
-    private boolean TryGetRowViewModel(
-            Collection<IElementRowViewModel<? extends CapellaElement>> childrenCollection, String id, Ref<ElementRowViewModel<? extends CapellaElement>> refElement)
+    private boolean TryGetRowViewModel(Collection<IElementRowViewModel<? extends CapellaElement>> childrenCollection, 
+            String id, Ref<ElementRowViewModel<? extends CapellaElement>> refElement)
     {
         if(childrenCollection == null || childrenCollection.isEmpty())
         {
@@ -264,9 +262,10 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
      * Compute eligible rows where the represented {@linkplain Thing} can be transfered,
      * and return the filtered collection for feedback application on the tree
      * 
-     * @param selectedRow the collection of selected view model {@linkplain ComponentRowViewModel}
+     * @param selectedRow the selected view model {@linkplain ElementRowViewModel}
      */
-    public void OnSelectionChanged(ComponentRowViewModel selectedRow) 
+    @Override
+    public void OnSelectionChanged(ElementRowViewModel<?> selectedRow) 
     {
         if(selectedRow != null && selectedRow.GetElement() != null && this.dstController.GetHubMapResult().stream()
                 .anyMatch(r -> AreTheseEquals(r.GetDstElement().getId(), selectedRow.GetElement().getId())))
@@ -278,9 +277,9 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     /**
      * Adds or remove the {@linkplain Thing} to/from the relevant collection depending on the {@linkplain MappingDirection}
      * 
-     * @param rowViewModel the {@linkplain ComponentRowViewModel} that contains the element to add or remove
+     * @param rowViewModel the {@linkplain ElementRowViewModel} that contains the element to add or remove
      */
-    private void AddOrRemoveSelectedRowToTransfer(ComponentRowViewModel rowViewModel)
+    private void AddOrRemoveSelectedRowToTransfer(ElementRowViewModel<?> rowViewModel)
     {
         if(rowViewModel.SwitchIsSelectedValue())
         {

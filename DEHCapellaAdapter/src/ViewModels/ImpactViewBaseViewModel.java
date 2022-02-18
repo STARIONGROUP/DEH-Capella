@@ -1,7 +1,7 @@
 /*
  * ImpactViewBaseViewModel.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski 
  *
@@ -129,7 +129,7 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
      */
     private void SwitchIsSelected(TThing thing, boolean shouldSelect)
     {
-        IThingRowViewModel<TThing> viewModel = this.GetRowViewModelFromThing((TThing)thing);
+        var viewModel = this.GetRowViewModelFromThing((TThing)thing);
         
         if(!viewModel.GetIsSelected() && shouldSelect)
         {
@@ -266,7 +266,7 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
      * Compute eligible rows where the represented {@linkplain Thing} can be transfered,
      * and return the filtered collection for feedback application on the tree
      * 
-     * @param selectedRow the collection of selected view model {@linkplain IThingRowViewModel}
+     * @param selectedRow the selected row view model {@linkplain IThingRowViewModel}
      */
     @Override
     public void OnSelectionChanged(ThingRowViewModel<?> selectedRow) 

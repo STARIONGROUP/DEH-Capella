@@ -1,9 +1,9 @@
 /*
- * CapellaRequirementCollection.java
+ * HubElementCollection.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
- * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
+ * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski 
  *
  * This file is part of DEH-Capella
  *
@@ -26,16 +26,15 @@ package Utils.Stereotypes;
 import java.util.ArrayList;
 
 import Services.MappingEngineService.IMappableThingCollection;
-import ViewModels.Rows.MappedRequirementRowViewModel;
-
+import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 /**
- * The {@linkplain CapellaRequirementCollection} class represents a collection of {@linkplain MappedRequirementRowViewModel}.
- * The {@linkplain CapellaRequirementCollection} is usable by the {@linkplain MappingEngine} and 
- * each item of the collection represents a mapping in the {@linkplain MappingDirection.FromDstToHub}
+ * The {@linkplain HubElementCollection} class represents a collection of {@linkplain MappedElementDefinitionRowViewModel}.
+ * The {@linkplain HubElementCollection} is usable by the {@linkplain MappingEngine} and 
+ * each item of the collection represents a mapping in the {@linkplain MappingDirection.FromHubToDst}
  * 
- * Wrapping CapellaRequirementCollection this way solves the following problem,
+ * Wrapping MappedRequirementRowViewModel this way solves the following problem,
  * The {@linkplain IMappingEngine} having to know the type of things to transform at runtime to be able to invoke the right rule; 
  * Meaning that defining a rule that takes as input a {@linkplain ArrayList} of any type isn't supported because of the java generic implementation.
  */
 @SuppressWarnings("serial")
-public class CapellaRequirementCollection extends ArrayList<MappedRequirementRowViewModel> implements IMappableThingCollection { }
+public class HubElementCollection extends ArrayList<MappedElementDefinitionRowViewModel> implements IMappableThingCollection { }

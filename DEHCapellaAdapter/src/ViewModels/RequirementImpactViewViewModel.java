@@ -1,7 +1,7 @@
 /*
  * RequirementImpactViewViewModel.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski 
  *
@@ -117,7 +117,6 @@ public class RequirementImpactViewViewModel extends ImpactViewBaseViewModel<Requ
     @Override
     protected IThingRowViewModel<RequirementsSpecification> GetRowViewModelFromThing(RequirementsSpecification thing)
     {
-
         IterationRequirementRowViewModel iterationRowViewModel = (IterationRequirementRowViewModel) this.BrowserTreeModel.Value().getRoot();
         
         Optional<RequirementSpecificationRowViewModel> optionalDefinition = iterationRowViewModel.GetContainedRows().stream()

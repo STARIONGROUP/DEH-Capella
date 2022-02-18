@@ -1,7 +1,7 @@
 /*
  * CapellaSelectionService.java
  *
- * Copyright (c) 2020-2021 RHEA System S.A.
+ * Copyright (c) 2020-2022 RHEA System S.A.
  *
  * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
  *
@@ -81,11 +81,19 @@ public class CapellaSelectionService implements ICapellaSelectionService
     /**
      * Initializes a new {@linkplain CapellaSelectionService}
      */
+    @ExludeFromCodeCoverageGeneratedReport
     public CapellaSelectionService()
     {    
-        this.selectionService.addSelectionListener(new ISelectionListener()
+        this.selectionService.addSelectionListener(new @ExludeFromCodeCoverageGeneratedReport ISelectionListener()
         {
+            /**
+             * Occurs when the selection changes
+             * 
+             * @param part the view part involved
+             * @param selection the {@linkplain ISelection}
+             */
             @Override
+            @ExludeFromCodeCoverageGeneratedReport
             public void selectionChanged(IWorkbenchPart part, ISelection selection)
             {
                 if(selection instanceof StructuredSelection)

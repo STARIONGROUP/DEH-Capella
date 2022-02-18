@@ -1,9 +1,9 @@
 /*
- * ICapellaSessionListenerService.java
+ * ISiriusSessionManagerWrapper.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
- * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
+ * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski 
  *
  * This file is part of DEH-Capella
  *
@@ -23,28 +23,43 @@
  */
 package Services.CapellaSession;
 
+import java.util.Collection;
+
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.business.api.session.SessionManagerListener;
 
-import io.reactivex.Observable;
-
 /**
- * The {@linkplain ICapellaSessionListenerService} is the main interface definition for the {@linkplain CapellaSessionListenerService}
+ * The ISiriusSessionManagerWrapper is the interface definition for the {@linkplain SiriusSessionManagerWrapper}
  */
-public interface ICapellaSessionListenerService extends SessionManagerListener
+public interface ISiriusSessionManagerWrapper
 {
     /**
-     * The {@linkplain Observable} of {@linkplain Session} when the one {@linkplain Session} gets updated
+     * Gets a value indicating whether there is any active session in the workspace
+     * 
+     * @return a {@linkplain boolean}
      */
-    Observable<Session> SessionUpdated();
+    boolean HasAnyOpenSession();
 
     /**
-     * The {@linkplain Observable} of {@linkplain Session} when the one {@linkplain Session} gets removed from the {@linkplain SessionManager}
+     * Tries to return the session corresponding to a semantic 
+     * 
+     * @param object any semantic {@linkplain EObject}
+     * @return the corresponding {@linkplain Session}
      */
-    Observable<Session> SessionRemoved();
+    Session GetSession(EObject object);
 
     /**
-     * The {@linkplain Observable} of {@linkplain Session} when the one {@linkplain Session} gets added to the {@linkplain SessionManager}
+     * Gets all the open {@linkplain Session}
+     * 
+     * @return a {@linkplain Collection} of {@linkplain Session}
      */
-    Observable<Session> SessionAdded();
+    Collection<Session> GetSessions();
+
+    /**
+     * Add a new listener for the session manager
+     * 
+     * @param listener the new {@linkplain SessionManagerListener}
+     */
+    void AddListener(SessionManagerListener listener);
 }
