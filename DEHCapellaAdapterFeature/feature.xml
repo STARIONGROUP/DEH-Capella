@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="DEHCapellaAdapterFeature"
+      label="DEHCapellaAdapter"
+      version="1.0.0.qualifier"
+      provider-name="Rhea Group SA">
+
+   <description url="www.rheagroup.com">
+      Rhea group feature for the DEH Capella Adapter
+   </description>
+
+   <copyright url="https://github.com/RHEAGROUP/DEH-Capella/blob/master/COPYING">
+      GNU Lesser General Public License v3.0
+   </copyright>
+
+   <license url="https://github.com/RHEAGROUP/DEH-Capella/blob/master/COPYING">
+      GNU Lesser General Public License v3.0
+   </license>
+
+   <url>
+      <discovery label="RHEAGROUP GitHub" url="https://github.com/RHEAGROUP"/>
+   </url>
+
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.polarsys.capella.core.model.handler" version="1.4.2" match="greaterOrEqual"/>
+      <import plugin="org.polarsys.capella.core.model.helpers" version="1.4.2" match="greaterOrEqual"/>
+      <import plugin="org.junit"/>
+      <import plugin="org.junit.jupiter.api"/>
+   </requires>
+
+   <plugin
+         id="com.rheagroup.dehcapellaadapter"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+</feature>

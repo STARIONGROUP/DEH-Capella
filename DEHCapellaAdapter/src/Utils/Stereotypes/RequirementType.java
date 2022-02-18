@@ -32,7 +32,7 @@ import org.polarsys.capella.core.data.requirement.*;
  * The {@linkplain RequirementType} is an enumerations of all Capella requirements type
  */
 public enum RequirementType
-{    
+{
     /**
      * Represents an undefined {@linkplain Requirement}
      */
