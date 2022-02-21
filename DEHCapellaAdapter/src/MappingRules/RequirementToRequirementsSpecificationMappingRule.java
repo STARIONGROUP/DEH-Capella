@@ -35,35 +35,33 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.eclipse.emf.ecore.EObject;
+import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
+import org.polarsys.capella.core.data.requirement.SystemFunctionalInterfaceRequirement;
+import org.polarsys.capella.core.data.requirement.SystemFunctionalRequirement;
+import org.polarsys.capella.core.data.requirement.SystemNonFunctionalInterfaceRequirement;
+import org.polarsys.capella.core.data.requirement.SystemNonFunctionalRequirement;
+import org.polarsys.capella.core.data.requirement.SystemUserRequirement;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
-import Services.MappingEngineService.MappingRule;
 import Utils.Ref;
 import Utils.Stereotypes.CapellaRequirementCollection;
+import Utils.Stereotypes.StereotypeUtils;
 import ViewModels.Rows.MappedRequirementRowViewModel;
+import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.Definition;
 import cdp4common.engineeringmodeldata.RequirementsGroup;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
-
+import cdp4common.sitedirectorydata.Category;
+            
 /**
  * The {@linkplain BlockDefinitionMappingRule} is the mapping rule implementation for transforming {@linkplain CapellaRequirementCollection} to {@linkplain RequirementsSpecification}
  */
-public class RequirementToRequirementsSpecificationMappingRule extends MappingRule<CapellaRequirementCollection, ArrayList<MappedRequirementRowViewModel>>
+public class RequirementToRequirementsSpecificationMappingRule extends DstToHubBaseMappingRule<CapellaRequirementCollection, ArrayList<MappedRequirementRowViewModel>>
 {
-    /**
-     * The {@linkplain IHubController}
-     */
-    private IHubController hubController;
-    
-    /**
-     * The {@linkplain ICapellaMappingConfigurationService}
-     */
-    private ICapellaMappingConfigurationService mappingConfiguration;
-
     /**
      * The collection of {@linkplain RequirementsSpecification} that are being mapped
      */
@@ -82,8 +80,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
      */
     public RequirementToRequirementsSpecificationMappingRule(IHubController hubController, ICapellaMappingConfigurationService mappingConfiguration)
     {
-        this.hubController = hubController;
-        this.mappingConfiguration = mappingConfiguration;
+        super(hubController, mappingConfiguration);
     }    
     
     /**
@@ -136,28 +133,19 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
     private void Map(CapellaRequirementCollection mappedRequirements)
     {
         for (MappedRequirementRowViewModel mappedRequirement : mappedRequirements)
-        {
-            var parent = mappedRequirement.GetDstElement().eContainer();
-            
+        {            
             Ref<RequirementsSpecification> refRequirementsSpecification = new Ref<>(RequirementsSpecification.class);
-               
+            
+            var refParent = new Ref<>(RequirementsPkg.class);
+            StereotypeUtils.TryGetPossibleRequirementsSpecificationElement(mappedRequirement.GetDstElement(), refParent);
+            
             if(!mappedRequirement.GetShouldCreateNewTargetElementValue() && mappedRequirement.GetHubElement() != null)
             {
                 refRequirementsSpecification.Set(mappedRequirement.GetHubElement());
             }
             else
             {
-                while (!(this.CanBeARequirementSpecification(parent)
-                        && parent != null && parent instanceof RequirementsPkg
-                        && this.TryGetOrCreateRequirementSpecification((RequirementsPkg)parent, refRequirementsSpecification)))
-                {
-                    if(parent == null)
-                    {
-                        break;
-                    }
-                    
-                    parent = parent.eContainer();
-                }
+                this.TryGetOrCreateRequirementSpecification(refParent.Get(), refRequirementsSpecification);
             }
             
             if(!refRequirementsSpecification.HasValue())
@@ -174,7 +162,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
             var refRequirementsGroup = new Ref<>(RequirementsGroup.class);
             var refRequirement = new Ref<>(cdp4common.engineeringmodeldata.Requirement.class);
             
-            if(!TryCreateRelevantGroupsAndTheRequirement(mappedRequirement.GetDstElement(), GetChildren(parent), refRequirementsSpecification, refRequirementsGroup, refRequirement))
+            if(!TryCreateRelevantGroupsAndTheRequirement(mappedRequirement.GetDstElement(), GetChildren(refParent.Get()), refRequirementsSpecification, refRequirementsGroup, refRequirement))
             {
                 this.Logger.error(String.format("Could not map requirement %s", mappedRequirement.GetDstElement().getName()));
             }
@@ -233,18 +221,18 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
      * Tries to get from the current {@linkplain RequirementsSpecification} the represented {@linkplain Requirement} by the provided {@linkplain Requirement} element
      * or creates it.
      * 
-     * @param element the {@linkplain Requirement} element
+     * @param dstRequirement the {@linkplain Requirement} element
      * @param refRequirementsGroup the {@linkplain Ref} of {@linkplain RequirementsGroup}, the closest parent in the tree of the {@linkplain Requirement}
      * @param refRequirement the {@linkplain Ref} of {@linkplain Requirement}
      * @return a value indicating whether the {@linkplain Requirement} has been created or retrieved
      */
-    private boolean TryGetOrCreateRequirement(Requirement element, Ref<RequirementsSpecification> refRequirementsSpecification, 
+    private boolean TryGetOrCreateRequirement(Requirement dstRequirement, Ref<RequirementsSpecification> refRequirementsSpecification, 
             Ref<RequirementsGroup> refRequirementsGroup, Ref<cdp4common.engineeringmodeldata.Requirement> refRequirement)
     {
         var optionalRequirement = refRequirementsSpecification.Get()
                 .getRequirement()
                 .stream()
-                .filter(x -> this.AreShortNamesEquals(x, GetShortName(element)))
+                .filter(x -> this.AreShortNamesEquals(x, GetShortName(dstRequirement)))
                 .findFirst();
         
         if(optionalRequirement.isPresent())
@@ -255,8 +243,8 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
         {
             var requirement = new cdp4common.engineeringmodeldata.Requirement();
             requirement.setIid(UUID.randomUUID());
-            requirement.setName(element.getName());
-            requirement.setShortName(GetShortName(element));
+            requirement.setName(dstRequirement.getName());
+            requirement.setShortName(GetShortName(dstRequirement));
             requirement.setOwner(this.hubController.GetCurrentDomainOfExpertise());
             
             requirement.setGroup(refRequirementsGroup.Get());
@@ -264,12 +252,50 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
             refRequirement.Set(requirement);
         }
         
-        this.UpdateOrCreateDefinition(element, refRequirement);
+        this.UpdateOrCreateDefinition(dstRequirement, refRequirement);
 
         refRequirementsSpecification.Get().getRequirement().removeIf(x -> x.getIid().equals(refRequirement.Get().getIid()));
         refRequirementsSpecification.Get().getRequirement().add(refRequirement.Get());
         
+        this.MapCategories(dstRequirement, refRequirement.Get());
+        
         return refRequirement.HasValue();
+    }
+
+
+    /**
+     * Maps the proper {@linkplain Category} to the provided {@linkplain cdp4common.engineeringmodeldata.Requirement}
+     * 
+     * @param dstRequirement the Capella {@linkplain Requirement}
+     * @param hubRequirement the HUB {@linkplain cdp4common.engineeringmodeldata.Requirement} 
+     */
+    private void MapCategories(Requirement dstRequirement, cdp4common.engineeringmodeldata.Requirement hubRequirement)
+    {
+        if(dstRequirement instanceof SystemNonFunctionalRequirement)
+        {
+            this.MapCategory(hubRequirement, SystemNonFunctionalRequirement.class.getSimpleName(), ClassKind.Requirement);
+        }
+        else if(dstRequirement instanceof SystemNonFunctionalInterfaceRequirement)
+        {
+            this.MapCategory(hubRequirement, SystemNonFunctionalInterfaceRequirement.class.getSimpleName(), ClassKind.Requirement);
+        }
+        else if(dstRequirement instanceof SystemFunctionalRequirement)
+        {
+            this.MapCategory(hubRequirement, SystemFunctionalRequirement.class.getSimpleName(), ClassKind.Requirement);
+        }
+        else if(dstRequirement instanceof SystemFunctionalInterfaceRequirement)
+        {
+            this.MapCategory(hubRequirement, SystemFunctionalInterfaceRequirement.class.getSimpleName(), ClassKind.Requirement);
+        }
+        else if(dstRequirement instanceof SystemUserRequirement)
+        {
+            this.MapCategory(hubRequirement, SystemUserRequirement.class.getSimpleName(), ClassKind.Requirement);
+        }
+        
+        if(dstRequirement.isIsObsolete())
+        {
+            this.MapCategory(hubRequirement, "Obsolete", ClassKind.Requirement);
+        }
     }
 
     /**
@@ -375,13 +401,13 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
     }
 
     /**
-     * Try to create the {@linkplain RequirementsSpecification} represented by the provided {@linkplain RequirementsPkg}
+     * Try to create the {@linkplain RequirementsSpecification} represented by the provided {@linkplain Structure}
      * 
-     * @param currentPackage the {@linkplain RequirementsPkg} to create or retrieve the {@linkplain RequirementsSpecification} that represents it
+     * @param currentPackage the {@linkplain Structure} to create or retrieve the {@linkplain RequirementsSpecification} that represents it
      * @param refRequirementSpecification the {@linkplain Ref} of {@linkplain RequirementsSpecification}
      * @return a value indicating whether the {@linkplain RequirementsGroup} has been found or created
      */
-    private boolean TryGetOrCreateRequirementSpecification(RequirementsPkg currentPackage, Ref<RequirementsSpecification> refRequirementSpecification)
+    private boolean TryGetOrCreateRequirementSpecification(Structure currentPackage, Ref<RequirementsSpecification> refRequirementSpecification)
     {
         Optional<RequirementsSpecification> optionalRequirementsSpecification = this.requirementsSpecifications
                 .stream()
@@ -418,16 +444,5 @@ public class RequirementToRequirementsSpecificationMappingRule extends MappingRu
         }
         
         return refRequirementSpecification.HasValue();
-    }
-    
-    /**
-     * Verifies if the provided {@linkplain eObject} contains any requirement
-     * 
-     * @param eObject the current {@linkplain EObject} to verify
-     * @return a value indicating whether the {@linkplain eObject} has any requirement as child
-     */
-    public boolean CanBeARequirementSpecification(EObject eObject)
-    {
-        return eObject instanceof RequirementsPkg && GetChildren(eObject, RequirementsPkg.class).size() > 0;
     }
 }

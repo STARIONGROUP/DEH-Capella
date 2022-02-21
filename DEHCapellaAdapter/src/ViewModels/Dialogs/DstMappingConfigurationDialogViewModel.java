@@ -35,10 +35,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.requirement.Requirement;
+import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 import org.polarsys.kitalpha.emde.model.Element;
 
 import DstController.IDstController;
@@ -48,6 +48,7 @@ import HubController.IHubController;
 import Reactive.ObservableCollection;
 import Reactive.ObservableValue;
 import Utils.Ref;
+import Utils.Stereotypes.StereotypeUtils;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
@@ -83,12 +84,12 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
      * The {@linkplain IHubController}
      */
     private IHubController hubController;
-
+    
     /**
      * The {@linkplain Collection} of {@linkplain EObject} that were originally selected 
      */
     private Collection<EObject> originalSelection;
-    
+        
     /**
      * Backing field for {@linkplain GetElementDefinitionBrowserViewModel}
      */
@@ -359,11 +360,11 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
             if(element instanceof Structure)
             {
                 this.PreMap(GetChildren(element));
-            }    
+            }
             else if (element instanceof CapellaElement)
             {
                 var mappedElement = this.GetMappedElementRowViewModel((CapellaElement)element);
-         
+
                 if(mappedElement != null)
                 {
                     this.mappedElements.add(mappedElement);
@@ -515,52 +516,30 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
         {
             refShouldCreateNewTargetElement.Set(true);
             
-            Ref<String> possibleParentName = new Ref<>(String.class);
+            var possibleParent = new Ref<>(RequirementsPkg.class);
             
-            if(this.TryGetPossibleRequirementsSpecificationName(requirement, possibleParentName))
+            if(StereotypeUtils.TryGetPossibleRequirementsSpecificationElement(requirement, possibleParent))
             {
                 optionalRequirementsSpecification = this.hubController.GetOpenIteration().getRequirementsSpecification().stream()
-                    .filter(x -> AreTheseEquals(possibleParentName, x.getName()))
+                    .filter(x -> AreTheseEquals(possibleParent, x.getName()))
                     .findFirst();
                 
                 if(optionalRequirementsSpecification.isPresent())
                 {
                     refRequirementSpecification.Set(optionalRequirementsSpecification.get().clone(true));
+                    return true;
                 }
             }
             
             RequirementsSpecification requirementsSpecification = new RequirementsSpecification();
-            requirementsSpecification.setName(possibleParentName.HasValue() ? possibleParentName.Get() : "new RequirementsSpecification");
-            requirementsSpecification.setShortName(GetShortName(possibleParentName.HasValue() ? possibleParentName.Get() : requirementsSpecification.getName()));
+            requirementsSpecification.setName(possibleParent.HasValue() ? possibleParent.Get().getName() : "new RequirementsSpecification");
+            requirementsSpecification.setShortName(GetShortName(possibleParent.HasValue() ? possibleParent.Get().getName() : requirementsSpecification.getName()));
             requirementsSpecification.setIid(UUID.randomUUID());
             requirementsSpecification.setOwner(this.hubController.GetCurrentDomainOfExpertise());
             refRequirementSpecification.Set(requirementsSpecification);            
         }
 
         return refRequirementSpecification.HasValue();
-    }
-
-    /**
-     * Attempts to retrieve the parent of parent of the provided {@linkplain Class} element. 
-     * Hence this is not always possible if the user decides to structure its SysML project differently.
-     * However, this feature is only a nice to have.
-     *  
-     * @param requirement the {@linkplain Class} element to get the parent from
-     * @return a value indicating whether the name of the parent was retrieved with success
-     */
-    private boolean TryGetPossibleRequirementsSpecificationName(Requirement requirement, Ref<String> possibleParentName)
-    {
-        try
-        {
-            possibleParentName.Set(((NamedElement)requirement.eContainer()).getName());
-        }
-        catch(Exception exception)
-        {
-            this.logger.catching(exception);
-            return false;
-        }
-        
-        return possibleParentName.HasValue();
     }
 
     /**

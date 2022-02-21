@@ -87,7 +87,9 @@ public class CapellaSessionService implements ICapellaSessionService
     {
         this.sessionListener = sessionListener;
         this.sessionManager = sessionManager;
-
+        
+        this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession());
+        
         this.sessionManager.AddListener(this.sessionListener);
 
         this.sessionListener.SessionUpdated()

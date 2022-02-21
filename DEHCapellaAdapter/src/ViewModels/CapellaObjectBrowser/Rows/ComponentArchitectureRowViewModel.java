@@ -24,6 +24,7 @@
 package ViewModels.CapellaObjectBrowser.Rows;
 
 import org.polarsys.capella.core.data.capellacore.Structure;
+import org.polarsys.capella.core.data.capellamodeller.Folder;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
@@ -62,6 +63,10 @@ public class ComponentArchitectureRowViewModel extends ProjectStructuralElementR
         else if(element instanceof RequirementsPkg)
         {
             this.GetContainedRows().add(new RequirementPackageRowViewModel(this, (RequirementsPkg)element));
+        }
+        else if(element instanceof Folder)
+        {
+            this.GetContainedRows().add(new RequirementPackageRowViewModel(this, (Folder)element));
         }
     }
 }

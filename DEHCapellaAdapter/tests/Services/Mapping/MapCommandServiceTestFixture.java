@@ -44,6 +44,7 @@ import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSelection.ICapellaSelectionService;
 import Services.CapellaSession.ICapellaSessionListenerService;
+import Services.CapellaSession.ICapellaSessionService;
 import Services.NavigationService.INavigationService;
 import Utils.Ref;
 import ViewModels.Dialogs.Interfaces.IDstMappingConfigurationDialogViewModel;
@@ -66,6 +67,7 @@ class MapCommandServiceTestFixture
     private MapCommandService service;
     private ObservableValue<Boolean> hasAnyOpenSession;
     private ObservableValue<Boolean> isSessionOpen;
+    private ICapellaSessionService sessionService;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -76,6 +78,7 @@ class MapCommandServiceTestFixture
         this.dstMappingDialog = mock(IDstMappingConfigurationDialogViewModel.class);
         this.logService = mock(ICapellaLogService.class);
         this.hubController = mock(IHubController.class);
+        this.sessionService = mock(ICapellaSessionService.class);
         
         this.hasAnyOpenSession = new ObservableValue<Boolean>();
         this.isSessionOpen = new ObservableValue<Boolean>();
@@ -83,12 +86,14 @@ class MapCommandServiceTestFixture
         when(this.hubController.GetIsSessionOpenObservable()).thenReturn(this.isSessionOpen.Observable());
                 
         this.service = new MapCommandService(this.selectionService, this.dstController, 
-                this.navigationService, this.dstMappingDialog, this.logService, this.hubController);
+                this.navigationService, this.dstMappingDialog, this.logService, 
+                this.hubController, this.sessionService);
     }
 
     @Test
     public void VerifyCanExecute()
     {
+        this.service.Initialize();
         var results = new ArrayList<Boolean>();
         this.service.CanExecuteObservable().subscribe(x -> results.add(x));
         this.isSessionOpen.Value(true);
@@ -96,8 +101,9 @@ class MapCommandServiceTestFixture
         this.isSessionOpen.Value(false);
         this.hasAnyOpenSession.Value(true);
         this.hasAnyOpenSession.Value(false);
-        assertEquals(4, results.size());
-        assertEquals(true, results.get(0));
+        assertEquals(6, results.size());
+        assertEquals(false, results.get(0));
+        assertEquals(true, results.get(2));
         assertEquals(false, results.get(3));
     }
     

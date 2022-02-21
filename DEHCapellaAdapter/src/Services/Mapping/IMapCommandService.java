@@ -45,4 +45,17 @@ public interface IMapCommandService
      * @return an {@linkplain Observable} of {@linkplain Boolean}
      */
     Observable<Boolean> CanExecuteObservable();
+
+    /**
+     * Initializes this {@linkplain MapCommandService} {@linkplain CanExecuteObservable} 
+     * for later use by the context menu map command
+     */
+    void Initialize();
+
+    /**
+     * Gets a value indicating whether the map action can be executed
+     * 
+     * @return a {@linkplain Boolean} value
+     */
+    boolean CanExecute();
 }

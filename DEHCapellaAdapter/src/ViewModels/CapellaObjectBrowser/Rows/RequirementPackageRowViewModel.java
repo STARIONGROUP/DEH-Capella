@@ -24,6 +24,8 @@
 package ViewModels.CapellaObjectBrowser.Rows;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.Structure;
+import org.polarsys.capella.core.data.capellamodeller.Folder;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 
@@ -33,15 +35,15 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 /**
  * The {@linkplain RequirementPackageRowViewModel} is the row view model that represents a {@linkplain RequirementsPkg}
  */
-public class RequirementPackageRowViewModel extends ProjectStructuralElementRowViewModel<RequirementsPkg, CapellaElement>
+public class RequirementPackageRowViewModel extends ProjectStructuralElementRowViewModel<Structure, CapellaElement>
 {
     /**
      * Initializes a new {@linkplain RequirementPackageRowViewModel}
      * 
      * @param parent the {@linkplain IRowViewModel} parent of this view model
-     * @param element the {@linkplain RequirementsPkg} that this row view model represents
+     * @param element the {@linkplain Structure} that this row view model represents
      */
-    public RequirementPackageRowViewModel(IElementRowViewModel<?> parent, RequirementsPkg element)
+    public RequirementPackageRowViewModel(IElementRowViewModel<?> parent, Structure element)
     {
         super(parent, element, CapellaElement.class);
     }
@@ -61,6 +63,10 @@ public class RequirementPackageRowViewModel extends ProjectStructuralElementRowV
         else if(element instanceof RequirementsPkg)
         {
             this.GetContainedRows().add(new RequirementPackageRowViewModel(this, (RequirementsPkg)element));
+        }
+        else if(element instanceof Folder)
+        {
+            this.GetContainedRows().add(new RequirementPackageRowViewModel(this, (Folder)element));
         }
     }
 }

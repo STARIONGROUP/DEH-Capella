@@ -109,7 +109,7 @@ class ElementDefinitionImpactViewViewModelTestFixture
         this.dstMapResult.addAll(this.elements);
         Callable<Integer> treeRows = () -> ((IterationRowViewModel)(this.viewModel.GetBrowserTreeModel().getRoot()))
                                             .GetContainedRows().size();
-        assertEquals(2, treeRows.call());
+        assertEquals(3, treeRows.call());
         this.dstMapResult.clear();
         assertEquals(0, treeRows.call());
         this.iteration.getElement().add(elementDefinition0);

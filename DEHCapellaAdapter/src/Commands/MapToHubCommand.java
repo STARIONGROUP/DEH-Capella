@@ -49,10 +49,9 @@ public class MapToHubCommand extends AbstractHandler
      */
     public MapToHubCommand()
     {
-        this.setBaseEnabled(false);        
+        this.setBaseEnabled(this.commandService.CanExecute());
         
-        this.commandService
-                .CanExecuteObservable()
+        this.commandService.CanExecuteObservable()
                 .subscribe(x -> this.setBaseEnabled(x));
     }
     
