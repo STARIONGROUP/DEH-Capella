@@ -47,6 +47,8 @@ import Services.CapellaSession.CapellaSessionListenerService;
 import Services.CapellaSession.CapellaSessionService;
 import Services.CapellaSession.ICapellaSessionListenerService;
 import Services.CapellaSession.ICapellaSessionService;
+import Services.CapellaSession.ISiriusSessionManagerWrapper;
+import Services.CapellaSession.SiriusSessionManagerWrapper;
 import Services.Mapping.IMapCommandService;
 import Services.Mapping.MapCommandService;
 import Services.MappingConfiguration.CapellaMappingConfigurationService;
@@ -92,7 +94,7 @@ public class App extends AbstractUIPlugin
     {
         this.RegisterDependencies();
         super.start(context);
-        
+        AppContainer.Container.getComponent(IMapCommandService.class).Initialize();
         this.LogAdapterInitialization();
     }
     
@@ -150,7 +152,8 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.addConfig("platformLogger", Platform.getLog(FrameworkUtil.getBundle(CapellaLogService.class)));
             AppContainer.Container.as(Characteristics.USE_NAMES).addComponent(ICapellaLogService.class, CapellaLogService.class);
             AppContainer.Container.addComponent(ICapellaSelectionService.class, CapellaSelectionService.class);
-            AppContainer.Container.addComponent(IMapCommandService.class, MapCommandService.class);
+            AppContainer.Container.as(CACHE).addComponent(IMapCommandService.class, MapCommandService.class);
+            AppContainer.Container.addComponent(ISiriusSessionManagerWrapper.class, SiriusSessionManagerWrapper.class);
 
             AppContainer.Container.addComponent(ComponentToElementMappingRule.class.getName(), ComponentToElementMappingRule.class);
             AppContainer.Container.addComponent(RequirementToRequirementsSpecificationMappingRule.class.getName(), RequirementToRequirementsSpecificationMappingRule.class);

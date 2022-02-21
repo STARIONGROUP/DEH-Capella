@@ -23,17 +23,19 @@
  */
 package Utils.Stereotypes;
 
-import static Utils.Operators.Operators.AreTheseEquals;
-
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.logging.log4j.LogManager;
 import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
-import org.polarsys.capella.core.data.requirement.RequirementPackage;
+import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
+
+import Utils.Ref;
 
 /**
  * The {@linkplain StereotypeUtils}  provides useful methods on Capella components
@@ -48,7 +50,7 @@ public final class StereotypeUtils
      */
     public static String GetShortName(String name)
     {
-        return name.replaceAll("[^a-zA-Z0-9-]|\\s", "");
+        return name.replaceAll("[^a-zA-Z0-9-]|\\s", "").toLowerCase();
     }
 
     /**
@@ -118,12 +120,50 @@ public final class StereotypeUtils
      * @param parent the {@linkplain EObject} parent
      * @param child the {@linkplain CapellaElement} child
      * @return a value indicating whether the parent is one of the child,
-     * if true, it also means that the parent is {@linkplain RequirementPackage}
+     * if true, it also means that the parent is {@linkplain RequirementsPkg}
      */
     public static boolean IsParentOf(EObject parent, CapellaElement child)
     {
-        return child.eContainer() instanceof RequirementsPkg &&
-               parent instanceof RequirementsPkg &&
-               AreTheseEquals(child.eContainer().eResource().getURI(), parent.eResource().getURI());
+        try
+        {
+            return child.eContainer() instanceof RequirementsPkg 
+                    && parent instanceof RequirementsPkg 
+                    && EcoreUtil.isAncestor(parent, child);
+        }
+        catch(ClassCastException exception)
+        {
+            LogManager.getLogger().catching(exception);
+            return child.eContainer() == parent; 
+        }
+    }
+    
+    /**
+     * Attempts to retrieve the parent of parent of the provided {@linkplain Class} element. 
+     * Hence this is not always possible if the user decides to structure its SysML project differently.
+     * However, this feature is only a nice to have.
+     *  
+     * @param requirement the {@linkplain Class} element to get the parent from
+     * @return a value indicating whether the name of the parent was retrieved with success
+     */
+    public static boolean TryGetPossibleRequirementsSpecificationElement(Requirement requirement, Ref<RequirementsPkg> possibleParent)
+    {
+        RequirementsPkg lastElement = null;
+        EObject currentElement = requirement.eContainer();
+        
+        while(!possibleParent.HasValue() && currentElement != null)
+        {  
+            if(currentElement instanceof RequirementsPkg)
+            {
+                lastElement = (RequirementsPkg)currentElement;
+            }
+            else
+            {
+                possibleParent.Set(lastElement);
+            }
+
+            currentElement = lastElement == null ? requirement.eContainer() : lastElement.eContainer();
+        }
+        
+        return possibleParent.HasValue();
     }
 }

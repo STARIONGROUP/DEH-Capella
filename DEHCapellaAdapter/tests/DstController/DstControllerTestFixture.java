@@ -70,6 +70,7 @@ import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.types.ValueArray;
 import cdp4dal.exceptions.TransactionException;
 import cdp4dal.operations.ThingTransaction;
+import io.reactivex.Observable;
 
 public class DstControllerTestFixture
 {
@@ -91,7 +92,9 @@ public class DstControllerTestFixture
         this.logService = mock(ICapellaLogService.class);
         this.mappingConfigurationService = mock(ICapellaMappingConfigurationService.class);
         this.capellaSessionService = mock(ICapellaSessionService.class);
-
+        
+        when(this.hubController.GetIsSessionOpenObservable()).thenReturn(Observable.fromArray(false, true));
+        
         var mappedThings0 = mock(MappedElementRowViewModel.class);
         var mappedThings1 = mock(MappedElementRowViewModel.class);
         

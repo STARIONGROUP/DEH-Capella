@@ -65,7 +65,7 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
     /**
      * Initializes a new {@linkplain ImpactViewBaseViewModel}
      * 
-     * @param HubController the {@linkplain IHubController} instance
+     * @param hubController the {@linkplain IHubController} instance
      * @param dstController the {@linkplain IDstController} instance
      * @param clazz the {@linkplain Class} of the {@linkplain TThing} for future check
      */

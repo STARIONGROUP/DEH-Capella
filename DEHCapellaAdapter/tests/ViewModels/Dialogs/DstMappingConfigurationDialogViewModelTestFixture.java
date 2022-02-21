@@ -41,6 +41,7 @@ import org.polarsys.capella.core.data.requirement.Requirement;
 import DstController.IDstController;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
+import MappingRules.RequirementToRequirementsSpecificationMappingRule;
 import Reactive.ObservableCollection;
 import Reactive.ObservableValue;
 import Utils.Ref;

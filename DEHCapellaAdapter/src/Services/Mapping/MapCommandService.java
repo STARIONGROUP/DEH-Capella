@@ -38,6 +38,7 @@ import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSelection.ICapellaSelectionService;
+import Services.CapellaSession.ICapellaSessionService;
 import Services.NavigationService.INavigationService;
 import Utils.Ref;
 import Utils.Stereotypes.CapellaComponentCollection;
@@ -93,6 +94,16 @@ public class MapCommandService implements IMapCommandService
      * The {@linkplain IHubController} instance
      */
     private final IHubController hubController;
+
+    /**
+     * The {@linkplain ICapellaSessionService} instance
+     */
+    private final ICapellaSessionService sessionService;
+
+    /**
+     * Backing field for {@linkplain CanExecuteObservable}
+     */
+    private Observable<Boolean> canExecute;
     
     /**
      * Initializes a new {@linkplain MapCommandService}
@@ -103,10 +114,11 @@ public class MapCommandService implements IMapCommandService
      * @param dstMappingDialog the {@linkplain IDstMappingConfigurationDialogViewModel} instance
      * @param logService the {@linkplain ICapellaLogService} instance
      * @param hubController the {@linkplain IHubController} instance
+     * @param hubController the {@linkplain ICapellaSessionService} instance
      */
     public MapCommandService(ICapellaSelectionService selectionService, IDstController dstController,
             INavigationService navigationService, IDstMappingConfigurationDialogViewModel dstMappingDialog,
-            ICapellaLogService logService, IHubController hubController)
+            ICapellaLogService logService, IHubController hubController, ICapellaSessionService sessionService)
     {
         this.selectionService = selectionService;
         this.dstController = dstController;
@@ -114,6 +126,19 @@ public class MapCommandService implements IMapCommandService
         this.dstMappingDialogViewModel = dstMappingDialog;
         this.logService = logService;
         this.hubController = hubController;
+        this.sessionService = sessionService;
+    }
+    
+    /**
+     * Initializes this {@linkplain MapCommandService} {@linkplain CanExecuteObservable} 
+     * for later use by the context menu map command
+     */
+    @Override
+    public void Initialize()
+    {
+        this.canExecute = Observable.combineLatest(this.dstController.HasAnyOpenSessionObservable().startWith(this.sessionService.HasAnyOpenSession()), 
+                    this.hubController.GetIsSessionOpenObservable().startWith(this.hubController.GetIsSessionOpen()),
+                (hasAnyOpenSession, isHubSessionOpen) -> hasAnyOpenSession && isHubSessionOpen);
     }
     
     /**
@@ -124,9 +149,18 @@ public class MapCommandService implements IMapCommandService
     @Override
     public Observable<Boolean> CanExecuteObservable()
     {
-        return Observable.combineLatest(this.dstController.HasAnyOpenSessionObservable(), this.hubController.GetIsSessionOpenObservable(),
-                (hasAnyOpenSession, isHubSessionOpen) -> 
-                        hasAnyOpenSession && isHubSessionOpen);
+        return this.canExecute;
+    }
+
+    /**
+     * Gets a value indicating whether the map action can be executed
+     * 
+     * @return a {@linkplain Boolean} value
+     */
+    @Override
+    public boolean CanExecute()
+    {
+        return this.sessionService.HasAnyOpenSession() && this.hubController.GetIsSessionOpen();
     }
     
     /**

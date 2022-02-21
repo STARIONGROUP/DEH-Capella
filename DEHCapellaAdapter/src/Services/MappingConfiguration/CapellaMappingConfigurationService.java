@@ -60,7 +60,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
     /**
      * Initializes a new {@linkplain MagicDrawMappingConfigurationService}
      * 
-     * @param HubController the {@linkplain IHubController}
+     * @param hubController the {@linkplain IHubController}
      * @param sessionService the {@linkplain ICapellaSessionService}
      */
     public CapellaMappingConfigurationService(IHubController hubController, ICapellaSessionService sessionService)

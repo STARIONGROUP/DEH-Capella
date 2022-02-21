@@ -240,7 +240,7 @@ public final class DstController implements IDstController
      * Initializes a new {@linkplain DstController}
      * 
      * @param mappingEngine the {@linkplain IMappingEngine} instance
-     * @param HubController the {@linkplain IHubController} instance
+     * @param hubController the {@linkplain IHubController} instance
      * @param logService the {@linkplain ICapellaLogService} instance
      * @param mappingConfigurationService the {@linkplain ICapellaMappingConfigurationService} instance
      * @param mappingConfigurationService the {@linkplain ICapellaSessionService} instance
@@ -253,6 +253,16 @@ public final class DstController implements IDstController
         this.logService = logService;
         this.mappingConfigurationService = mappingConfigurationService;
         this.capellaSessionService = capellaSessionService;
+        
+        this.hubController.GetIsSessionOpenObservable().subscribe(isSessionOpen ->
+        {
+            if(!isSessionOpen)
+            {
+                this.hubMapResult.clear();
+                this.dstMapResult.clear();
+                this.selectedDstMapResultForTransfer.clear();
+                this.selectedHubMapResultForTransfer.clear();
+            }});
     }
         
     /**

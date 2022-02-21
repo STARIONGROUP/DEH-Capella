@@ -69,7 +69,7 @@ public class ElementDefinitionImpactViewViewModel extends ImpactViewBaseViewMode
     {
         try
         {            
-            if(thing.getOriginal() == null && iteration.getElement().stream().noneMatch(x -> this.DoTheseThingsRepresentTheSameThing(x, thing)))
+            if(thing.getOriginal() == null || iteration.getElement().stream().noneMatch(x -> this.DoTheseThingsRepresentTheSameThing(x, thing)))
             {            
                 iteration.getElement().add(thing);
             }

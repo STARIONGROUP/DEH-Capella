@@ -32,30 +32,30 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.Property;
-import org.polarsys.capella.core.data.information.datatype.BooleanType;
-import org.polarsys.capella.core.data.information.datatype.StringType;
 import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
-import org.polarsys.capella.core.data.information.datavalue.NumericValue;
+import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
-import Services.MappingEngineService.MappingRule;
 import Utils.Ref;
 import Utils.ValueSetUtils;
 import Utils.Stereotypes.CapellaComponentCollection;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
-import cdp4common.commondata.Thing;
+import cdp4common.commondata.ClassKind;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.ElementUsage;
 import cdp4common.engineeringmodeldata.Parameter;
 import cdp4common.engineeringmodeldata.ParameterSwitchKind;
 import cdp4common.engineeringmodeldata.ParameterValueSet;
 import cdp4common.sitedirectorydata.BooleanParameterType;
+import cdp4common.sitedirectorydata.Category;
 import cdp4common.sitedirectorydata.MeasurementScale;
 import cdp4common.sitedirectorydata.MeasurementUnit;
 import cdp4common.sitedirectorydata.NumberSetKind;
@@ -66,26 +66,13 @@ import cdp4common.sitedirectorydata.ReferenceDataLibrary;
 import cdp4common.sitedirectorydata.SimpleQuantityKind;
 import cdp4common.sitedirectorydata.SimpleUnit;
 import cdp4common.sitedirectorydata.TextParameterType;
-import cdp4common.types.ContainerList;
 import cdp4common.types.ValueArray;
-import cdp4dal.operations.ThingTransactionImpl;
-import cdp4dal.operations.TransactionContextResolver;
 
 /**
  * The {@linkplain ComponentToElementMappingRule} is the mapping rule implementation for transforming Capella {@linkplain Component} to {@linkplain ElementDefinition}
  */
-public class ComponentToElementMappingRule extends MappingRule<CapellaComponentCollection, ArrayList<MappedElementDefinitionRowViewModel>>
+public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<CapellaComponentCollection, ArrayList<MappedElementDefinitionRowViewModel>>
 {
-    /**
-     * The {@linkplain IHubController}
-     */
-    private final IHubController hubController;
-
-    /**
-     * The {@linkplain IMagicDrawMappingConfigurationService} instance
-     */
-    private final ICapellaMappingConfigurationService mappingConfiguration;
-    
     /**
      * The {@linkplain CapellaComponentCollection} of {@linkplain MappedElementDefinitionRowViewModel}
      */
@@ -94,13 +81,12 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
     /**
      * Initializes a new {@linkplain BlockDefinitionMappingRule}
      * 
-     * @param HubController the {@linkplain IHubController}
+     * @param hubController the {@linkplain IHubController}
      * @param mappingConfiguration the {@linkplain IMagicDrawMappingConfigurationService}
      */
     public ComponentToElementMappingRule(IHubController hubController, ICapellaMappingConfigurationService mappingConfiguration)
     {
-        this.hubController = hubController;
-        this.mappingConfiguration = mappingConfiguration;
+        super(hubController, mappingConfiguration);
     }
     
     /**
@@ -154,12 +140,51 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
                 mappedElement.SetHubElement(this.GetOrCreateElementDefinition(mappedElement.GetDstElement()));
             }
             
+            this.MapCategories(mappedElement);
+            
             this.MapContainedElement(mappedElement);
             
             this.MapProperties(mappedElement.GetHubElement(), mappedElement.GetDstElement());
         }
     }
 
+    /**
+     * Maps the proper {@linkplain Category} to the associated HUB element of the provided {@linkplain MappedElementDefinitionRowViewModel}
+     * 
+     * @param mappedElement the {@linkplain MappedElementDefinitionRowViewModel}
+     */
+    private void MapCategories(MappedElementDefinitionRowViewModel mappedElement)
+    {
+        if(StringUtils.containsIgnoreCase(mappedElement.GetDstElement().getName(), "system"))
+        {
+            this.MapCategory(mappedElement.GetHubElement(), "System", ClassKind.ElementDefinition);
+        }
+        
+        if(mappedElement.GetDstElement().isActor()) 
+        {
+            this.MapCategory(mappedElement.GetHubElement(), "Actor", ClassKind.ElementDefinition);
+        }
+
+        if(mappedElement.GetDstElement().isHuman()) 
+        {
+            this.MapCategory(mappedElement.GetHubElement(), "Human", ClassKind.ElementDefinition);
+        }
+
+        if(mappedElement.GetDstElement().isAbstract()) 
+        {
+            this.MapCategory(mappedElement.GetHubElement(), "Abstract", ClassKind.ElementDefinition);
+        }
+        
+        else if(mappedElement.GetDstElement() instanceof LogicalComponent)
+        {
+            this.MapCategory(mappedElement.GetHubElement(), "Logical", ClassKind.ElementDefinition);
+        }
+        else if(mappedElement.GetDstElement() instanceof PhysicalComponent)
+        {
+            this.MapCategory(mappedElement.GetHubElement(), "Physical", ClassKind.ElementDefinition);
+        }
+    }
+        
     /**
      * Maps the contained element of the provided {@linkplain mappedElement}
      * 
@@ -194,6 +219,7 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
                             new MappedElementDefinitionRowViewModel(
                                     this.GetOrCreateElementDefinition(component), component, MappingDirection.FromDstToHub);
                     
+                    this.MapCategories(element);
                     this.elements.add(element);
                     this.MapContainedElement(element);
                     return element;
@@ -520,35 +546,5 @@ public class ComponentToElementMappingRule extends MappingRule<CapellaComponentC
         }
 
         valueSet.setManual(new ValueArray<>(Arrays.asList(refValue.Get()), String.class));
-    }
-
-    /**
-     * Tries to add the specified {@linkplain newThing} to the provided {@linkplain ContainerList} and retrieved the new reference from the cache after save
-     * 
-     * @param <TThing> the type of {@linkplain Thing}
-     * @param newThing the new {@linkplain Thing}
-     * @param clonedReferenceDataLibrary the cloned {@linkplain ReferenceDataLibrary} where the {@linkplain newThing} is contained
-     * @param refThing the {@linkplain Ref} acting as an out parameter here
-     * @return a value indicating whether the {@linkplain newThing} has been successfully created and retrieved from the cache
-     */
-    private <TThing extends Thing> boolean TryCreateReferenceDataLibraryThing(TThing newThing, ReferenceDataLibrary clonedReferenceDataLibrary, Ref<TThing> refThing)
-    {
-        try
-        {
-            var transaction = new ThingTransactionImpl(TransactionContextResolver.resolveContext(clonedReferenceDataLibrary), clonedReferenceDataLibrary);
-            transaction.createOrUpdate(clonedReferenceDataLibrary);
-            transaction.createOrUpdate(newThing);
-            
-            this.hubController.Write(transaction);
-            this.hubController.RefreshReferenceDataLibrary(clonedReferenceDataLibrary);
-            
-            return this.hubController.TryGetThingFromChainOfRdlBy(x -> x.getIid().compareTo(newThing.getIid()) == 0, refThing);
-        }
-        catch(Exception exception)
-        {
-            this.Logger.error(String.format("Could not create the %s because %s", newThing.getClassKind(), exception));
-            this.Logger.catching(exception);
-            return false;
-        }       
     }
 }
