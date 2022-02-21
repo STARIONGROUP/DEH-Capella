@@ -177,11 +177,11 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         
         else if(mappedElement.GetDstElement() instanceof LogicalComponent)
         {
-            this.MapCategory(mappedElement.GetHubElement(), "Logical", ClassKind.ElementDefinition);
+            this.MapCategory(mappedElement.GetHubElement(), "Logical Component", ClassKind.ElementDefinition);
         }
         else if(mappedElement.GetDstElement() instanceof PhysicalComponent)
         {
-            this.MapCategory(mappedElement.GetHubElement(), "Physical", ClassKind.ElementDefinition);
+            this.MapCategory(mappedElement.GetHubElement(), "Physical Component", ClassKind.ElementDefinition);
         }
     }
         

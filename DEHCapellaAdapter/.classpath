@@ -15,7 +15,7 @@
 			<attribute name="ignore_optional_problems" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/DEHCommonJ-1.0.0.jar" sourcepath="C:/CODE/DEHP/DEH-CommonJ/src/main/java">
+	<classpathentry kind="lib" path="lib/DEHCommonJ-1.0.0.jar" sourcepath="../DEH-CommonJ/src/main/java">
 		<attributes>
 			<attribute name="source_encoding" value="UTF-8"/>
 		</attributes>
