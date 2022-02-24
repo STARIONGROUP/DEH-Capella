@@ -637,7 +637,7 @@ public final class DstController implements IDstController
     {
         try
         {
-            if(containerList.stream().noneMatch(x -> x.getIid().equals(thing.getIid())))
+            if(thing.getContainer() == null || containerList.stream().noneMatch(x -> x.getIid().equals(thing.getIid())))
             {
                 containerList.add(thing);
             }

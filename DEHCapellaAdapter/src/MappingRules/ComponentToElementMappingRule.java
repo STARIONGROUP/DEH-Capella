@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
@@ -155,22 +156,27 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
      */
     private void MapCategories(MappedElementDefinitionRowViewModel mappedElement)
     {
-        if(StringUtils.containsIgnoreCase(mappedElement.GetDstElement().getName(), "system"))
+        if(mappedElement.GetDstElement().eContainer() instanceof ComponentPkg)
         {
             this.MapCategory(mappedElement.GetHubElement(), "System", ClassKind.ElementDefinition);
         }
         
-        if(mappedElement.GetDstElement().isActor()) 
+        if(StringUtils.containsIgnoreCase(mappedElement.GetDstElement().getName(), "subsystem"))
+        {
+            this.MapCategory(mappedElement.GetHubElement(), "Subsystem", ClassKind.ElementDefinition);
+        }
+        
+        if(mappedElement.GetDstElement().isActor())
         {
             this.MapCategory(mappedElement.GetHubElement(), "Actor", ClassKind.ElementDefinition);
         }
 
-        if(mappedElement.GetDstElement().isHuman()) 
+        if(mappedElement.GetDstElement().isHuman())
         {
             this.MapCategory(mappedElement.GetHubElement(), "Human", ClassKind.ElementDefinition);
         }
 
-        if(mappedElement.GetDstElement().isAbstract()) 
+        if(mappedElement.GetDstElement().isAbstract())
         {
             this.MapCategory(mappedElement.GetHubElement(), "Abstract", ClassKind.ElementDefinition);
         }
@@ -226,19 +232,10 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         
                 });
         
-        if(mappedElement.GetHubElement() == null)
-        {
-            mappedElement.SetHubElement(this.GetOrCreateElementDefinition(component));
-        }
-        else
-        {
-            mappedElement.SetHubElement(mappedElement.GetHubElement().clone(true));
-        }
-
         this.MapProperties(mappedElement.GetHubElement(), component);
         
         if(container.getContainedElement()
-                .stream().anyMatch(x -> AreTheseEquals(x.getName(), mappedElement.GetHubElement().getName())))
+                .stream().anyMatch(x -> AreTheseEquals(x.getElementDefinition().getIid(), mappedElement.GetHubElement().getIid())))
         {
             return;
         }
@@ -265,7 +262,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         String shortName = GetShortName(component);
         
         ElementDefinition elementDefinition = this.elements.stream()
-                .filter(x -> x.GetHubElement() != null && AreTheseEquals(x.GetHubElement().getShortName(), shortName))
+                .filter(x -> x.GetHubElement() != null && AreTheseEquals(x.GetHubElement().getShortName().toLowerCase(), shortName.toLowerCase()))
                 .map(x -> x.GetHubElement())
                 .findFirst()
                 .orElse(this.hubController.GetOpenIteration()
@@ -273,6 +270,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
                     .stream()
                     .filter(x -> AreTheseEquals(x.getShortName(), shortName))
                     .findFirst()
+                    .map(x -> x.clone(true))
                     .orElse(null));
         
         if(elementDefinition == null)
@@ -286,7 +284,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             return elementDefinition;
         }
 
-        return elementDefinition.clone(true);
+        return elementDefinition;
     }
     
     /**
@@ -300,7 +298,8 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         for (Property property : component.getContainedProperties())
         {
             Optional<Parameter> existingParameter = elementDefinition.getContainedParameter().stream()
-                    .filter(x -> this.AreShortNamesEquals(x.getParameterType(), property.getName()))
+                    .filter(x -> this.AreShortNamesEquals(x.getParameterType(), GetShortName(property)) 
+                            || x.getParameterType().getName().compareToIgnoreCase(property.getName()) == 0)
                     .findAny();
 
             Ref<ParameterType> refParameterType = new Ref<>(ParameterType.class);
@@ -386,7 +385,8 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         {
             String shortName = GetShortName(property.getName());
             
-            if(!this.hubController.TryGetThingFromChainOfRdlBy(x -> this.AreShortNamesEquals(x, shortName) || this.AreShortNamesEquals(x, shortName.substring(0, 1)), refParameterType))
+            if(!this.hubController.TryGetThingFromChainOfRdlBy(x -> this.AreShortNamesEquals(x, shortName) 
+                    || x.getName().compareToIgnoreCase(property.getName()) == 0, refParameterType))
             {
                 ParameterType parameterType = null;
                 
