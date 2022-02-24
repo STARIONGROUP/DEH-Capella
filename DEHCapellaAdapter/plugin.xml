@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.eclipse.ui.commands">
+      <category id="DEH.Capella.Commands.CommandsCategory"
+            name="Commands category">
+      </category>
+      <command categoryId="DEH.Capella.Commands.CommandsCategory"
+            name="Open/Close Hub Panel"
+            id="DEH.Capella.OpenHubPanel">
+      </command>
+      <command categoryId="DEH.Capella.Commands.CommandsCategory"
+            name="Open/Close Impact Views Panel"
+            id="DEH.Capella.OpenImpactViewPanel">
+      </command>
+      <command categoryId="DEH.Capella.Commands.CommandsCategory"
+            id="DEH.Capella.MapToHub"
+            name="Map Selection To Hub">
+      </command>
+   </extension>
+   <extension point="org.eclipse.ui.handlers">
+      <handler class="Commands.OpenHubBrowserCommand"
+            commandId="DEH.Capella.OpenHubPanel">
+      </handler>
+      <handler class="Commands.OpenImpactViewCommand"
+            commandId="DEH.Capella.OpenImpactViewPanel">
+      </handler>
+      <handler class="Commands.MapToHubCommand"
+            commandId="DEH.Capella.MapToHub">
+      </handler>
+   </extension>
+   <extension point="org.eclipse.ui.menus">
+		<menuContribution locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         	<menu id="DEH.Capella.DEHMenu"
+               label="DEHP"
+               mnemonic="M">
+            	<command commandId="DEH.Capella.OpenHubPanel"
+                  id="DEH.Capella.Menus.OpenHubPanel"
+                  mnemonic="S">
+            	</command>
+            	<command commandId="DEH.Capella.OpenImpactViewPanel"
+                  id="DEH.Capella.Menus.OpenImpactViewPanel"
+                  mnemonic="S">
+            	</command>
+			</menu>
+		</menuContribution>
+		
+		<menuContribution locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+        	<toolbar id="DEH.Capella.Toolbar">
+            	<command commandId="DEH.Capella.OpenHubPanel"
+                   icon="icons/icon16.png"
+                   id="DEH.Capella.Toolbars.OpenAdapterPanels"
+                   style="pulldown"
+                   tooltip="Open/Close the DEH Capella adapter panels">
+            	</command>
+         	</toolbar>
+ 		</menuContribution>
+ 		<menuContribution locationURI="menu:DEH.Capella.Toolbars.OpenAdapterPanels">
+	        <command commandId="DEH.Capella.OpenHubPanel"
+                   icon="icons/icon16.png"
+                   style="push"
+                   id="DEH.Capella.Toolbars.OpenHubPanel"
+                   tooltip="Open/Close the Hub Panel">
+        	</command>
+	        <separator name="additions" visible="false"/>
+	        <command commandId="DEH.Capella.OpenImpactViewPanel"
+                   icon="icons/icon16.png"
+                   style="push"
+                   id="DEH.Capella.Toolbars.OpenImpactViewPanel"
+                   tooltip="Open/Close the Impact View Panel">
+	        </command>
+     	</menuContribution>
+		<menuContribution allPopups="false" locationURI="popup:org.eclipse.ui.popup.any">
+		      <command commandId="DEH.Capella.MapToHub"
+		      			style="push"
+	      			 	icon="icons/icon16.png"
+                   		id="DEH.Capella.ContextMenu.MapToHub"
+                   		tooltip="Map the selected element to the Hub"/>
+	   	</menuContribution>
+   	</extension>
+	<extension point="org.eclipse.ui.views">
+    	<category id="DEH.Capella.Views" name="DEH Capella adapter"/>
+        <view id="HubBrowserPanel"
+                name="HubBrowser"
+                icon="icons/icon16.png"
+             	category="DEH.Capella.Views"
+                class="Views.CapellaHubBrowserPanel"/>
+        <view id="ImpactViewPanel"
+                name="ImpactView"
+                icon="icons/icon16.png"
+             	category="DEH.Capella.Views"
+                class="Views.CapellaImpactViewPanel"/>
+	</extension>
+</plugin>
