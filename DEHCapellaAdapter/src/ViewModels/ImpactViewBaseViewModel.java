@@ -58,7 +58,7 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
     protected IDstController DstController;
     
     /**
-     * The {@linkplain Class} of the {@linkplain TThing} for future check
+     * The {@linkplain Class} of the {@linkplain #TThing} for future check
      */
     private Class<TThing> clazz;
 
@@ -67,7 +67,7 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
      * 
      * @param hubController the {@linkplain IHubController} instance
      * @param dstController the {@linkplain IDstController} instance
-     * @param clazz the {@linkplain Class} of the {@linkplain TThing} for future check
+     * @param clazz the {@linkplain Class} of the {@linkplain #TThing} for future check
      */
     protected ImpactViewBaseViewModel(IHubController hubController, IDstController dstController, Class<TThing> clazz)
     {
@@ -144,8 +144,8 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
     /**
      * Gets the {@linkplain IThingRowViewModel} that represent the {@linkplain Thing}
      * 
-     * @param thing the {@linkplain TThing} 
-     * @return the {@linkplain IThingRowViewModel} of {@linkplain TThing}
+     * @param thing the {@linkplain #TThing} 
+     * @return the {@linkplain IThingRowViewModel} of {@linkplain #TThing}
      */
     protected abstract IThingRowViewModel<TThing> GetRowViewModelFromThing(TThing thing);
     

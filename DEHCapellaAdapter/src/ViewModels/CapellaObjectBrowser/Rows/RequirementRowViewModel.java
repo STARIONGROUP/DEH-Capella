@@ -39,7 +39,7 @@ public class RequirementRowViewModel extends ElementRowViewModel<Requirement>
      * @param parent the {@linkplain IRowViewModel} parent of this view model
      * @param element the {@linkplain TRequirement} represented by this row view model
      */
-    protected RequirementRowViewModel(IElementRowViewModel<?> parent, Requirement element)
+    public RequirementRowViewModel(IElementRowViewModel<?> parent, Requirement element)
     {
         super(parent, element);
     }

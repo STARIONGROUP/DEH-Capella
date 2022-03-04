@@ -63,7 +63,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     /**
      * Initializes a new {@linkplain RequirementImpactViewViewModel}
      * 
-     * @param hubController the {@linkplain IHubController}
+     * @param dstController the {@linkplain IDstController}
      * @param sessionService the {@linkplain ICapellaSessionService}
      */
     public CapellaImpactViewViewModel(IDstController dstController, ICapellaSessionService sessionService)
@@ -169,9 +169,8 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     }
         
     /**
-     * Gets the {@linkplain Thing} by it's Iid from the capella sessions
+     * Gets the {@linkplain Thing} by its Iid from the capella sessions
      * 
-     * @param <TElementRowViewModel> the type of {@linkplain ElementRowViewModel} to retrieve
      * @param childrenCollection the {@linkplain Collection} collection from the parent row view model
      * @param id the id of the searched {@linkplain TElementRowViewModel}
      * @param refElement the {@linkplain Ref} of {@linkplain TElementRowViewModel} as ref parameter

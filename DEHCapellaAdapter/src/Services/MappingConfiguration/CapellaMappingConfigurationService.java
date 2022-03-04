@@ -145,7 +145,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
             
             if(this.HubController.TryGetThingById(optionalCorrespondence.get().right, refElementDefinition))
             {
-                mappedElement.SetHubElement(refElementDefinition.Get().clone(true));
+                mappedElement.SetHubElement(refElementDefinition.Get().clone(false));
             }
             
             refMappedElementRowViewModel.Set(mappedElement);

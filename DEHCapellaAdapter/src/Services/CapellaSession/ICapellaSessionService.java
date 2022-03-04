@@ -74,4 +74,11 @@ public interface ICapellaSessionService
      * @return a {@linkplain HashMap} of {@linkplain URI} and a {@linkplain List} of {@linkplain CapellaElement}
      */
     HashMap<URI, List<CapellaElement>> GetAllCapellaElementsFromOpenSessions();
+
+    /**
+     * Gets the {@linkplain Observable} of {@linkplain Session} that indicates when the emitted session gets saved
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
+     */
+    Observable<Session> SessionUpdated();
 }

@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.data.requirement.Requirement;
 
 import DstController.IDstController;
+import Enumerations.MappedElementRowStatus;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import MappingRules.RequirementToRequirementsSpecificationMappingRule;
@@ -46,9 +48,13 @@ import Reactive.ObservableCollection;
 import Reactive.ObservableValue;
 import Utils.Ref;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.ComponentRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.RequirementRowViewModel;
 import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
 import ViewModels.Interfaces.IRequirementBrowserViewModel;
+import ViewModels.ObjectBrowser.ElementDefinitionTree.Rows.ElementDefinitionRowViewModel;
+import ViewModels.ObjectBrowser.RequirementTree.Rows.RequirementSpecificationRowViewModel;
 import ViewModels.ObjectBrowser.Rows.ThingRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
@@ -57,6 +63,7 @@ import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.Iteration;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
+import cdp4common.sitedirectorydata.DomainOfExpertise;
 
 class DstMappingConfigurationDialogViewModelTestFixture
 {
@@ -68,6 +75,9 @@ class DstMappingConfigurationDialogViewModelTestFixture
     private DstMappingConfigurationDialogViewModel viewModel;
     private Iteration iteration;
     private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> dstMapResult;
+    private ObservableValue<ThingRowViewModel<? extends Thing>> selectedElementDefinitionObservable;
+    private ObservableValue<ThingRowViewModel<? extends Thing>> selectedRequirementObservable;
+    private ObservableValue<ElementRowViewModel<? extends CapellaElement>> selectedCapellaElementObservable;
 
     /**
      * @throws java.lang.Exception
@@ -84,12 +94,12 @@ class DstMappingConfigurationDialogViewModelTestFixture
         this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
         when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
         
-        var selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<CapellaElement>>();
-        when(this.capellaObjectBrowser.GetSelectedElement()).thenReturn(selectedCapellaElementObservable.Observable());
-        var selectedElementDefinitionObservable = new ObservableValue<ThingRowViewModel<? extends Thing>>();
-        when(this.elementDefinitionBrowser.GetSelectedElement()).thenReturn(selectedElementDefinitionObservable.Observable());
-        var selectedRequirementObservable = new ObservableValue<ThingRowViewModel<? extends Thing>>();
-        when(this.requirementBrowserViewModel.GetSelectedElement()).thenReturn(selectedRequirementObservable.Observable());
+        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends CapellaElement>>();
+        when(this.capellaObjectBrowser.GetSelectedElement()).thenReturn(this.selectedCapellaElementObservable.Observable());
+        this.selectedElementDefinitionObservable = new ObservableValue<ThingRowViewModel<? extends Thing>>();
+        when(this.elementDefinitionBrowser.GetSelectedElement()).thenReturn(this.selectedElementDefinitionObservable.Observable());
+        this.selectedRequirementObservable = new ObservableValue<ThingRowViewModel<? extends Thing>>();
+        when(this.requirementBrowserViewModel.GetSelectedElement()).thenReturn(this.selectedRequirementObservable.Observable());
         
         this.iteration = new Iteration();
         when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
@@ -115,20 +125,13 @@ class DstMappingConfigurationDialogViewModelTestFixture
     @Test
     public void VerifySetMappedElement()
     {
-        var elements = new ArrayList<EObject>();
-        var physicalComponent = mock(PhysicalComponent.class);
-        when(physicalComponent.getName()).thenReturn("physicalComponent");
-        elements.add(physicalComponent);
-        var requirement = mock(Requirement.class);
-        when(requirement.getName()).thenReturn("requirement");
-        elements.add(requirement);
-        var componentPkg = mock(ComponentPkg.class);
-        when(componentPkg.getName()).thenReturn("componentPkg");
-        elements.add(componentPkg);
-        
+        var mappedRequirement = new MappedRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
+        mappedRequirement.SetShouldCreateNewTargetElement(false);
+        this.dstMapResult.add(mappedRequirement);
+        var elements = SetupCapellaElements();
         assertDoesNotThrow(() -> this.viewModel.SetMappedElement(elements));
     }
-    
+
     @Test
     public void VerifyResetPremappedThings()
     {
@@ -176,5 +179,84 @@ class DstMappingConfigurationDialogViewModelTestFixture
         this.dstMapResult.add(mappedRequirement);
         this.viewModel.SetSelectedMappedElement(mappedRequirement);
         assertDoesNotThrow(() -> this.viewModel.WhenMapToNewHubElementCheckBoxChanged(true));
+    }
+    
+    @Test
+    public void VerifySetHubElement()
+    {
+        var owner = new DomainOfExpertise();
+        owner.setName("Owner");
+        owner.setShortName("owner");
+        var elementDefinition = new ElementDefinition();
+        elementDefinition.setOwner(owner);
+        elementDefinition.setName("elementDefinition");
+        elementDefinition.setShortName("elementDefinition");
+        var requirementSpecification = new RequirementsSpecification();
+        requirementSpecification.setOwner(owner);
+        requirementSpecification.setName("requirementSpecification");
+        requirementSpecification.setShortName("requirementSpecification");
+        
+        
+        assertDoesNotThrow(() -> this.selectedElementDefinitionObservable.Value(new ElementDefinitionRowViewModel(elementDefinition, null)));
+        assertDoesNotThrow(() -> this.selectedRequirementObservable.Value(new RequirementSpecificationRowViewModel(requirementSpecification, null)));
+        var mappedElementDefinition = new MappedElementDefinitionRowViewModel(mock(PhysicalComponent.class), MappingDirection.FromDstToHub);
+        mappedElementDefinition.SetShouldCreateNewTargetElement(false);
+        mappedElementDefinition.SetRowStatus(MappedElementRowStatus.None);
+        this.viewModel.SetSelectedMappedElement(mappedElementDefinition);
+        assertDoesNotThrow(() -> this.selectedElementDefinitionObservable.Value(new ElementDefinitionRowViewModel(elementDefinition, null)));
+        var mappedRequirement = new MappedRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
+        mappedRequirement.SetShouldCreateNewTargetElement(false);
+        mappedRequirement.SetRowStatus(MappedElementRowStatus.None);
+        this.viewModel.SetSelectedMappedElement(mappedRequirement);
+        assertDoesNotThrow(() -> this.selectedRequirementObservable.Value(new RequirementSpecificationRowViewModel(requirementSpecification, null)));   
+    }
+    
+    @Test
+    public void VerifyUpdateMappedElement()
+    {
+        this.viewModel.SetMappedElement(this.SetupCapellaElements());
+        var firstRowIsSelected = new ArrayList<Boolean>();
+        this.viewModel.GetMappedElementCollection().get(0).GetIsSelected().subscribe(x -> firstRowIsSelected.add(x));
+        
+        this.viewModel.SetSelectedMappedElement(this.viewModel.GetMappedElementCollection().get(0));
+        assertTrue(firstRowIsSelected.get(firstRowIsSelected.size() - 1));
+        assertEquals(1, firstRowIsSelected.size());
+        
+
+        var mappedElement = new MappedElementDefinitionRowViewModel(mock(PhysicalComponent.class), MappingDirection.FromDstToHub);
+        mappedElement.SetRowStatus(MappedElementRowStatus.NewElement);
+        assertDoesNotThrow(() -> this.viewModel.SetSelectedMappedElement(mappedElement));
+        
+        var mappedRequirement = new MappedRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
+        mappedRequirement.SetRowStatus(MappedElementRowStatus.ExisitingElement);
+        assertDoesNotThrow(() -> this.viewModel.SetSelectedMappedElement(mappedRequirement));
+        
+        var physicalComponent = mock(PhysicalComponent.class);
+        when(physicalComponent.getId()).thenReturn(UUID.randomUUID().toString());
+        when(physicalComponent.getName()).thenReturn("physicalComponent");
+        when(physicalComponent.eContents()).thenReturn(new BasicEList<EObject>());
+        
+        var requirement0 = mock(Requirement.class);
+        var requirement1 = mock(Requirement.class);
+        when(requirement1.getName()).thenReturn("requirement");
+        
+        assertDoesNotThrow(() -> this.selectedCapellaElementObservable.Value(new ComponentRowViewModel(null, physicalComponent)));
+        assertDoesNotThrow(() -> this.selectedCapellaElementObservable.Value(new RequirementRowViewModel(null, requirement0)));   
+        assertDoesNotThrow(() -> this.selectedCapellaElementObservable.Value(new RequirementRowViewModel(null, requirement1)));   
+    }
+    
+    private ArrayList<EObject> SetupCapellaElements()
+    {
+        var elements = new ArrayList<EObject>();
+        var physicalComponent = mock(PhysicalComponent.class);
+        when(physicalComponent.getName()).thenReturn("physicalComponent");
+        elements.add(physicalComponent);
+        var requirement = mock(Requirement.class);
+        when(requirement.getId()).thenReturn(UUID.randomUUID().toString());
+        elements.add(requirement);
+        var componentPkg = mock(ComponentPkg.class);
+        when(componentPkg.getName()).thenReturn("componentPkg");
+        elements.add(componentPkg);
+        return elements;
     }
 }

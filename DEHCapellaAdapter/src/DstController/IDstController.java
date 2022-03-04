@@ -68,8 +68,6 @@ public interface IDstController extends IDstControllerBase
 
     /**
      * Loads the saved mapping and applies the mapping rule to the loaded things
-     * 
-     * @return the number of mapped things loaded
      */
     void LoadMapping();
 

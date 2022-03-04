@@ -23,8 +23,10 @@
  */
 package Utils.Stereotypes;
 
+import static Utils.Operators.Operators.AreTheseEquals;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.emf.ecore.ENamedElement;
@@ -79,8 +81,8 @@ public final class StereotypeUtils
      * 
      * @param <TCapellaElement> the {@linkplain Type} to look for 
      * @param element the {@linkplain EObject} to get the children from
-     * @param clazz the {@linkplain Class} of the {@linkplain TCapellaElement} parameter
-     * @return a {@linkplain Collection} of element typed as the one specified by the {@linkplain TCapellaElement} parameter
+     * @param clazz the {@linkplain Class} of the {@linkplain #TCapellaElement} parameter
+     * @return a {@linkplain Collection} of element typed as the one specified by the {@linkplain #TCapellaElement} parameter
      */
     @SuppressWarnings("unchecked")
     public static <TCapellaElement> Collection<TCapellaElement> GetChildren(EObject element, Class<TCapellaElement> clazz)
@@ -136,13 +138,47 @@ public final class StereotypeUtils
             return child.eContainer() == parent; 
         }
     }
+  
+    /**
+     * Verifies the provided {@linkplain Element} element is owned by the provided {@linkplain Element} parent
+     * 
+     * @param element the {@linkplain EObject} to verify
+     * @param parent the {@linkplain EObject} parent
+     * @return a value indicating whether the element is owned by the specified parent
+     */
+    public static boolean IsOwnedBy(CapellaElement element, CapellaElement parent)
+    {
+        if(parent.eContents().isEmpty())
+        {
+            return false;
+        }
+        
+        for (var child : parent.eContents().stream()
+                .filter(x -> x instanceof CapellaElement)
+                .map(x -> (CapellaElement)x)
+                .collect(Collectors.toList()))
+        {
+            if(AreTheseEquals(child.getId(), element.getId()))
+            {
+                return true;
+            }
+            
+            if(!child.eContents().isEmpty() && IsOwnedBy(element, child))
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
     
     /**
      * Attempts to retrieve the parent of parent of the provided {@linkplain Class} element. 
      * Hence this is not always possible if the user decides to structure its SysML project differently.
      * However, this feature is only a nice to have.
      *  
-     * @param requirement the {@linkplain Class} element to get the parent from
+     * @param requirement the {@linkplain Requirement} element to get the parent from
+     * @param possibleParent the {@linkplain Ref} of {@linkplain RequirementsPkg}
      * @return a value indicating whether the name of the parent was retrieved with success
      */
     public static boolean TryGetPossibleRequirementsSpecificationElement(Requirement requirement, Ref<RequirementsPkg> possibleParent)

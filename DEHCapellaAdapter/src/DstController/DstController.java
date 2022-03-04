@@ -41,6 +41,7 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
+import MappingRules.ComponentToElementMappingRule;
 import Reactive.ObservableCollection;
 import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
@@ -59,6 +60,7 @@ import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedRequirementRowViewModel;
 import cdp4common.commondata.ClassKind;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Definition;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.BinaryRelationship;
@@ -66,7 +68,8 @@ import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.ElementUsage;
 import cdp4common.engineeringmodeldata.Iteration;
 import cdp4common.engineeringmodeldata.Parameter;
-import cdp4common.engineeringmodeldata.ParameterValueSet;
+import cdp4common.engineeringmodeldata.ParameterOrOverrideBase;
+import cdp4common.engineeringmodeldata.ParameterOverride;
 import cdp4common.engineeringmodeldata.ParameterValueSetBase;
 import cdp4common.engineeringmodeldata.Relationship;
 import cdp4common.engineeringmodeldata.Requirement;
@@ -114,9 +117,14 @@ public final class DstController implements IDstController
     private final ICapellaMappingConfigurationService mappingConfigurationService;
     
     /**
-     * the {@linkplain ICapellaSessionService} instance 
+     * The {@linkplain ICapellaSessionService} instance 
      */
     private final ICapellaSessionService capellaSessionService;
+    
+    /**
+     * A value indicating whether the {@linkplain DstController} should load mapping when the HUB session is refresh or reloaded
+     */
+    private boolean isHubSessionRefreshSilent;
     
     /**
      * Backing field for {@linkplain GetDstMapResult}
@@ -243,7 +251,7 @@ public final class DstController implements IDstController
      * @param hubController the {@linkplain IHubController} instance
      * @param logService the {@linkplain ICapellaLogService} instance
      * @param mappingConfigurationService the {@linkplain ICapellaMappingConfigurationService} instance
-     * @param mappingConfigurationService the {@linkplain ICapellaSessionService} instance
+     * @param capellaSessionService the {@linkplain ICapellaSessionService} instance
      */
     public DstController(IMappingEngineService mappingEngine, IHubController hubController, ICapellaLogService logService, 
             ICapellaMappingConfigurationService mappingConfigurationService, ICapellaSessionService capellaSessionService)
@@ -262,13 +270,24 @@ public final class DstController implements IDstController
                 this.dstMapResult.clear();
                 this.selectedDstMapResultForTransfer.clear();
                 this.selectedHubMapResultForTransfer.clear();
-            }});
+            }
+        });
+        
+        this.capellaSessionService.SessionUpdated()
+            .subscribe(x -> this.LoadMapping());
+        
+        this.hubController.GetSessionEventObservable()
+            .subscribe(x -> 
+            {
+                if(!this.isHubSessionRefreshSilent)
+                {
+                    this.LoadMapping(); 
+                }
+            });
     }
         
     /**
      * Loads the saved mapping and applies the mapping rule to the loaded things
-     * 
-     * @return the number of mapped things loaded
      */
     @Override
     public void LoadMapping()
@@ -424,6 +443,7 @@ public final class DstController implements IDstController
     {
         try
         {
+            this.isHubSessionRefreshSilent = true;
             Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
             Iteration iterationClone = iterationTransaction.getLeft();
             ThingTransaction transaction = iterationTransaction.getRight();
@@ -434,9 +454,12 @@ public final class DstController implements IDstController
             transaction.createOrUpdate(iterationClone);
             
             this.hubController.Write(transaction);
-            this.mappingConfigurationService.RefreshExternalIdentifierMap();
             boolean result = this.hubController.Refresh();
+            this.mappingConfigurationService.RefreshExternalIdentifierMap();
+            this.PrepareParameterOverrides();
+            result &= this.hubController.Refresh();
             this.UpdateParameterValueSets();
+            this.isHubSessionRefreshSilent = true;
             return result && this.hubController.Refresh();
         }
         catch (Exception exception)
@@ -447,51 +470,108 @@ public final class DstController implements IDstController
         finally
         {
             this.selectedDstMapResultForTransfer.clear();
+            this.isHubSessionRefreshSilent = true;
         }
     }
-    
+
+    /**
+    * Prepares all the {@linkplain ParameterOverrides}s that are to be updated or created
+    * 
+    * @throws TransactionException can throw {@linkplain TransactionException}
+    */
+   private void PrepareParameterOverrides() throws TransactionException
+    {
+       Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
+       Iteration iterationClone = iterationTransaction.getLeft();
+       ThingTransaction transaction = iterationTransaction.getRight();
+       
+        var elementDefinitions = this.selectedDstMapResultForTransfer.stream()
+                .filter(x -> x instanceof ElementDefinition)
+                .map(x -> (ElementDefinition)x)
+                .filter(x -> !x.getContainedElement().isEmpty())
+                .filter(x -> x.getContainedElement().stream().anyMatch(u -> !u.getParameterOverride().isEmpty()))
+                .collect(Collectors.toList());
+        
+        for (var elementDefinition : elementDefinitions)
+        {
+            var refElementDefinition = new Ref<>(ElementDefinition.class);
+            
+            if(this.hubController.TryGetThingById(elementDefinition.getIid(), refElementDefinition))
+            {
+                var updatedElementDefinition = refElementDefinition.Get().clone(false);
+                this.AddOrUpdateIterationAndTransaction(updatedElementDefinition, iterationClone.getElement(), transaction);
+                this.PrepareElementUsageForTransfer(iterationClone, transaction, updatedElementDefinition, true);
+            }           
+        }
+
+        transaction.createOrUpdate(iterationClone);
+        this.hubController.Write(transaction);
+    }
+
     /**
      * Updates the {@linkplain ValueSet} with the new values
      * 
-     * @return a value indicating whether the operation went OK
-     * @return a {@linkplain Pair} of a value indicating whether the transaction has been committed with success
-     * and a string of the exception if any
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     public void UpdateParameterValueSets() throws TransactionException
     {
         Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
         Iteration iterationClone = iterationTransaction.getLeft();
         ThingTransaction transaction = iterationTransaction.getRight();
-
-        List<Parameter> allParameters = this.dstMapResult.stream()
-                .filter(x -> x.GetHubElement() instanceof ElementDefinition)
-                .flatMap(x -> ((ElementDefinition)x.GetHubElement()).getParameter().stream())
+        
+        var allParameterOverrides = this.selectedDstMapResultForTransfer.stream()
+                .filter(x -> x instanceof ElementDefinition)
+                .flatMap(x -> ((ElementDefinition)x).getContainedElement().stream())
+                .flatMap(x -> x.getParameterOverride().stream())
+                .filter(x -> x.getOriginal() != null)
                 .collect(Collectors.toList());
         
-        for(Parameter parameter : allParameters)
+        var allParameters = this.selectedDstMapResultForTransfer.stream()
+                .filter(x -> x instanceof ElementDefinition)
+                .flatMap(x -> ((ElementDefinition)x).getParameter().stream())
+                .filter(x -> x.getOriginal() != null)
+                .collect(Collectors.toList());
+        
+        this.UpdateParameterValueSets(transaction, allParameters, Parameter.class);
+        this.UpdateParameterValueSets(transaction, allParameterOverrides, ParameterOverride.class);
+        
+        transaction.createOrUpdate(iterationClone);
+        this.hubController.Write(transaction);
+        
+        this.logService.Append("%s ParameterOverrides and %s Parameter have been updated or created", allParameterOverrides.size(), allParameters.size());
+    }
+    
+    /**
+     * Updates the value sets of the provided {@linkplain Collection} of {@linkplain #TParameter}
+     * 
+     * @param <TParameter> the type of {@linkplain ParameterOrOverrideBase}
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param allParameters the collection of {@linkplain #TParameter} to update
+     * @param clazz the {@linkplain Class} of {@linkplain #TParameter}
+     * @throws TransactionException can throw {@linkplain TransactionException}
+     */
+    private <TParameter extends ParameterOrOverrideBase> void UpdateParameterValueSets(ThingTransaction transaction, List<TParameter> allParameters, Class<TParameter> clazz) throws TransactionException
+    {
+        for(var parameter : allParameters)
         {
-            Ref<Parameter> refNewParameter = new Ref<>(Parameter.class);
+            var refNewParameter = new Ref<>(Parameter.class);
             
             if(this.hubController.TryGetThingById(parameter.getIid(), refNewParameter))
             {
-                Parameter newParameterCloned = refNewParameter.Get().clone(false);
+                var newParameterCloned = refNewParameter.Get().clone(false);
     
-                for (int index = 0; index < parameter.getValueSet().size(); index++)
+                for (int index = 0; index < parameter.getValueSets().size(); index++)
                 {
-                    ParameterValueSet clone = newParameterCloned.getValueSet().get(index).clone(false);
-                    this.UpdateValueSet(clone, parameter.getValueSet().get(index));
+                    var clone = newParameterCloned.getValueSet().get(index).clone(false);
+                    this.UpdateValueSet(clone, parameter.getValueSets().get(index));
                     transaction.createOrUpdate(clone);
                 }
     
                 transaction.createOrUpdate(newParameterCloned);
             }
         }
-        
-        transaction.createOrUpdate(iterationClone);
-        this.hubController.Write(transaction);
-    }    
-
+    }
+    
     /**
      * Updates the specified {@linkplain ParameterValueSetBase}
      * 
@@ -509,7 +589,7 @@ public final class DstController implements IDstController
      * 
      * @param iterationClone the {@linkplain Iteration} clone
      * @param transaction the {@linkplain ThingTransaction}
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private void PrepareThingsForTransfer(Iteration iterationClone, ThingTransaction transaction) throws TransactionException
     {
@@ -557,22 +637,79 @@ public final class DstController implements IDstController
      * @param iterationClone the {@linkplain Iteration} clone
      * @param transaction the {@linkplain ThingTransaction}
      * @param elementDefinition the {@linkplain ElementDefinition} to prepare
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private void PrepareElementDefinitionForTransfer(Iteration iterationClone, ThingTransaction transaction, 
             ElementDefinition elementDefinition) throws TransactionException
     {
-        for (ElementUsage elementUsage : elementDefinition.getContainedElement())
-        {
-            this.AddOrUpdateIterationAndTransaction(elementUsage.getElementDefinition(), iterationClone.getElement(), transaction);
-            this.AddOrUpdateIterationAndTransaction(elementUsage, elementDefinition.getContainedElement(), transaction);
-        }
+        this.PrepareElementUsageForTransfer(iterationClone, transaction, elementDefinition, false);
 
         this.AddOrUpdateIterationAndTransaction(elementDefinition, iterationClone.getElement(), transaction);
         
-        for(Parameter parameter : elementDefinition.getParameter())
-        {            
+        this.PrepareParameterOrOverrideForTransfer(transaction, elementDefinition.getParameter());
+    }
+
+    /**
+     * Prepares the provided {@linkplain ElementDefinition} contained {@linkplain ElementUsages} for transfer
+     * 
+     * @param iterationClone the {@linkplain Iteration} clone
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param elementDefinition the {@linkplain ElementDefinition} that might contain {@linkplain ElementUsages}
+     * @throws TransactionException can throw {@linkplain TransactionException}
+     */
+    private void PrepareElementUsageForTransfer(Iteration iterationClone, ThingTransaction transaction,
+            ElementDefinition elementDefinition, boolean shouldPrepareParameterOverride) throws TransactionException
+    {
+        for (ElementUsage elementUsage : elementDefinition.getContainedElement())
+        {
+           this.AddOrUpdateIterationAndTransaction(elementUsage.getElementDefinition().clone(false), iterationClone.getElement(), transaction);
+           this.AddOrUpdateIterationAndTransaction(elementUsage, elementDefinition.getContainedElement(), transaction);
+           
+           if(transaction.getAddedThing().stream().anyMatch(x -> AreTheseEquals(x.getIid(), elementUsage.getIid())))
+           {
+               this.PrepareDefinition(transaction, elementUsage);
+           }
+           
+           if(shouldPrepareParameterOverride)
+           {
+               this.PrepareParameterOrOverrideForTransfer(transaction, elementUsage.getParameterOverride());
+           }
+        }
+    }
+
+    /**
+     * Prepare the provided parameters
+     * 
+     * @param <TParameter> the type of {@linkplain ParameterOrOverrideBase} to prepare
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param parameters the {@linkplain ContainerList} of {@linkplain ParameterOrOverrideBase} to prepare
+     * @param clazz the {@linkplain Class} of {@linkplain #TParameter}
+     * @throws TransactionException can throw {@linkplain TransactionException}
+     */
+    private <TParameter extends ParameterOrOverrideBase> void PrepareParameterOrOverrideForTransfer(ThingTransaction transaction, ContainerList<TParameter> parameters) throws TransactionException
+    {
+        for(var parameter : parameters.stream().filter(x -> x.getOriginal() != null).collect(Collectors.toList()))
+        {
             transaction.createOrUpdate(parameter);
+        }
+    }
+    
+    /**
+     * Prepares any transferable {@linkplain Definition} from the provided {@linkplain DefinedThing}
+     * 
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param definedThing the {@linkplain DefinedThing} that can contain a transferable {@linkplain Definition}
+     * @throws TransactionException can throw {@linkplain TransactionException}
+     */
+    private void PrepareDefinition(ThingTransaction transaction, DefinedThing definedThing) throws TransactionException
+    {
+        var definition = definedThing.getDefinition().stream()
+                                                .filter(x -> AreTheseEquals(x.getLanguageCode(), ComponentToElementMappingRule.CIID))
+                                                .findFirst();
+        
+        if(definition.isPresent())
+        {
+            this.AddOrUpdateIterationAndTransaction(definition.get(), definedThing.getDefinition(), transaction);
         }
     }
 
@@ -582,7 +719,7 @@ public final class DstController implements IDstController
      * @param iterationClone the {@linkplain Iteration} clone
      * @param transaction the {@linkplain ThingTransaction}
      * @param requirementsSpecification the {@linkplain RequirementsSpecification} to prepare
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private void PrepareRequirementForTransfer(Iteration iterationClone, ThingTransaction transaction, 
             RequirementsSpecification requirementsSpecification) throws TransactionException
@@ -607,9 +744,9 @@ public final class DstController implements IDstController
     /**
      * Registers the {@linkplain RequirementsGroup} to be created or updated
      * 
-     * @param transaction
-     * @param groups
-     * @throws TransactionException
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param groups the {@linkplain ContainerList} of {@linkplain RequirementsGroup}
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private void RegisterRequirementsGroups(ThingTransaction transaction, ContainerList<RequirementsGroup> groups) throws TransactionException
     {
@@ -631,7 +768,7 @@ public final class DstController implements IDstController
      * @param thing the {@linkplain Thing}
      * @param containerList the {@linkplain ContainerList} of {@linkplain Thing} typed as T
      * @param transaction the {@linkplain ThingTransaction}
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private <T extends Thing> void AddOrUpdateIterationAndTransaction(T thing, ContainerList<T> containerList, ThingTransaction transaction) throws TransactionException
     {
