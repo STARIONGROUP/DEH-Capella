@@ -93,11 +93,11 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
     @Override
     public void BuildTree(Collection<EObject> elements)
     {
-        this.BrowserTreeModel.Value(DefaultOutlineModel.createOutlineModel(
+        this.browserTreeModel.Value(DefaultOutlineModel.createOutlineModel(
                 new CapellaObjectBrowserTreeViewModel(this.SessionService.GetModels()),
                 new CapellaObjectBrowserTreeRowViewModel(), true));
                 
-        this.IsTheTreeVisible.Value(true);
+        this.isTheTreeVisible.Value(true);
     }
 
     /**

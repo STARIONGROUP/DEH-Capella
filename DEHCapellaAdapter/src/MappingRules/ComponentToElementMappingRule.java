@@ -147,7 +147,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         {
             this.elements = this.CastInput(input);
             this.Map(this.elements);
-            this.SaveMappingConfiguration(this.elements);
+            this.SaveMappingConfiguration(this.elements, MappingDirection.FromDstToHub);
             return new ArrayList<>(this.elements);
         }
         catch (Exception exception)
@@ -160,21 +160,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             this.portsToConnect.clear();
         }
     }
-
-    /**
-     * Saves the mapping configuration
-     * 
-     * @param elements the {@linkplain CapellaComponentCollection}
-     */
-    private void SaveMappingConfiguration(CapellaComponentCollection elements)
-    {
-        for (MappedElementDefinitionRowViewModel mappedElement : elements)
-        {
-            this.mappingConfiguration.AddToExternalIdentifierMap(
-                    mappedElement.GetHubElement().getIid(), mappedElement.GetDstElement().getId(), MappingDirection.FromDstToHub);
-        }
-    }
-
+    
     /**
      * Maps the provided collection of  {@linkplain Component}
      * 

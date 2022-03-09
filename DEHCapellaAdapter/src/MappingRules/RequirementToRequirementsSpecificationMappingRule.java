@@ -56,9 +56,9 @@ import cdp4common.commondata.Definition;
 import cdp4common.engineeringmodeldata.RequirementsGroup;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.Category;
-            
+
 /**
- * The {@linkplain BlockDefinitionMappingRule} is the mapping rule implementation for transforming {@linkplain CapellaRequirementCollection} to {@linkplain RequirementsSpecification}
+ * The {@linkplain RequirementToRequirementsSpecificationMappingRule} is the mapping rule implementation for transforming {@linkplain CapellaRequirementCollection} into {@linkplain RequirementsSpecification}
  */
 public class RequirementToRequirementsSpecificationMappingRule extends DstToHubBaseMappingRule<CapellaRequirementCollection, ArrayList<MappedRequirementRowViewModel>>
 {
@@ -96,7 +96,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
         {
             CapellaRequirementCollection mappedElements = this.CastInput(input);
             this.Map(mappedElements);
-            this.SaveMappingConfiguration(mappedElements);
+            this.SaveMappingConfiguration(mappedElements, MappingDirection.FromDstToHub);
             return new ArrayList<MappedRequirementRowViewModel>(mappedElements);
         }
         catch (Exception exception)
@@ -110,21 +110,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             this.temporaryRequirementsGroups.clear();
         }
     }
-    
-    /**
-     * Saves the mapping configuration
-     * 
-     * @param elements the {@linkplain CapellaRequirementCollection}
-     */
-    private void SaveMappingConfiguration(CapellaRequirementCollection elements)
-    {
-        for (MappedRequirementRowViewModel mappedRequirementsSpecification : elements)
-        {
-            this.mappingConfiguration.AddToExternalIdentifierMap(
-                    mappedRequirementsSpecification.GetHubElement().getIid(), mappedRequirementsSpecification.GetDstElement().getId(), MappingDirection.FromDstToHub);
-        }
-    }
-    
+        
     /**
      * Maps the provided collection of requirements
      * 

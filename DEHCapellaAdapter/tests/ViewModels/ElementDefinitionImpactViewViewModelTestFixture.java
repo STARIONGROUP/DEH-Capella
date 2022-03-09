@@ -103,7 +103,7 @@ class ElementDefinitionImpactViewViewModelTestFixture
         
         var timesTheBrowserTreeModelHasBeenUpdated = new Ref<Integer>(Integer.class, 0);
         
-        this.viewModel.BrowserTreeModel.Observable().subscribe(x -> 
+        this.viewModel.browserTreeModel.Observable().subscribe(x -> 
             timesTheBrowserTreeModelHasBeenUpdated.Set(timesTheBrowserTreeModelHasBeenUpdated.Get() + 1));
         
         this.dstMapResult.addAll(this.elements);

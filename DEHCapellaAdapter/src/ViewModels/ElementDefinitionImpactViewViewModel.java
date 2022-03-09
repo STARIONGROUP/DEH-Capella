@@ -91,7 +91,7 @@ public class ElementDefinitionImpactViewViewModel extends ImpactViewBaseViewMode
         }
         catch(Exception exception)
         {
-            this.Logger.catching(exception);
+            this.logger.catching(exception);
         }
     }    
 
@@ -117,7 +117,7 @@ public class ElementDefinitionImpactViewViewModel extends ImpactViewBaseViewMode
     @Override
     protected IThingRowViewModel<ElementDefinition> GetRowViewModelFromThing(ElementDefinition thing)
     {
-        IterationElementDefinitionRowViewModel iterationRowViewModel = (IterationElementDefinitionRowViewModel) this.BrowserTreeModel.Value().getRoot();
+        IterationElementDefinitionRowViewModel iterationRowViewModel = (IterationElementDefinitionRowViewModel) this.browserTreeModel.Value().getRoot();
         
         return iterationRowViewModel.GetContainedRows().stream()
             .filter(x -> AreTheseEquals(thing.getIid(), x.GetThing().getIid()))
