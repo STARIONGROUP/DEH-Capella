@@ -88,7 +88,7 @@ public class PropertyRowViewModel extends ElementRowViewModel<Property> implemen
     }
 
     /**
-     * @return
+     * Process data values for the represented {@linkplain Property}
      */
     @SuppressWarnings("unchecked")
     private void ProcessDataValues()

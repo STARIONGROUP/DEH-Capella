@@ -33,6 +33,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import ViewModels.Interfaces.IViewModel;
@@ -78,21 +79,15 @@ public abstract class BaseViewPart<TViewModel extends IViewModel, TView extends 
     }
     
     /**
-     * An assert whether this view is visible
-     */
-    private boolean isVisibleInTheDock = true;
-    
-    /**
-     * The {@link TViewModel} as the data context of this view
+     * The {@link #TViewModel} as the data context of this view
      */
     protected TViewModel DataContext;
     
     /**
-     * The {@linkplain TView} this view wraps
+     * The {@linkplain #TView} this view wraps
      */
     protected TView View;
-    
-    
+        
     /**
      * Initializes a new {@linkplain BaseViewPart}
      * 
@@ -124,26 +119,33 @@ public abstract class BaseViewPart<TViewModel extends IViewModel, TView extends 
         this.composite.setFocus();
     }
     
+    /**
+     * Gets a value indicating whether the panel is visible in the dock
+     *  
+     * @return a {@linkplain boolean}
+     */
+    private boolean IsVisibleInTheDock()
+    {
+        return PlatformUI.getWorkbench()
+                .getActiveWorkbenchWindow().getActivePage().findView(this.panelId) != null;
+    }
     
     /**
      * Show or Hide this {@link MagicDrawBasePanel}
-     * @param workbenchPage 
      * 
-     * @param dockingManager The {@link DockingManager} that is allowed to hide or show this frame
+     * @param workbenchPage the {@linkplain IWorkbenchPage} that is allowed to hide or show this frame
      */
     public void ShowHide(IWorkbenchPage workbenchPage)
     {
         try
         {
-            if(this.isVisibleInTheDock)
+            if(this.IsVisibleInTheDock())
             {
                 workbenchPage.hideView(workbenchPage.findView(this.panelId));
-                this.isVisibleInTheDock = false;
             }
             else
             {
                 workbenchPage.showView(this.panelId);
-                this.isVisibleInTheDock = true;
             }
         }
         catch(Exception exception)

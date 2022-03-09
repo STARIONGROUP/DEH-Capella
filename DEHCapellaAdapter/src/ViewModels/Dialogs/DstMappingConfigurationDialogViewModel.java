@@ -327,7 +327,7 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
     {
         this.mappedElements.clear();
                 
-        for (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElementRowViewModel : this.dstController.GetDstMapResult())
+        for (var mappedElementRowViewModel : this.dstController.GetDstMapResult())
         {
             this.mappedElements.add(mappedElementRowViewModel);
         }

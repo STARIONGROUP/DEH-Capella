@@ -35,16 +35,22 @@ public interface ICapellaSessionListenerService extends SessionManagerListener
 {
     /**
      * The {@linkplain Observable} of {@linkplain Session} when the one {@linkplain Session} gets updated
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
      */
     Observable<Session> SessionUpdated();
 
     /**
      * The {@linkplain Observable} of {@linkplain Session} when the one {@linkplain Session} gets removed from the {@linkplain SessionManager}
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
      */
     Observable<Session> SessionRemoved();
 
     /**
      * The {@linkplain Observable} of {@linkplain Session} when the one {@linkplain Session} gets added to the {@linkplain SessionManager}
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
      */
     Observable<Session> SessionAdded();
 }

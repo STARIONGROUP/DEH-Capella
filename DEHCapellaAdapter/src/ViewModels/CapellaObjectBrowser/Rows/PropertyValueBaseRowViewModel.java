@@ -39,7 +39,7 @@ public abstract class PropertyValueBaseRowViewModel<TElement extends CapellaElem
      * Initializes a new {@linkplain ComponentRowViewModel}
      * 
      * @param parent the {@linkplain IRowViewModel} parent of this view model
-     * @param element the {@linkplain TElement} represented by this row view model
+     * @param element the {@linkplain #TElement} represented by this row view model
      */
     protected PropertyValueBaseRowViewModel(IElementRowViewModel<?> parent, TElement element)
     {
@@ -47,7 +47,7 @@ public abstract class PropertyValueBaseRowViewModel<TElement extends CapellaElem
     }
 
     /**
-     * Gets the value representation based on the represented {@linkplain TElement}
+     * Gets the value representation based on the represented {@linkplain #TElement}
      * 
      * @return a {@linkplain String}
      */

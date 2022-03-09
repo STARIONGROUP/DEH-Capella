@@ -64,7 +64,7 @@ public class CapellaSessionService implements ICapellaSessionService
     /**
      * Backing field for {@linkplain HasAnyOpenSessionObservable}
      */
-    private ObservableValue<Boolean> hasAnyOpenSession = new ObservableValue<Boolean>(false, Boolean.class);
+    private ObservableValue<Boolean> hasAnyOpenSession = new ObservableValue<>(false, Boolean.class);
 
     /**
      * Gets the {@linkplain Observable} of value indicating whether there is any session open
@@ -77,6 +77,22 @@ public class CapellaSessionService implements ICapellaSessionService
         return this.hasAnyOpenSession.Observable();
     }
     
+    /**
+     * Backing field for {@linkplain HasAnyOpenSessionObservable}
+     */
+    private ObservableValue<Session> sessionUpdated = new ObservableValue<>();
+
+    /**
+     * Gets the {@linkplain Observable} of {@linkplain Session} that indicates when the emitted session gets saved
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
+     */
+    @Override
+    public Observable<Session> SessionUpdated()
+    {
+        return this.sessionUpdated.Observable();
+    }
+        
     /**
      * Initializes a new {@linkplain CapellaSessionService}
      * 
@@ -93,7 +109,11 @@ public class CapellaSessionService implements ICapellaSessionService
         this.sessionManager.AddListener(this.sessionListener);
 
         this.sessionListener.SessionUpdated()
-            .subscribe(x -> this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession()));
+            .subscribe(x -> 
+            {
+                this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession());
+                this.sessionUpdated.Value(x);
+            });
             
         this.sessionListener.SessionAdded()
             .subscribe(x -> this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession()));

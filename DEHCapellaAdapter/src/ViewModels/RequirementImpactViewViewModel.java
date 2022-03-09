@@ -51,7 +51,7 @@ public class RequirementImpactViewViewModel extends ImpactViewBaseViewModel<Requ
      * Initializes a new {@linkplain RequirementImpactViewViewModel}
      * 
      * @param hubController the {@linkplain IHubController}
-     * @param dstControllern the {@linkplain IDstController}
+     * @param dstController the {@linkplain IDstController}
      */
     public RequirementImpactViewViewModel(IHubController hubController, IDstController dstController)
     {
@@ -69,7 +69,7 @@ public class RequirementImpactViewViewModel extends ImpactViewBaseViewModel<Requ
     {
         try
         {
-            if(thing.getOriginal() == null && iteration.getRequirementsSpecification().stream().noneMatch(x -> this.DoTheseThingsRepresentTheSameThing(x, thing)))
+            if(iteration.getRequirementsSpecification().stream().noneMatch(x -> this.DoTheseThingsRepresentTheSameThing(x, thing)))
             {
                 iteration.getRequirementsSpecification().add(thing);
             }

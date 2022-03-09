@@ -65,7 +65,7 @@ public abstract class ProjectStructuralElementRowViewModel<TElement extends Stru
      * Initializes a new {@linkplain ComponentRowViewModel}
      * 
      * @param parent the {@linkplain IRowViewModel} parent of this view model
-     * @param element the {@linkplain TElement} represented by this row view model
+     * @param element the {@linkplain #TElement} represented by this row view model
      * @param containedElementClazz the {@linkplain Class} of the contained element
      */
     protected ProjectStructuralElementRowViewModel(IElementRowViewModel<?> parent, TElement element, Class<TContainedElement> containedElementClazz)
@@ -97,9 +97,9 @@ public abstract class ProjectStructuralElementRowViewModel<TElement extends Stru
     }
     
     /**
-     * Adds to the contained element the corresponding row view model representing the provided {@linkplain TContainedElement}
+     * Adds to the contained element the corresponding row view model representing the provided {@linkplain #TContainedElement}
      * 
-     * @param element the {@linkplain TContainedElement}
+     * @param element the {@linkplain #TContainedElement}
      */
     protected abstract void AddToContainedRows(TContainedElement element);
 }

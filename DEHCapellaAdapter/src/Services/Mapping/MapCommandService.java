@@ -114,7 +114,7 @@ public class MapCommandService implements IMapCommandService
      * @param dstMappingDialog the {@linkplain IDstMappingConfigurationDialogViewModel} instance
      * @param logService the {@linkplain ICapellaLogService} instance
      * @param hubController the {@linkplain IHubController} instance
-     * @param hubController the {@linkplain ICapellaSessionService} instance
+     * @param sessionService the {@linkplain ICapellaSessionService} instance
      */
     public MapCommandService(ICapellaSelectionService selectionService, IDstController dstController,
             INavigationService navigationService, IDstMappingConfigurationDialogViewModel dstMappingDialog,

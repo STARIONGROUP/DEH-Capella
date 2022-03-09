@@ -185,8 +185,6 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
     
     /**
      * Sets a value indicating whether the current row is expanded
-     * 
-     * @return a {@linkplain boolean}
      */
     @Override
     public void SetIsExpanded(boolean isExpanded)
@@ -198,7 +196,7 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
      * Initializes a new {@linkplain ElementRowViewModel}
      * 
      * @param parent the {@linkplain IElementRowViewModel} parent view model of this row view model
-     * @param element the {@linkplain TElement} {@linkplain Element} which is represented
+     * @param element the {@linkplain #TElement} {@linkplain Element} which is represented
      */
     public ElementRowViewModel(IElementRowViewModel<?> parent, TElement element)
     {

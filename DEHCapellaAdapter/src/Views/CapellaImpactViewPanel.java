@@ -77,9 +77,9 @@ public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanel
     }
     
     /**
-     * Binds the <code>TViewModel viewModel</code> to the implementing view
+     * Binds the {@linkplain TViewModel} viewModel to the implementing view
      * 
-     * @param <code>viewModel</code> the view model to bind
+     * @param viewModel the view model to bind
      */
     @Override
     public void Bind()

@@ -43,6 +43,8 @@ public class CapellaSessionListenerService implements ICapellaSessionListenerSer
     
     /**
      * The {@linkplain Observable} of {@linkplain Session} when the one {@linkplain Session} gets added to the {@linkplain SessionManager}
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
      */
     @Override
     public Observable<Session> SessionAdded()
@@ -57,6 +59,8 @@ public class CapellaSessionListenerService implements ICapellaSessionListenerSer
 
     /**
      * The {@linkplain Observable} of {@linkplain Session} when the one {@linkplain Session} gets removed from the {@linkplain SessionManager}
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
      */
     @Override
     public Observable<Session> SessionRemoved()
@@ -71,6 +75,8 @@ public class CapellaSessionListenerService implements ICapellaSessionListenerSer
     
     /**
      * The {@linkplain Observable} of {@linkplain Session} when the one {@linkplain Session} gets updated
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
      */
     @Override
     public Observable<Session> SessionUpdated()

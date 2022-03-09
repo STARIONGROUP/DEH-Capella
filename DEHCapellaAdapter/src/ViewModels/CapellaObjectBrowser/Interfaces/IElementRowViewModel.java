@@ -29,6 +29,8 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 
 /**
  * The {@linkplain IElementRowViewModel} is the interface definition for all {@linkplain ElementRowViewModel}
+ * 
+ * @param <TElement> the type of {@linkplain CapellaElement} this row view model represents
  */
 public interface IElementRowViewModel<TElement extends CapellaElement> extends IRowViewModel
 {

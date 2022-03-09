@@ -77,7 +77,7 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
     private final Logger logger = LogManager.getLogger();
     
     /**
-     * Backing field for {@linkplain GetDialogResult()}
+     * Backing field for {@linkplain #GetDialogResult()}
      */
     private Boolean dialogResult;
 
@@ -275,9 +275,9 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
     }
     
     /**
-     * Binds the <code>TViewModel viewModel</code> to the implementing view
+     * Binds the {@linkplain TViewModel} viewModel to the implementing view
      * 
-     * @param <code>viewModel</code> the view model to bind
+     * @param viewModel the view model to bind
      */
     public void Bind()
     {

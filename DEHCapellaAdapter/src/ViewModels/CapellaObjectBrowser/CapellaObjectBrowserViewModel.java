@@ -54,9 +54,9 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
     private ObservableValue<ElementRowViewModel<?>> selectedElement = new ObservableValue<ElementRowViewModel<?>>();
     
     /**
-     * Gets the {@linkplain Observable} of {@linkplain ClassRowViewModel} that yields the selected element
+     * Gets the {@linkplain Observable} of {@linkplain ElementRowViewModel} that yields the selected element
      * 
-     * @return an {@linkplain Observable} of {@linkplain ClassRowViewModel}
+     * @return an {@linkplain Observable} of {@linkplain ElementRowViewModel}
      */
     @Override
     public Observable<ElementRowViewModel<?>> GetSelectedElement()

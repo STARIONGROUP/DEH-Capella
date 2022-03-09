@@ -36,6 +36,7 @@ import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingEngineService.MappingRule;
 import Utils.Ref;
 import cdp4common.commondata.ClassKind;
+import cdp4common.commondata.NamedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.sitedirectorydata.CategorizableThing;
@@ -48,8 +49,8 @@ import cdp4dal.operations.TransactionContextResolver;
 /**
  * The DstToHubBaseMappingRule is the mapping rule for rules that maps from DST to the Hub
  *  
- * @param TInput the input type the rule will process
- * @param TOutput the output type the rule will return
+ * @param <TInput> the input type the rule will process
+ * @param <TOutput> the output type the rule will return
  */
 public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> extends MappingRule<TInput, TOutput>
 {
@@ -94,7 +95,7 @@ public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> ex
     protected void MapCategory(CategorizableThing thing, String categoryName, ClassKind... permissibleClass)
     {
         try
-        {         
+        {
             Ref<Category> refCategory = new Ref<>(Category.class);
             var categoryShortName = GetShortName(categoryName);
             
@@ -115,7 +116,7 @@ public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> ex
             }
             else
             {
-                this.Logger.debug(String.format("The Category %s could not be found or created for the element %s", categoryShortName, thing));
+                this.Logger.debug(String.format("The Category %s could not be found or created", categoryShortName));
             }
         }
         catch(Exception exception)
