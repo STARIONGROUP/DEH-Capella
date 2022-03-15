@@ -29,10 +29,6 @@ import org.eclipse.ui.part.ViewPart;
 import Annotations.ExludeFromCodeCoverageGeneratedReport;
 import App.AppContainer;
 import ViewModels.Interfaces.ICapellaHubBrowserPanelViewModel;
-import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
-import ViewModels.Interfaces.IHubBrowserPanelViewModel;
-import ViewModels.Interfaces.IRequirementBrowserViewModel;
-import Views.ContextMenu.HubBrowserContextMenu;
 import Views.ViewParts.BaseViewPart;
 
 /**
@@ -42,16 +38,6 @@ import Views.ViewParts.BaseViewPart;
 @ExludeFromCodeCoverageGeneratedReport
 public class CapellaHubBrowserPanel extends BaseViewPart<ICapellaHubBrowserPanelViewModel, HubBrowserPanel>
 {
-    /**
-     * The context menu view instance for the {@linkplain RequirementBorwser}
-     */
-    private HubBrowserContextMenu requirementBrowserContextMenu;
-    
-    /**
-     * The context menu view instance for the {@linkplain ElementDefinitionBorwser}
-     */
-    private HubBrowserContextMenu elementDefinitionContextMenu;
-
     /**
      * Initializes a new {@linkplain CapellaHubBrowserPanel}
      */
