@@ -70,11 +70,6 @@ public class CapellaHubBrowserPanel extends BaseViewPart<ICapellaHubBrowserPanel
     {
         this.CreateBasePartControl(parent);
         this.View = new HubBrowserPanel();
-//        this.elementDefinitionContextMenu = new HubBrowserContextMenu(IElementDefinitionBrowserViewModel.class);
-//        this.View.GetElementDefinitionBrowser().SetContextMenu(this.elementDefinitionContextMenu);
-//        this.requirementBrowserContextMenu = new HubBrowserContextMenu(IRequirementBrowserViewModel.class);
-//        this.View.GetRequirementBrowser().SetContextMenu(this.requirementBrowserContextMenu);
-        
         this.SetDataContext(AppContainer.Container.getComponent(ICapellaHubBrowserPanelViewModel.class));
         this.Container.add(this.View);
     }
