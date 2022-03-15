@@ -31,7 +31,6 @@ Export-Package: App,
  Services.Mapping,
  Services.MappingConfiguration,
  Utils,
- Utils.ImageLoader.Images,
  Utils.Stereotypes,
  ViewModels,
  ViewModels.CapellaObjectBrowser,
@@ -45,3 +44,4 @@ Export-Package: App,
  Views,
  Views.Dialogs,
  Views.ViewParts
+Import-Package: ViewModels.Rows

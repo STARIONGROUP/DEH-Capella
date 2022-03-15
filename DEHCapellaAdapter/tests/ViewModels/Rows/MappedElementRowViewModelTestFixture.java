@@ -52,8 +52,8 @@ import org.eclipse.sirius.viewpoint.description.Viewpoint;
 
 public class MappedElementRowViewModelTestFixture
 {
-    private MappedRequirementRowViewModel dstRequirementRowViewModel;
-    private MappedRequirementRowViewModel hubRequirementRowViewModel;
+    private MappedDstRequirementRowViewModel dstRequirementRowViewModel;
+    private MappedDstRequirementRowViewModel hubRequirementRowViewModel;
     private MappedElementDefinitionRowViewModel dstElementRowViewModel;
     private MappedElementDefinitionRowViewModel hubElementRowViewModel;
 
@@ -62,8 +62,8 @@ public class MappedElementRowViewModelTestFixture
     {
         var requirement = mock(SystemUserRequirement.class);
         when(requirement.getName()).thenReturn("user requirement");
-        this.dstRequirementRowViewModel = new MappedRequirementRowViewModel(requirement, MappingDirection.FromDstToHub);
-        this.hubRequirementRowViewModel = new MappedRequirementRowViewModel(new RequirementsSpecification(), requirement, MappingDirection.FromHubToDst);
+        this.dstRequirementRowViewModel = new MappedDstRequirementRowViewModel(requirement, MappingDirection.FromDstToHub);
+        this.hubRequirementRowViewModel = new MappedDstRequirementRowViewModel(new RequirementsSpecification(), requirement, MappingDirection.FromHubToDst);
         
         var logicalComponent = mock(LogicalComponent.class);
         when(logicalComponent.getName()).thenReturn("la component");

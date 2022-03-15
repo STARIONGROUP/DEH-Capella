@@ -24,12 +24,12 @@
 package Utils.Stereotypes;
 
 import static Utils.Operators.Operators.AreTheseEquals;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.emf.ecore.EClass;
@@ -42,13 +42,10 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.fa.FaPackage;
-import org.polarsys.capella.core.data.pa.PaFactory;
 import org.polarsys.capella.core.data.pa.PaPackage;
-import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementPackage;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
-import org.polarsys.capella.core.data.requirement.SystemFunctionalRequirement;
 
 import Utils.Ref;
 
@@ -243,20 +240,20 @@ public final class StereotypeUtils
      */
     private static Pair<EClassifier, EFactory> GetEClassAndFactory(String className)
     {
-        Function<EPackage, EClassifier> fun = (EPackage ePackage) -> ePackage.getEClassifier(className);
+        Function<EPackage, EClassifier> getClassifierFromClassName = (EPackage ePackage) -> ePackage.getEClassifier(className);
         
-        var eClass = fun.apply(PaPackage.eINSTANCE);
+        var eClass = getClassifierFromClassName.apply(PaPackage.eINSTANCE);
         var eFactory = PaPackage.eINSTANCE.getEFactoryInstance();
         
         if(eClass == null)
         {
-            eClass = fun.apply(FaPackage.eINSTANCE);
+            eClass = getClassifierFromClassName.apply(FaPackage.eINSTANCE);
             eFactory = FaPackage.eINSTANCE.getEFactoryInstance();
         }
         
         if(eClass == null)
         {
-            eClass = fun.apply(RequirementPackage.eINSTANCE);
+            eClass = getClassifierFromClassName.apply(RequirementPackage.eINSTANCE);
             eFactory = RequirementPackage.eINSTANCE.getEFactoryInstance();
         }
 

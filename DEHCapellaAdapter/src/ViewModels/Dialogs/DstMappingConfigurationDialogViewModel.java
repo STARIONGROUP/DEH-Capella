@@ -57,7 +57,7 @@ import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
 import ViewModels.Interfaces.IRequirementBrowserViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import Views.Dialogs.DstMappingConfigurationDialog;
 import cdp4common.commondata.NamedThing;
 import cdp4common.commondata.Thing;
@@ -308,7 +308,7 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
             }
             else
             {
-                mappedElement = new MappedRequirementRowViewModel((Requirement) rowViewModel.GetElement(), MappingDirection.FromDstToHub);
+                mappedElement = new MappedDstRequirementRowViewModel((Requirement) rowViewModel.GetElement(), MappingDirection.FromDstToHub);
             }
 
             this.mappedElements.add(mappedElement);
@@ -401,7 +401,7 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
             if(this.TryGetRequirementSpecification((Requirement)capellaElement, refRequirementSpecification, refShouldCreateNewTargetElement))
             {
                 mappedElementRowViewModel = 
-                        new MappedRequirementRowViewModel(refRequirementSpecification.Get(), (Requirement)capellaElement, MappingDirection.FromDstToHub);
+                        new MappedDstRequirementRowViewModel(refRequirementSpecification.Get(), (Requirement)capellaElement, MappingDirection.FromDstToHub);
             }
         }
         

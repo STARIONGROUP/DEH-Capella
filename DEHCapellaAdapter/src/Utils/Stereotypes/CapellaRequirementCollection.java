@@ -26,10 +26,10 @@ package Utils.Stereotypes;
 import java.util.ArrayList;
 
 import Services.MappingEngineService.IMappableThingCollection;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 
 /**
- * The {@linkplain CapellaRequirementCollection} class represents a collection of {@linkplain MappedRequirementRowViewModel}.
+ * The {@linkplain CapellaRequirementCollection} class represents a collection of {@linkplain MappedDstRequirementRowViewModel}.
  * The {@linkplain CapellaRequirementCollection} is usable by the {@linkplain MappingEngine} and 
  * each item of the collection represents a mapping in the {@linkplain MappingDirection.FromDstToHub}
  * 
@@ -38,4 +38,4 @@ import ViewModels.Rows.MappedRequirementRowViewModel;
  * Meaning that defining a rule that takes as input a {@linkplain ArrayList} of any type isn't supported because of the java generic implementation.
  */
 @SuppressWarnings("serial")
-public class CapellaRequirementCollection extends ArrayList<MappedRequirementRowViewModel> implements IMappableThingCollection { }
+public class CapellaRequirementCollection extends ArrayList<MappedDstRequirementRowViewModel> implements IMappableThingCollection { }

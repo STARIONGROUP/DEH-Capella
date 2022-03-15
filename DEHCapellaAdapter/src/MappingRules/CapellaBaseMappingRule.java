@@ -71,10 +71,10 @@ public abstract class CapellaBaseMappingRule<TInput extends Object, TOutput> ext
      */
     protected void SaveMappingConfiguration(Collection<? extends MappedElementRowViewModel<?, ? extends CapellaElement>> elements, MappingDirection mappingDirection)
     {
-        for (var mappedRequirementsSpecification : elements)
+        for (var element : elements)
         {
             this.mappingConfiguration.AddToExternalIdentifierMap(
-                    mappedRequirementsSpecification.GetHubElement().getIid(), mappedRequirementsSpecification.GetDstElement().getId(), mappingDirection);
+                    element.GetHubElement().getIid(), element.GetDstElement().getId(), mappingDirection);
         }
     }
 }

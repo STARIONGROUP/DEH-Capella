@@ -59,7 +59,8 @@ import Utils.Ref;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedHubRequirementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
@@ -136,9 +137,9 @@ public class DstControllerTestFixture
                     (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
                     new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromHubToDst),
                     (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                    new MappedRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
+                    new MappedDstRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
                     (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                    new MappedRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
+                    new MappedHubRequirementRowViewModel(new Requirement(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
                     ));
         
         when(this.mappingConfigurationService.LoadMapping()).thenReturn(loadedMapping);
@@ -161,9 +162,9 @@ public class DstControllerTestFixture
                 (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
                 new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromHubToDst),
                 (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                new MappedRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
+                new MappedDstRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
                 (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                new MappedRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
+                new MappedDstRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
                 ));
         
         when(this.mappingEngine.Map(any())).thenReturn(mapResult);

@@ -50,7 +50,7 @@ import Utils.Ref;
 import ViewModels.Dialogs.Interfaces.IDstMappingConfigurationDialogViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import Views.Dialogs.DstMappingConfigurationDialog;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
@@ -127,7 +127,7 @@ class MapCommandServiceTestFixture
         dialogResult.Set(true);
         assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult));
         var mappedElement0 = new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(PhysicalComponent.class), MappingDirection.FromDstToHub);
-        var mappedElement1 = new MappedRequirementRowViewModel(new RequirementsSpecification(), mock(Requirement.class), MappingDirection.FromDstToHub);
+        var mappedElement1 = new MappedDstRequirementRowViewModel(new RequirementsSpecification(), mock(Requirement.class), MappingDirection.FromDstToHub);
         mappedElementResultFromTheMappingDialog.add(mappedElement0);
         mappedElementResultFromTheMappingDialog.add(mappedElement1);
                 
