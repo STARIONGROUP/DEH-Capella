@@ -24,6 +24,7 @@
 package Services.CapellaSession;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -36,6 +37,11 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellamodeller.Project;
+import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
+import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
+import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
 import Reactive.ObservableValue;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
@@ -145,6 +151,16 @@ public class CapellaSessionService implements ICapellaSessionService
         return this.sessionManager.HasAnyOpenSession();
     }
     
+    /**
+     * Gets the open {@linkplain Session}s
+     * 
+     * @return a {@linkplain List} of {@linkplain Session}
+     */
+    @Override
+    public List<Session> GetOpenSessions()
+    {
+        return this.sessionManager.GetSessions().stream().collect(Collectors.toList());
+    }
     
     /**
      * Gets the models of the active sessions
@@ -212,5 +228,93 @@ public class CapellaSessionService implements ICapellaSessionService
         });
         
         return sessionAndObjectsMap;
+    }
+
+    /**
+     * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement} in the Physical Architecture package
+     * 
+     * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
+     * @return a {@linkplain CapellaElement}
+     */
+    @Override
+    public CapellaElement GetTopElement(CapellaElement referenceElement)
+    {
+        return this.GetTopElement(referenceElement, Type.PA);
+    }
+
+    /**
+     * Gets the top element from the provided {@linkplain Session} in the Physical Architecture package
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain PhysicalComponent}
+     */
+    @Override
+    public PhysicalComponent GetTopElement(Session session)
+    {
+        return (PhysicalComponent) this.GetTopElement(this.GetProject(session), Type.PA);
+    }
+    
+    /**
+     * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
+     * 
+     * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
+     * @param architectureType the architecture {@linkplain Type}
+     * @return a {@linkplain Component}
+     */
+    @Override
+    public Component GetTopElement(CapellaElement referenceElement, Type architectureType)
+    {
+        return GetTopElement(this.GetProject(referenceElement), architectureType);
+    }
+
+    /**
+     * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
+     * 
+     * @param project the {@linkplain Project} used to search the correct session
+     * @param architectureType the architecture {@linkplain Type}
+     * @return a {@linkplain CapellaElement}
+     */
+    @Override
+    public Component GetTopElement(Project project, Type architectureType)
+    {
+        var architecture = BlockArchitectureExt.getBlockArchitecture(architectureType, project);
+        return architecture.getSystem();
+    }
+    
+    /**
+     * Gets the {@linkplain Project} element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
+     * 
+     * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
+     * @return a {@linkplain CapellaElement}
+     */
+    @Override
+    public Project GetProject(CapellaElement referenceElement)
+    {
+        var session = this.GetSession(referenceElement);
+        return this.GetProject(session);
+    }
+
+    /**
+     * Gets the {@linkplain Project} element from the provided {@linkplain Session}
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain Project} element
+     */
+    @Override
+    public Project GetProject(Session session)
+    {
+        var contents = session.getTransactionalEditingDomain().getResourceSet().getAllContents();
+        
+        Notifier element;
+        
+        while(contents.hasNext() && (element = contents.next()) !=null)
+        {
+            if(element instanceof Project)
+            {
+                return (Project)element;
+            }
+        }
+        
+        return null;
     }
 }

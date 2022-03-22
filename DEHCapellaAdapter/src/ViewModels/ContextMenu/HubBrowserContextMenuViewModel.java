@@ -26,14 +26,24 @@ package ViewModels.ContextMenu;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.cs.Component;
+
+import com.google.errorprone.annotations.Var;
+
+import DstController.IDstController;
+import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
+import Utils.Ref;
+import Utils.Stereotypes.HubElementCollection;
 import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
 import ViewModels.Interfaces.IHubBrowserContextMenuViewModel;
 import ViewModels.Interfaces.IObjectBrowserViewModel;
 import ViewModels.Interfaces.IRequirementBrowserViewModel;
+import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import io.reactivex.Observable;
@@ -46,27 +56,32 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
     /**
      * The {@linkplain IElementDefinitionBrowserViewModel}
      */
-    private IElementDefinitionBrowserViewModel elementDefinitionBrowserViewModel;
+    private final IElementDefinitionBrowserViewModel elementDefinitionBrowserViewModel;
     
     /**
      * The {@linkplain IRequirementBrowserViewModel}
      */
-    private IRequirementBrowserViewModel requirementBrowserViewModel;
+    private final IRequirementBrowserViewModel requirementBrowserViewModel;
     
     /**
      * The {@linkplain ICapellaSessionService}
      */
-    private ICapellaSessionService capellaSessionService;
+    private final ICapellaSessionService capellaSessionService;
     
     /**
      * The {@linkplain IHubController}
      */
-    private IHubController hubController;
+    private final IHubController hubController;
 
     /**
      * The {@linkplain ICapellaLogService}
      */
-    private ICapellaLogService logService;
+    private final ICapellaLogService logService;
+
+    /**
+     * The {@linkplain IDstController}
+     */
+    private final IDstController dstController;
 
     /**
      * Maps the top element towards the DST
@@ -142,16 +157,18 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
      * @param capellaSessionService the {@linkplain ICapellaSessionService}
      * @param hubController the {@linkplain IHubController}
      * @param logService the {@linkplain ICapellaLogService}
+     * @param dstController the {@linkplain IDstController}
      */
     public HubBrowserContextMenuViewModel(IElementDefinitionBrowserViewModel elementDefinitionBrowserViewModel,
             IRequirementBrowserViewModel requirementBrowserViewModel, ICapellaSessionService capellaSessionService,
-            IHubController hubController, ICapellaLogService logService)
+            IHubController hubController, ICapellaLogService logService, IDstController dstController)
     {
         this.elementDefinitionBrowserViewModel = elementDefinitionBrowserViewModel;
         this.requirementBrowserViewModel = requirementBrowserViewModel;
         this.capellaSessionService = capellaSessionService;
         this.hubController = hubController;
         this.logService = logService;
+        this.dstController = dstController;
         
         this.InitializeObservables();
     }
@@ -192,7 +209,7 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
      * @param topElement the {@linkplain ElementDefinition} optional
      */
     private void Map(ElementDefinition topElement)
-    {        
+    {
         var elements = new ArrayList<Thing>();
         
         if(topElement != null)
@@ -210,5 +227,21 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
         }
         
         this.logService.Append("Mapping in progress of %s elements", elements.size());
+        
+        var hubElements = new HubElementCollection();
+        
+        hubElements.addAll(elements.stream()
+                .filter(x -> x instanceof ElementDefinition)
+                .map(x -> (ElementDefinition)x)
+                .map(x -> 
+                {
+                    var refElement = new Ref<>(Component.class);
+                    this.dstController.TryGetElementByName(x, refElement);
+
+                    return new MappedElementDefinitionRowViewModel(x, refElement.Get(), MappingDirection.FromHubToDst);
+                })
+                .collect(Collectors.toList()));
+        
+        this.dstController.Map(hubElements, MappingDirection.FromHubToDst);
     }
 }

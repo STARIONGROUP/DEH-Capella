@@ -23,6 +23,7 @@
  */
 package MappingRules;
 
+import DstController.IDstController;
 import HubController.IHubController;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 
@@ -35,10 +36,16 @@ import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 public abstract class HubToDstBaseMappingRule<TInput extends Object, TOutput> extends CapellaBaseMappingRule<TInput, TOutput>
 {
     /**
-     * Initializes a new {@linkplain HubToDstBaseMappingRule}
+     * The {@linkplain IDstController} instance
+     */
+    IDstController dstController;
+    
+    /**
+     * Initializes a new {@linkplain DstToHubBaseMappingRule}
      * 
      * @param hubController the {@linkplain IHubController}
      * @param mappingConfiguration the {@linkplain IMagicDrawMappingConfigurationService}
+     * @param dstController the {@linkplain IDstController}
      */
     protected HubToDstBaseMappingRule(IHubController hubController, ICapellaMappingConfigurationService mappingConfiguration)
     {

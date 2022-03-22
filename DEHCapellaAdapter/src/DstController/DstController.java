@@ -37,7 +37,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.polarsys.capella.common.ef.command.AbstractReadWriteCommand;
+import org.polarsys.capella.common.helpers.TransactionHelper;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.capellamodeller.Project;
+import org.polarsys.capella.core.data.information.datatype.DataType;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
@@ -56,11 +62,11 @@ import Utils.Stereotypes.CapellaRequirementCollection;
 import Utils.Stereotypes.HubElementCollection;
 import Utils.Stereotypes.HubRequirementCollection;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import ViewModels.Rows.MappedRequirementBaseRowViewModel;
-import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Definition;
@@ -78,6 +84,7 @@ import cdp4common.engineeringmodeldata.Requirement;
 import cdp4common.engineeringmodeldata.RequirementsGroup;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.engineeringmodeldata.ValueSet;
+import cdp4common.sitedirectorydata.MeasurementScale;
 import cdp4common.types.ContainerList;
 import cdp4dal.exceptions.TransactionException;
 import cdp4dal.operations.ThingTransaction;
@@ -320,8 +327,7 @@ public final class DstController implements IDstController
                    & this.Map(allMappedHubRequirements, MappingDirection.FromHubToDst);
     
         timer.stop();
-    
-        
+            
         if(!result)
         {
             this.logService.Append(String.format("Could not load %s saved mapped things for some reason, check the log for details", mappedElements.size()), Level.ERROR);
@@ -405,8 +411,9 @@ public final class DstController implements IDstController
                         .anyMatch(d -> AreTheseEquals(d.GetDstElement().getId(), x.GetDstElement().getId())));
 
                 this.selectedHubMapResultForTransfer.clear();
+                this.selectedHubMapResultForTransfer.addAll(this.hubMapResult.stream().map(x -> x.GetDstElement()).collect(Collectors.toList()));
                 return this.hubMapResult.addAll(resultAsCollection);
-            }            
+            }
         }
         
         return false;
@@ -428,7 +435,7 @@ public final class DstController implements IDstController
                 result = this.TransferToHub();
                 break;
             case FromHubToDst:
-                result = true;
+                result = this.TransferToDst();
                 break;
             default:
                 result = false;
@@ -437,6 +444,57 @@ public final class DstController implements IDstController
         
         this.LoadMapping();
         return result;
+    }
+    
+    /**
+     * Transfers all the {@linkplain CapellaElement} contained in the {@linkplain hubMapResult} to the DST
+     * 
+     * @return a value indicating that all transfer could be completed
+     */
+    private boolean TransferToDst()
+    {
+        var project = this.capellaSessionService.GetProject(this.capellaSessionService.GetOpenSessions().get(0));
+        var result = new Ref<>(Boolean.class, false);
+        
+        TransactionHelper.getExecutionManager(project).execute(new AbstractReadWriteCommand() 
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    TransferTopElement(project);
+                    result.Set(true);
+                }
+                catch(Exception exception)
+                {
+                    logger.catching(exception);
+                    result.Set(false);
+                }
+            }
+        });
+
+        return result.Get();
+    }
+
+    /**
+     * Transfers the whole containment tree
+     * 
+     * @param project the {@linkplain Project} to update
+     */
+    private void TransferTopElement(Project project)
+    {
+        for (var mappedElementRowViewModel : this.hubMapResult)
+        {
+            if(mappedElementRowViewModel.GetDstElement().eContainer() == null)
+            {
+                var system = capellaSessionService.GetTopElement(project);
+                var newFeature = mappedElementRowViewModel.GetDstElement();
+                ((PhysicalComponent)system).getOwnedPhysicalComponents().add((PhysicalComponent) newFeature);
+                
+                break;
+            }
+        }
     }
     
     /**
@@ -572,7 +630,7 @@ public final class DstController implements IDstController
                     this.UpdateValueSet(clone, parameter.getValueSets().get(index));
                     transaction.createOrUpdate(clone);
                 }
-    
+
                 transaction.createOrUpdate(newParameterCloned);
             }
         }
@@ -853,6 +911,21 @@ public final class DstController implements IDstController
     }
     
     /**
+     * Tries to get the corresponding element based on the provided {@linkplain DefinedThing} name or short name. 
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param thing the {@linkplain DefinedThing} that can potentially match a {@linkplain #TElement} 
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    public <TElement extends CapellaElement> boolean TryGetElementByName(DefinedThing thing, Ref<TElement> refElement)
+    {
+        return this.TryGetElementBy(x -> x instanceof NamedElement
+                && (AreTheseEquals(thing.getName(), ((NamedElement)x).getName(), true)
+                || AreTheseEquals(thing.getShortName(), ((NamedElement)x).getName(), true)), refElement);
+    }
+        
+    /**
      * Tries to get the corresponding element that has the provided Id
      * 
      * @param <TElement> the type of {@linkplain CapellaElement} to query
@@ -891,5 +964,38 @@ public final class DstController implements IDstController
         }
         
         return refElement.HasValue();
+    }
+
+    /**
+     * Tries to get a {@linkplain DataType} that matches the provided {@linkplain MeasurementScale}
+     * 
+     * @param scale the {@linkplain MeasurementScale} of reference
+     * @param referenceElement a {@linkplain CapellaElement} that will point to the right session
+     * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
+     * @return a {@linkplain boolean}
+     */
+    @Override
+    public boolean TryGetDataType(MeasurementScale scale, CapellaElement referenceElement, Ref<DataType> refDataType)
+    {
+        var sessionUri = this.capellaSessionService.GetSession(referenceElement).getSessionResource().getURI();
+        
+        var elementsBySession = this.capellaSessionService.GetAllCapellaElementsFromOpenSessions();
+                
+        var dataTypes = elementsBySession.get(sessionUri).stream()
+                .filter(x -> x instanceof DataType)
+                .map(x -> (DataType)x)
+                .collect(Collectors.toList());
+        
+        var optionalScale = dataTypes.stream()
+                .filter(x -> AreTheseEquals(x.getName(), scale.getName(), true) 
+                        || AreTheseEquals(x.getName(), scale.getShortName(), true))
+                .findAny();
+        
+        if(optionalScale.isPresent())
+        {
+            refDataType.Set(optionalScale.get());
+        }
+        
+        return refDataType.HasValue();
     }
 }

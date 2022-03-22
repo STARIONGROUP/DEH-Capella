@@ -29,13 +29,18 @@ import java.util.function.Predicate;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.information.Unit;
+import org.polarsys.capella.core.data.information.datatype.DataType;
+import org.polarsys.capella.core.data.information.datatype.PhysicalQuantity;
 
 import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
 import Services.MappingEngineService.IMappableThingCollection;
 import Utils.Ref;
 import ViewModels.Rows.MappedElementRowViewModel;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
+import cdp4common.sitedirectorydata.MeasurementScale;
 import io.reactivex.Observable;
 
 /**
@@ -138,7 +143,6 @@ public interface IDstController extends IDstControllerBase
      */
     <TElement extends CapellaElement> boolean TryGetElementBy(Predicate<? super CapellaElement> predicate, Ref<TElement> refElement);
     
-
     /**
      * Tries to get the corresponding element that has the provided Id
      * 
@@ -148,4 +152,24 @@ public interface IDstController extends IDstControllerBase
      * @return a value indicating whether the {@linkplain CapellaElement} has been found
      */
     <TElement extends CapellaElement> boolean TryGetElementById(String elementId, Ref<TElement> refElement);
+    
+    /**
+     * Tries to get the corresponding element based on the provided {@linkplain DefinedThing} name or short name. 
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param thing the {@linkplain DefinedThing} that can potentially match a {@linkplain #TElement} 
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    <TElement extends CapellaElement> boolean TryGetElementByName(DefinedThing thing, Ref<TElement> refElement);
+
+    /**
+     * Tries to get a {@linkplain DataType} that matches the provided {@linkplain MeasurementScale}
+     * 
+     * @param scale the {@linkplain MeasurementScale} of reference
+     * @param referenceElement a {@linkplain CapellaElement} that will point to the right session
+     * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
+     * @return a {@linkplain boolean}
+     */
+    boolean TryGetDataType(MeasurementScale scale, CapellaElement referenceElement, Ref<DataType> refDataType);
 }

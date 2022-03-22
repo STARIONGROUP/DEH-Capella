@@ -39,8 +39,7 @@ public class MappedElementDefinitionRowViewModel extends MappedElementRowViewMod
      * @param dstElement the {@linkplain TDstElement} that is at the other end
      * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
      */
-    public MappedElementDefinitionRowViewModel(ElementDefinition thing, Component dstElement,
-            MappingDirection mappingDirection)
+    public MappedElementDefinitionRowViewModel(ElementDefinition thing, Component dstElement, MappingDirection mappingDirection)
     {
         super(thing, ElementDefinition.class, dstElement, mappingDirection);
     }    

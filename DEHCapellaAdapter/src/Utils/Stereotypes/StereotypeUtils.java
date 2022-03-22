@@ -26,7 +26,9 @@ package Utils.Stereotypes;
 import static Utils.Operators.Operators.AreTheseEquals;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -42,10 +44,15 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.fa.FaPackage;
+import org.polarsys.capella.core.data.information.InformationPackage;
+import org.polarsys.capella.core.data.information.datatype.DatatypePackage;
+import org.polarsys.capella.core.data.information.datavalue.DatavaluePackage;
 import org.polarsys.capella.core.data.pa.PaPackage;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementPackage;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
+import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import Utils.Ref;
 
@@ -142,7 +149,7 @@ public final class StereotypeUtils
                     && parent instanceof RequirementsPkg 
                     && EcoreUtil.isAncestor(parent, child);
         }
-        catch(ClassCastException exception)
+        catch(Exception exception)
         {
             LogManager.getLogger().catching(exception);
             return child.eContainer() == parent; 
@@ -240,23 +247,27 @@ public final class StereotypeUtils
      */
     private static Pair<EClassifier, EFactory> GetEClassAndFactory(String className)
     {
-        Function<EPackage, EClassifier> getClassifierFromClassName = (EPackage ePackage) -> ePackage.getEClassifier(className);
-        
-        var eClass = getClassifierFromClassName.apply(PaPackage.eINSTANCE);
-        var eFactory = PaPackage.eINSTANCE.getEFactoryInstance();
-        
-        if(eClass == null)
+        for (var ePackage : GetEPackages())
         {
-            eClass = getClassifierFromClassName.apply(FaPackage.eINSTANCE);
-            eFactory = FaPackage.eINSTANCE.getEFactoryInstance();
+            var eClass = ePackage.getEClassifier(className);
+            
+            if(eClass != null)
+            {
+                return Pair.of(eClass, ePackage.getEFactoryInstance());
+            }
         }
         
-        if(eClass == null)
-        {
-            eClass = getClassifierFromClassName.apply(RequirementPackage.eINSTANCE);
-            eFactory = RequirementPackage.eINSTANCE.getEFactoryInstance();
-        }
+        return Pair.of(null, null);
+    }
 
-        return Pair.of(eClass, eFactory);
+    /**
+     * Gets a {@linkplain List} of {@linkplain EPackage}s instance
+     * 
+     * @return {@linkplain List} of {@linkplain EPackage}
+     */
+    private static List<EPackage> GetEPackages()
+    {
+        return Arrays.asList(PaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, 
+                InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE);
     }
 }

@@ -33,12 +33,14 @@ import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 
+import App.AppContainer;
 import DstController.IDstController;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Utils.Ref;
 import Utils.Stereotypes.CapellaRequirementCollection;
+import Utils.Stereotypes.CapellaTypeEnumerationUtility;
 import Utils.Stereotypes.HubRequirementCollection;
 import Utils.Stereotypes.RequirementType;
 import Utils.Stereotypes.StereotypeUtils;
@@ -65,22 +67,15 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
     private ArrayList<RequirementsPkg> temporaryRequirementsContainer = new ArrayList<>();
 
     /**
-     * The {@linkplain IDstController} instance
-     */
-    private IDstController dstController;
-
-    /**
      * Initializes a new {@linkplain RequirementToRequirementsSpecificationMappingRule}
      * 
      * @param hubController the {@linkplain IHubController}
      * @param mappingConfiguration the {@linkplain ICapellaMappingConfigurationService}
-     * @param dstController the {@linkplain IDstController}
      */
     public RequirementsSpecificationToRequirementMappingRule(IHubController hubController, 
-            ICapellaMappingConfigurationService mappingConfiguration, IDstController dstController)
+            ICapellaMappingConfigurationService mappingConfiguration)
     {
         super(hubController, mappingConfiguration);
-        this.dstController = dstController;
     }    
     
     /**
@@ -94,6 +89,11 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
     {
         try
         {
+            if(this.dstController == null)
+            {
+                this.dstController = AppContainer.Container.getComponent(IDstController.class);
+            }
+            
             var mappedElements = this.CastInput(input);
             this.Map(mappedElements);
             
@@ -140,14 +140,14 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
      */
     private Requirement GetOrCreateRequirement(MappedHubRequirementRowViewModel mappedRequirementRowViewModel)
     {
-        var refRequirementType = new Ref<RequirementType>(RequirementType.class, RequirementType.Undefined);
+        var refRequirementType = new Ref<RequirementType>(RequirementType.class);
         
         if(!this.TryGetRequirementClass(mappedRequirementRowViewModel.GetHubElement(), refRequirementType))
         {
             refRequirementType.Set(RequirementType.User);
         }
         
-        return this.GetOrCreateRequirement(mappedRequirementRowViewModel.GetHubElement(), refRequirementType.Get().RequirementClassType);
+        return this.GetOrCreateRequirement(mappedRequirementRowViewModel.GetHubElement(), refRequirementType.Get().ClassType());
     }
 
     /**
@@ -208,15 +208,16 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
     {
         for (var category : requirement.getCategory())
         {
-            refRequirementType.Set(RequirementType.From(category.getName()));
+            var requirementType = CapellaTypeEnumerationUtility.RequirementTypeFrom(category.getName());
             
-            if(refRequirementType.Get() != RequirementType.Undefined)
+            if(requirementType != null)
             {
+                refRequirementType.Set(requirementType);
                 break;
             }
         }
         
-        return refRequirementType.Get() != RequirementType.Undefined;
+        return refRequirementType.HasValue();
     }
     
     /**
