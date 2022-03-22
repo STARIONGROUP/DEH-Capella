@@ -71,7 +71,7 @@ public enum RequirementType
     /**
      * The {@linkplain Class} represented by this enum value
      */
-    private final Class<? extends Requirement> clazz;
+    public final Class<? extends Requirement> RequirementClassType;
     
     /**
      * The display-able label that represent this enum value
@@ -87,7 +87,7 @@ public enum RequirementType
     private RequirementType(String label, Class<? extends Requirement> clazz)
     {
         this.Label = label;
-        this.clazz = clazz;
+        this.RequirementClassType = clazz;
     }
 
     /**
@@ -111,7 +111,7 @@ public enum RequirementType
     {
         return Arrays.asList(RequirementType.values())
                 .stream()
-                .filter(x -> x.clazz == requirementClass)
+                .filter(x -> x.RequirementClassType == requirementClass)
                 .findFirst()
                 .orElse(RequirementType.Undefined);
     }
@@ -136,7 +136,8 @@ public enum RequirementType
         
         for(var value : RequirementType.values())
         {
-            if(value.Label.equalsIgnoreCase(valueOrLabel)) 
+            if(value.Label.equalsIgnoreCase(valueOrLabel) || (value.RequirementClassType != null 
+                    && value.RequirementClassType.getSimpleName().equalsIgnoreCase(valueOrLabel))) 
             {
                 return value;
             }

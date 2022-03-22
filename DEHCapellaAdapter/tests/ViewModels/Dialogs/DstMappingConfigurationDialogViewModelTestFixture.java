@@ -58,7 +58,7 @@ import ViewModels.ObjectBrowser.RequirementTree.Rows.RequirementSpecificationRow
 import ViewModels.ObjectBrowser.Rows.ThingRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.Iteration;
@@ -125,7 +125,7 @@ class DstMappingConfigurationDialogViewModelTestFixture
     @Test
     public void VerifySetMappedElement()
     {
-        var mappedRequirement = new MappedRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
+        var mappedRequirement = new MappedDstRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
         mappedRequirement.SetShouldCreateNewTargetElement(false);
         this.dstMapResult.add(mappedRequirement);
         var elements = SetupCapellaElements();
@@ -146,7 +146,7 @@ class DstMappingConfigurationDialogViewModelTestFixture
         var mappedElementDefinition = new MappedElementDefinitionRowViewModel(mock(PhysicalComponent.class), MappingDirection.FromDstToHub);
         mappedElementDefinition.SetShouldCreateNewTargetElement(false);
 
-        var mappedRequirement = new MappedRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
+        var mappedRequirement = new MappedDstRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
         mappedElementDefinition.SetShouldCreateNewTargetElement(false);
         
         assertDoesNotThrow(() -> this.viewModel.WhenMapToNewHubElementCheckBoxChanged(true));
@@ -204,7 +204,7 @@ class DstMappingConfigurationDialogViewModelTestFixture
         mappedElementDefinition.SetRowStatus(MappedElementRowStatus.None);
         this.viewModel.SetSelectedMappedElement(mappedElementDefinition);
         assertDoesNotThrow(() -> this.selectedElementDefinitionObservable.Value(new ElementDefinitionRowViewModel(elementDefinition, null)));
-        var mappedRequirement = new MappedRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
+        var mappedRequirement = new MappedDstRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
         mappedRequirement.SetShouldCreateNewTargetElement(false);
         mappedRequirement.SetRowStatus(MappedElementRowStatus.None);
         this.viewModel.SetSelectedMappedElement(mappedRequirement);
@@ -227,7 +227,7 @@ class DstMappingConfigurationDialogViewModelTestFixture
         mappedElement.SetRowStatus(MappedElementRowStatus.NewElement);
         assertDoesNotThrow(() -> this.viewModel.SetSelectedMappedElement(mappedElement));
         
-        var mappedRequirement = new MappedRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
+        var mappedRequirement = new MappedDstRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
         mappedRequirement.SetRowStatus(MappedElementRowStatus.ExisitingElement);
         assertDoesNotThrow(() -> this.viewModel.SetSelectedMappedElement(mappedRequirement));
         

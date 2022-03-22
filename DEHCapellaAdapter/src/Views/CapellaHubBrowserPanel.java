@@ -28,7 +28,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import Annotations.ExludeFromCodeCoverageGeneratedReport;
 import App.AppContainer;
-import ViewModels.Interfaces.IHubBrowserPanelViewModel;
+import ViewModels.Interfaces.ICapellaHubBrowserPanelViewModel;
 import Views.ViewParts.BaseViewPart;
 
 /**
@@ -36,7 +36,7 @@ import Views.ViewParts.BaseViewPart;
  * This view is meant to be integrated into another container view specific to DST * 
  */
 @ExludeFromCodeCoverageGeneratedReport
-public class CapellaHubBrowserPanel extends BaseViewPart<IHubBrowserPanelViewModel, HubBrowserPanel>
+public class CapellaHubBrowserPanel extends BaseViewPart<ICapellaHubBrowserPanelViewModel, HubBrowserPanel>
 {
     /**
      * Initializes a new {@linkplain CapellaHubBrowserPanel}
@@ -56,7 +56,7 @@ public class CapellaHubBrowserPanel extends BaseViewPart<IHubBrowserPanelViewMod
     {
         this.CreateBasePartControl(parent);
         this.View = new HubBrowserPanel();
-        this.SetDataContext(AppContainer.Container.getComponent(IHubBrowserPanelViewModel.class));
+        this.SetDataContext(AppContainer.Container.getComponent(ICapellaHubBrowserPanelViewModel.class));
         this.Container.add(this.View);
     }
 
@@ -68,6 +68,8 @@ public class CapellaHubBrowserPanel extends BaseViewPart<IHubBrowserPanelViewMod
     @Override
     public void Bind()
     {
+        this.View.GetElementDefinitionBrowser().GetContextMenu().SetDataContext(this.DataContext.GetElementDefinitionBrowserContextMenuViewModel());
+        this.View.GetRequirementBrowser().GetContextMenu().SetDataContext(this.DataContext.GetRequirementBrowserContextMenuViewModel());
         this.View.GetSessionControlPanel().SetDataContext(this.DataContext.GetSessionControlViewModel());
         this.View.getHubBrowserHeader().SetDataContext(this.DataContext.GetHubBrowserHeaderViewModel());
         this.View.GetElementDefinitionBrowser().SetDataContext(this.DataContext.GetElementDefinitionBrowserViewModel());

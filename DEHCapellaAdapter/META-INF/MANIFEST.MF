@@ -8,7 +8,8 @@ Require-Bundle: org.eclipse.ui,
  org.polarsys.capella.core.model.handler;bundle-version="5.1.0";visibility:=reexport,
  org.polarsys.capella.core.model.helpers;bundle-version="5.1.0";visibility:=reexport,
  org.junit,
- org.junit.jupiter.api
+ org.junit.jupiter.api,
+ org.eclipse.emf.ecore
 Automatic-Module-Name: Test
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
@@ -30,12 +31,12 @@ Export-Package: App,
  Services.Mapping,
  Services.MappingConfiguration,
  Utils,
- Utils.ImageLoader.Images,
  Utils.Stereotypes,
  ViewModels,
  ViewModels.CapellaObjectBrowser,
  ViewModels.CapellaObjectBrowser.Interfaces,
  ViewModels.CapellaObjectBrowser.Rows,
+ ViewModels.ContextMenu,
  ViewModels.Dialogs,
  ViewModels.Dialogs.Interfaces,
  ViewModels.Interfaces,
@@ -43,3 +44,4 @@ Export-Package: App,
  Views,
  Views.Dialogs,
  Views.ViewParts
+Import-Package: ViewModels.Rows

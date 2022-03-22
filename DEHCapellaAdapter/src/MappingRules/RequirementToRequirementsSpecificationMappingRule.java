@@ -50,17 +50,17 @@ import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Utils.Ref;
 import Utils.Stereotypes.CapellaRequirementCollection;
 import Utils.Stereotypes.StereotypeUtils;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.Definition;
 import cdp4common.engineeringmodeldata.RequirementsGroup;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.Category;
-            
+
 /**
- * The {@linkplain BlockDefinitionMappingRule} is the mapping rule implementation for transforming {@linkplain CapellaRequirementCollection} to {@linkplain RequirementsSpecification}
+ * The {@linkplain RequirementToRequirementsSpecificationMappingRule} is the mapping rule implementation for transforming {@linkplain CapellaRequirementCollection} into {@linkplain RequirementsSpecification}
  */
-public class RequirementToRequirementsSpecificationMappingRule extends DstToHubBaseMappingRule<CapellaRequirementCollection, ArrayList<MappedRequirementRowViewModel>>
+public class RequirementToRequirementsSpecificationMappingRule extends DstToHubBaseMappingRule<CapellaRequirementCollection, ArrayList<MappedDstRequirementRowViewModel>>
 {
     /**
      * The collection of {@linkplain RequirementsSpecification} that are being mapped
@@ -87,22 +87,22 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
      * Transforms an {@linkplain CapellaRequirementCollection} of type {@linkplain Requirement} to an {@linkplain ArrayList} of {@linkplain RequirementsSpecification}
      * 
      * @param input the {@linkplain CapellaRequirementCollection} to transform
-     * @return the {@linkplain ArrayList} of {@linkplain MappedRequirementRowViewModel}
+     * @return the {@linkplain ArrayList} of {@linkplain MappedDstRequirementRowViewModel}
      */
     @Override
-    public ArrayList<MappedRequirementRowViewModel> Transform(Object input)
+    public ArrayList<MappedDstRequirementRowViewModel> Transform(Object input)
     {
         try
         {
             CapellaRequirementCollection mappedElements = this.CastInput(input);
             this.Map(mappedElements);
-            this.SaveMappingConfiguration(mappedElements);
-            return new ArrayList<MappedRequirementRowViewModel>(mappedElements);
+            this.SaveMappingConfiguration(mappedElements, MappingDirection.FromDstToHub);
+            return new ArrayList<MappedDstRequirementRowViewModel>(mappedElements);
         }
         catch (Exception exception)
         {
             this.Logger.catching(exception);
-            return new ArrayList<MappedRequirementRowViewModel>();
+            return new ArrayList<MappedDstRequirementRowViewModel>();
         }
         finally
         {
@@ -110,21 +110,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             this.temporaryRequirementsGroups.clear();
         }
     }
-    
-    /**
-     * Saves the mapping configuration
-     * 
-     * @param elements the {@linkplain CapellaRequirementCollection}
-     */
-    private void SaveMappingConfiguration(CapellaRequirementCollection elements)
-    {
-        for (MappedRequirementRowViewModel mappedRequirementsSpecification : elements)
-        {
-            this.mappingConfiguration.AddToExternalIdentifierMap(
-                    mappedRequirementsSpecification.GetHubElement().getIid(), mappedRequirementsSpecification.GetDstElement().getId(), MappingDirection.FromDstToHub);
-        }
-    }
-    
+        
     /**
      * Maps the provided collection of requirements
      * 
@@ -132,7 +118,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
      */
     private void Map(CapellaRequirementCollection mappedRequirements)
     {
-        for (MappedRequirementRowViewModel mappedRequirement : mappedRequirements)
+        for (MappedDstRequirementRowViewModel mappedRequirement : mappedRequirements)
         {            
             Ref<RequirementsSpecification> refRequirementsSpecification = new Ref<>(RequirementsSpecification.class);
             
@@ -307,7 +293,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
     private void UpdateOrCreateDefinition(Requirement requirement, Ref<cdp4common.engineeringmodeldata.Requirement> refRequirement)
     {
         if(refRequirement.HasValue())
-        {            
+        {
             Definition definition = refRequirement.Get().getDefinition()
                     .stream()
                     .filter(x -> x.getLanguageCode().equalsIgnoreCase("en"))

@@ -10,15 +10,13 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="tests">
+	<classpathentry kind="src" output="bin.tests" path="tests">
 		<attributes>
 			<attribute name="ignore_optional_problems" value="true"/>
+			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/DEHCommonJ-1.0.0.jar" sourcepath="../DEH-CommonJ/src/main/java">
-		<attributes>
-			<attribute name="source_encoding" value="UTF-8"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="src" path="resources"/>
+	<classpathentry kind="lib" path="lib/DEHCommonJ-1.0.0.jar" sourcepath="lib/DEHCommonJ-1.0.0-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

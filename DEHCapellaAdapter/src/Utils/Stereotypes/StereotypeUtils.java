@@ -24,17 +24,27 @@
 package Utils.Stereotypes;
 
 import static Utils.Operators.Operators.AreTheseEquals;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EClassifier;
+import org.eclipse.emf.ecore.EFactory;
 import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.fa.FaPackage;
+import org.polarsys.capella.core.data.pa.PaPackage;
 import org.polarsys.capella.core.data.requirement.Requirement;
+import org.polarsys.capella.core.data.requirement.RequirementPackage;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 
 import Utils.Ref;
@@ -201,5 +211,52 @@ public final class StereotypeUtils
         }
         
         return possibleParent.HasValue();
+    }
+    
+    /**
+     * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}
+     * 
+     * @param <TInstance> the {@linkplain Type} of {@linkplain CapellaElement}
+     * @param clazz the {@linkplain Class} of {@linkplain #TInstance}
+     * @return an instance of the provided type
+     */
+    public static <TInstance extends CapellaElement> TInstance InitializeCapellaElement(Class<TInstance> clazz)
+    {        
+        var eClassAndFactory = StereotypeUtils.GetEClassAndFactory(clazz.getSimpleName());
+        
+        if (eClassAndFactory.getLeft() != null && eClassAndFactory.getRight() != null && eClassAndFactory.getLeft() instanceof EClass) 
+        {
+            return clazz.cast(eClassAndFactory.getRight().create((EClass)eClassAndFactory.getLeft()));
+        }
+        
+        return null;
+    }
+
+    /**
+     * Gets the {@linkplain EClass} that corresponds to the provided {@linkplain String} className 
+     * 
+     * @param className the {@linkplain Class} name
+     * @return the {@linkplain EClassifier} {@linkplain EClass}
+     */
+    private static Pair<EClassifier, EFactory> GetEClassAndFactory(String className)
+    {
+        Function<EPackage, EClassifier> getClassifierFromClassName = (EPackage ePackage) -> ePackage.getEClassifier(className);
+        
+        var eClass = getClassifierFromClassName.apply(PaPackage.eINSTANCE);
+        var eFactory = PaPackage.eINSTANCE.getEFactoryInstance();
+        
+        if(eClass == null)
+        {
+            eClass = getClassifierFromClassName.apply(FaPackage.eINSTANCE);
+            eFactory = FaPackage.eINSTANCE.getEFactoryInstance();
+        }
+        
+        if(eClass == null)
+        {
+            eClass = getClassifierFromClassName.apply(RequirementPackage.eINSTANCE);
+            eFactory = RequirementPackage.eINSTANCE.getEFactoryInstance();
+        }
+
+        return Pair.of(eClass, eFactory);
     }
 }

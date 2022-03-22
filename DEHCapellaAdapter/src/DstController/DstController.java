@@ -58,7 +58,9 @@ import Utils.Stereotypes.HubRequirementCollection;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedHubRequirementRowViewModel;
+import ViewModels.Rows.MappedRequirementBaseRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Definition;
@@ -334,11 +336,11 @@ public final class DstController implements IDstController
      * Sorts the {@linkplain IMappedElementRowViewModel} and adds it to the relevant collection of one of the two provided
      * 
      * @param allMappedElement the {@linkplain Collection} of {@linkplain MappedElementDefinitionRowViewModel}
-     * @param allMappedRequirements the {@linkplain Collection} of {@linkplain MappedRequirementRowViewModel}
+     * @param allMappedRequirements the {@linkplain Collection} of {@linkplain MappedRequirementBaseRowViewModel}
      * @param mappedRowViewModel the {@linkplain IMappedElementRowViewModel} to sort
      */
     private void SortMappedElementByType(ArrayList<MappedElementDefinitionRowViewModel> allMappedElement,
-            ArrayList<MappedRequirementRowViewModel> allMappedRequirements, IMappedElementRowViewModel mappedRowViewModel)
+            ArrayList<? extends MappedRequirementBaseRowViewModel<?>> allMappedRequirements, IMappedElementRowViewModel mappedRowViewModel)
     {
         if(mappedRowViewModel.GetTThingClass().isAssignableFrom(ElementDefinition.class))
         {
@@ -346,7 +348,11 @@ public final class DstController implements IDstController
         }
         else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(RequirementsSpecification.class))
         {
-            allMappedRequirements.add((MappedRequirementRowViewModel) mappedRowViewModel);
+            ((CapellaRequirementCollection)allMappedRequirements).add((MappedDstRequirementRowViewModel) mappedRowViewModel);
+        }
+        else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(cdp4common.engineeringmodeldata.Requirement.class))
+        {
+            ((HubRequirementCollection)allMappedRequirements).add((MappedHubRequirementRowViewModel) mappedRowViewModel);
         }
     }
     
@@ -844,5 +850,46 @@ public final class DstController implements IDstController
                     .map(MappedElementRowViewModel::GetDstElement)
                     .collect(Collectors.toList()));
         }
+    }
+    
+    /**
+     * Tries to get the corresponding element that has the provided Id
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param elementId the {@linkplain String} id of the searched element
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    public <TElement extends CapellaElement> boolean TryGetElementById(String elementId, Ref<TElement> refElement)
+    {
+        return this.TryGetElementBy(x -> AreTheseEquals(elementId, x.getId()), refElement);
+    }
+    
+    /**
+     * Tries to get the corresponding element that answer to the provided {@linkplain Predicate}
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param predicate the {@linkplain Predicate} to verify in order to match the element
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <TElement extends CapellaElement> boolean TryGetElementBy(Predicate<? super CapellaElement> predicate, Ref<TElement> refElement)
+    {
+        var elementsBySession = this.capellaSessionService.GetAllCapellaElementsFromOpenSessions();
+        
+        for (var elements : elementsBySession.values())
+        {
+            var element = elements.stream().filter(predicate).findFirst();
+            
+            if(element.isPresent() && refElement.GetType().isAssignableFrom(element.get().getClass()))
+            {
+                refElement.Set((TElement) element.get());
+                break;
+            }
+        }
+        
+        return refElement.HasValue();
     }
 }

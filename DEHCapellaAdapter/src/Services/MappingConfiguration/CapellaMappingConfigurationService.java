@@ -42,7 +42,7 @@ import Services.CapellaSession.ICapellaSessionService;
 import Utils.Ref;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.ExternalIdentifierMap;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
@@ -154,7 +154,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         {      
             var refRequirementsSpecification = new Ref<>(RequirementsSpecification.class);
             
-            var mappedElement = new MappedRequirementRowViewModel((Requirement)element, optionalCorrespondence.get().middle.MappingDirection);
+            var mappedElement = new MappedDstRequirementRowViewModel((Requirement)element, optionalCorrespondence.get().middle.MappingDirection);
             
             if(this.HubController.TryGetThingById(optionalCorrespondence.get().right, refRequirementsSpecification))
             {

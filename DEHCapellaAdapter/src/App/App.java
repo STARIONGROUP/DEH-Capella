@@ -25,6 +25,7 @@
 package App;
 
 import static org.picocontainer.Characteristics.CACHE;
+import static org.picocontainer.Characteristics.NO_CACHE;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,6 +56,7 @@ import Services.MappingConfiguration.CapellaMappingConfigurationService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingEngineService.IMappingEngineService;
 import Services.MappingEngineService.MappingEngineService;
+import ViewModels.CapellaHubBrowserPanelViewModel;
 import ViewModels.CapellaImpactViewPanelViewModel;
 import ViewModels.CapellaImpactViewViewModel;
 import ViewModels.ElementDefinitionImpactViewViewModel;
@@ -63,11 +65,14 @@ import ViewModels.RequirementImpactViewViewModel;
 import ViewModels.TransferControlViewModel;
 import ViewModels.CapellaObjectBrowser.CapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
+import ViewModels.ContextMenu.HubBrowserContextMenuViewModel;
 import ViewModels.Dialogs.DstMappingConfigurationDialogViewModel;
 import ViewModels.Dialogs.Interfaces.IDstMappingConfigurationDialogViewModel;
+import ViewModels.Interfaces.ICapellaHubBrowserPanelViewModel;
 import ViewModels.Interfaces.ICapellaImpactViewPanelViewModel;
 import ViewModels.Interfaces.ICapellaImpactViewViewModel;
 import ViewModels.Interfaces.IElementDefinitionImpactViewViewModel;
+import ViewModels.Interfaces.IHubBrowserContextMenuViewModel;
 import ViewModels.Interfaces.IHubBrowserPanelViewModel;
 import ViewModels.Interfaces.IRequirementImpactViewViewModel;
 import ViewModels.Interfaces.ITransferControlViewModel;
@@ -166,6 +171,8 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.addComponent(ICapellaObjectBrowserViewModel.class, CapellaObjectBrowserViewModel.class);
             AppContainer.Container.addComponent(ICapellaImpactViewViewModel.class, CapellaImpactViewViewModel.class);
             AppContainer.Container.addComponent(IDstMappingConfigurationDialogViewModel.class, DstMappingConfigurationDialogViewModel.class);
+            AppContainer.Container.as(NO_CACHE).addComponent(IHubBrowserContextMenuViewModel.class, HubBrowserContextMenuViewModel.class);           
+            AppContainer.Container.addComponent(ICapellaHubBrowserPanelViewModel.class, CapellaHubBrowserPanelViewModel.class);           
         }
         catch (Exception exception) 
         {

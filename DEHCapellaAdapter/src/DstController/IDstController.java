@@ -24,6 +24,7 @@
 package DstController;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
@@ -126,4 +127,25 @@ public interface IDstController extends IDstControllerBase
      * @return {@linkplain Observable} of {@linkplain Boolean} 
      */
     Observable<Boolean> HasAnyOpenSessionObservable();
+    
+    /**
+     * Tries to get the corresponding element that answer to the provided {@linkplain Predicate}
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param predicate the {@linkplain Predicate} to verify in order to match the element
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    <TElement extends CapellaElement> boolean TryGetElementBy(Predicate<? super CapellaElement> predicate, Ref<TElement> refElement);
+    
+
+    /**
+     * Tries to get the corresponding element that has the provided Id
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param elementId the {@linkplain String} id of the searched element
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    <TElement extends CapellaElement> boolean TryGetElementById(String elementId, Ref<TElement> refElement);
 }

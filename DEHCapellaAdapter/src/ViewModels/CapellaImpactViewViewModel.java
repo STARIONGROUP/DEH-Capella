@@ -81,11 +81,11 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     private void InitializesObservables()
     {
         this.dstController.HasAnyOpenSessionObservable()
-            .subscribe(this::UpdateBrowserTrees, this.Logger::catching);
+            .subscribe(this::UpdateBrowserTrees, this.logger::catching);
                         
         this.dstController.GetHubMapResult()
             .ItemsAdded()
-            .subscribe(x -> this.ComputeDifferences(), this.Logger::catching);
+            .subscribe(x -> this.ComputeDifferences(), this.logger::catching);
         
         this.dstController.GetHubMapResult()
             .IsEmpty()
@@ -128,7 +128,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     {
         var refRowViewModel = new Ref<ElementRowViewModel<? extends CapellaElement>>(null);
         
-        if(this.TryGetRowViewModel(((RootRowViewModel) this.BrowserTreeModel.Value().getRoot()).GetContainedRows(), element.getId(), refRowViewModel))
+        if(this.TryGetRowViewModel(((RootRowViewModel) this.browserTreeModel.Value().getRoot()).GetContainedRows(), element.getId(), refRowViewModel))
         {        
             if(!refRowViewModel.Get().GetIsSelected() && shouldSelect)
             {
@@ -146,7 +146,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
      */
     protected RootRowViewModel ComputeDifferences()
     {
-        var rootRowViewModel = (RootRowViewModel) this.BrowserTreeModel.Value().getRoot();
+        var rootRowViewModel = (RootRowViewModel) this.browserTreeModel.Value().getRoot();
         try
         {
             for (var mappedElementRowViewModel : this.dstController.GetHubMapResult())
@@ -162,7 +162,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
         }
         catch(Exception exception)
         {
-            this.Logger.catching(exception);
+            this.logger.catching(exception);
         }
             
         return rootRowViewModel;
@@ -221,7 +221,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
             this.SetOutlineModel(DefaultOutlineModel.createOutlineModel(treeModel, new CapellaObjectBrowserTreeRowViewModel(), true));
         }
     
-        this.IsTheTreeVisible.Value(isConnected);
+        this.isTheTreeVisible.Value(isConnected);
     }
     
     /**
@@ -232,7 +232,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     protected void SetOutlineModel(OutlineModel model)
     {
         this.UpdateHighlightOnRows(model);
-        this.BrowserTreeModel.Value(model);
+        this.browserTreeModel.Value(model);
     }
 
     /**
