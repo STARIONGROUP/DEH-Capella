@@ -99,7 +99,8 @@ class RequirementsSpecificationToRequirementMappingRuleTestFixture
         
         this.SetupElements();
         
-        this.mappingRule = new RequirementsSpecificationToRequirementMappingRule(this.hubController, this.mappingConfigurationService, this.dstController);
+        this.mappingRule = new RequirementsSpecificationToRequirementMappingRule(this.hubController, this.mappingConfigurationService);
+        this.mappingRule.dstController = this.dstController;
     }
     
     @Test
@@ -114,12 +115,12 @@ class RequirementsSpecificationToRequirementMappingRuleTestFixture
         assertEquals(this.requirementsSpecification1.getName(), requirement2Container.getName());
         assertSame(result.get(1).GetDstElement().eContainer(), requirement2Container);
         
-        assertTrue(RequirementType.FunctionalInterface.RequirementClassType.isInstance(result.get(0).GetDstElement()));
-        assertTrue(RequirementType.NonFunctionalInterface.RequirementClassType.isInstance(result.get(1).GetDstElement()));
-        assertTrue(RequirementType.NonFunctional.RequirementClassType.isInstance(result.get(2).GetDstElement()));
-        assertTrue(RequirementType.Functional.RequirementClassType.isInstance(result.get(3).GetDstElement()));
-        assertTrue(RequirementType.NonFunctionalInterface.RequirementClassType.isInstance(result.get(4).GetDstElement()));
-        assertTrue(RequirementType.User.RequirementClassType.isInstance(result.get(5).GetDstElement()));
+        assertTrue(RequirementType.FunctionalInterface.ClassType().isInstance(result.get(0).GetDstElement()));
+        assertTrue(RequirementType.NonFunctionalInterface.ClassType().isInstance(result.get(1).GetDstElement()));
+        assertTrue(RequirementType.NonFunctional.ClassType().isInstance(result.get(2).GetDstElement()));
+        assertTrue(RequirementType.Functional.ClassType().isInstance(result.get(3).GetDstElement()));
+        assertTrue(RequirementType.NonFunctionalInterface.ClassType().isInstance(result.get(4).GetDstElement()));
+        assertTrue(RequirementType.User.ClassType().isInstance(result.get(5).GetDstElement()));
     }
 
     private void SetupElements()

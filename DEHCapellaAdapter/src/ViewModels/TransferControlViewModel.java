@@ -80,7 +80,11 @@ public class TransferControlViewModel implements ITransferControlViewModel
         this.dstController.GetSelectedDstMapResultForTransfer()
             .Changed()
             .subscribe(x -> this.UpdateNumberOfSelectedThing(this.dstController.CurrentMappingDirection()));
-        
+
+        this.dstController.GetSelectedHubMapResultForTransfer()
+            .Changed()
+            .subscribe(x -> this.UpdateNumberOfSelectedThing(this.dstController.CurrentMappingDirection()));
+
         this.dstController.GetMappingDirection()
             .subscribe(mappingDirection ->
             {

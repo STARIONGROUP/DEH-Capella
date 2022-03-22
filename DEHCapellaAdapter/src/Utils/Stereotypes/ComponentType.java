@@ -1,9 +1,9 @@
 /*
- * RequirementType.java
+ * ComponentType.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
- * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
+ * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski 
  *
  * This file is part of DEH-Capella
  *
@@ -23,41 +23,30 @@
  */
 package Utils.Stereotypes;
 
+import java.util.Arrays;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.requirement.*;
+import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
 
 /**
- * The {@linkplain RequirementType} is an enumerations of all Capella requirements type
+ * The {@linkplain ComponentType} is an enumerations of all mappable Capella {@linkplain Component} type
  */
-public enum RequirementType implements ICapellaTypeEnumeration<RequirementType, Requirement>
-{    
+public enum ComponentType implements ICapellaTypeEnumeration<ComponentType, Component>
+{
     /**
-     * Represents a {@linkplain SystemNonFunctionalRequirement}
+     * Represents a {@linkplain PhysicalComponent}
      */
-    NonFunctional("Non-Functional", SystemNonFunctionalRequirement.class),
+    Physical("Physical Component", PhysicalComponent.class),
     
     /**
-     * Represents a {@linkplain SystemNonFunctionalInterfaceRequirement}
+     * Represents a {@linkplain LogicalComponent}
      */
-    NonFunctionalInterface("Non-Functional Interface", SystemNonFunctionalInterfaceRequirement.class),
+    Logical("Non-Functional Interface", LogicalComponent.class);
     
-    /**
-     * Represents a {@linkplain SystemFunctionalRequirement}
-     */
-    Functional("Functional", SystemFunctionalRequirement.class),
-    
-    /**
-     * Represents a {@linkplain SystemFunctionalInterfaceRequirement}
-     */
-    FunctionalInterface("Functional Interface", SystemFunctionalInterfaceRequirement.class),
-    
-    /**
-     * Represents a {@linkplain SystemUserRequirement}
-     */
-    User("User Requirement", SystemUserRequirement.class);
-
     /**
      * The current class logger
      */
@@ -66,20 +55,20 @@ public enum RequirementType implements ICapellaTypeEnumeration<RequirementType, 
     /**
      * The {@linkplain Class} represented by this enum value
      */
-    private final Class<? extends Requirement> classType;
+    private final Class<? extends Component> classType;
     
     /**
      * The display-able label that represent this enum value
      */
-    private final String label;
+    public final String label;
     
     /**
-     * Initializes a new {@linkplain RequirementType}
+     * Initializes a new {@linkplain ComponentType}
      * 
      * @param label the label associated to the enumeration value
      * @param classType the class associated to the enumeration value
      */
-    private RequirementType(String label, Class<? extends Requirement> classType)
+    private ComponentType(String label, Class<? extends Component> classType)
     {
         this.label = label;
         this.classType = classType;
@@ -95,14 +84,14 @@ public enum RequirementType implements ICapellaTypeEnumeration<RequirementType, 
     {
         return this.label;
     }
-
+    
     /**
      * Gets the {@linkplain Class} of the instance of the enumeration value
      * 
      * @return a {@linkplain Class} of {@linkplain CapellaElement}
      */
     @Override
-    public Class<? extends Requirement> ClassType()
+    public Class<? extends Component> ClassType()
     {
         return this.classType;
     }

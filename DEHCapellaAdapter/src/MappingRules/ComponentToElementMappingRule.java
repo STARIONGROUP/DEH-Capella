@@ -88,7 +88,6 @@ import cdp4common.types.ValueArray;
  */
 public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<CapellaComponentCollection, ArrayList<MappedElementDefinitionRowViewModel>>
 {
-
     /**
      * The string that indicates the language code for the {@linkplain Definition}
      * That contains the Capella Id of the mapped {@linkplain CapellaElement}
@@ -124,7 +123,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
     private List<Triple<ComponentPort, MappedElementDefinitionRowViewModel, ElementUsage>> portsToConnect = new ArrayList<>();
     
     /**
-     * Initializes a new {@linkplain BlockDefinitionMappingRule}
+     * Initializes a new {@linkplain ComponentToElementMappingRule}
      * 
      * @param hubController the {@linkplain IHubController}
      * @param mappingConfiguration the {@linkplain ICapellaMappingConfigurationService}
@@ -184,7 +183,6 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         this.MapInterfaces();
     }
     
-
     /**
      * Creates the {@linkplain BinaryRelationShip} that connects ports between each others
      * 

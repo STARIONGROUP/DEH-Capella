@@ -33,7 +33,7 @@ import Views.ViewParts.BaseViewPart;
 
 /**
  * The {@linkplain CapellaHubBrowserPanel} is the main panel view for the Hub controls like session controls and tree views.
- * This view is meant to be integrated into another container view specific to DST * 
+ * This view is meant to be integrated into another container view specific to DST
  */
 @ExludeFromCodeCoverageGeneratedReport
 public class CapellaHubBrowserPanel extends BaseViewPart<ICapellaHubBrowserPanelViewModel, HubBrowserPanel>

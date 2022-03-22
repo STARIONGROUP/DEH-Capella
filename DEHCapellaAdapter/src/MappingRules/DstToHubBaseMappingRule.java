@@ -26,22 +26,16 @@ package MappingRules;
 import static Utils.Operators.Operators.AreTheseEquals;
 import static Utils.Stereotypes.StereotypeUtils.GetShortName;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.UUID;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
-import Enumerations.MappingDirection;
+import DstController.IDstController;
 import HubController.IHubController;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
-import Services.MappingEngineService.MappingRule;
 import Utils.Ref;
-import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.ClassKind;
-import cdp4common.commondata.NamedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.sitedirectorydata.CategorizableThing;
@@ -58,7 +52,7 @@ import cdp4dal.operations.TransactionContextResolver;
  * @param <TOutput> the output type the rule will return
  */
 public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> extends CapellaBaseMappingRule<TInput, TOutput>
-{    
+{
     /**
      * Initializes a new {@linkplain DstToHubBaseMappingRule}
      * 

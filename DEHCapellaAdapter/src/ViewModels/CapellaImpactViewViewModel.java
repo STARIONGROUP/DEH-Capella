@@ -147,6 +147,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     protected RootRowViewModel ComputeDifferences()
     {
         var rootRowViewModel = (RootRowViewModel) this.browserTreeModel.Value().getRoot();
+        
         try
         {
             for (var mappedElementRowViewModel : this.dstController.GetHubMapResult())
@@ -167,7 +168,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
             
         return rootRowViewModel;
     }
-        
+
     /**
      * Gets the {@linkplain Thing} by its Iid from the capella sessions
      * 
@@ -186,7 +187,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
 
         for (var childRowViewModel : childrenCollection)
         {
-            if (AreTheseEquals(childRowViewModel.GetElement().getId(), id))
+            if (childRowViewModel.GetElement() != null && AreTheseEquals(childRowViewModel.GetElement().getId(), id))
             {
                 refElement.Set((ElementRowViewModel<? extends CapellaElement>)childRowViewModel);
                 break;

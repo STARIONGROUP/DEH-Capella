@@ -39,7 +39,9 @@ import DstController.DstController;
 import DstController.IDstController;
 import HubController.IHubController;
 import MappingRules.ComponentToElementMappingRule;
+import MappingRules.ElementToComponentMappingRule;
 import MappingRules.RequirementToRequirementsSpecificationMappingRule;
+import MappingRules.RequirementsSpecificationToRequirementMappingRule;
 import Services.CapellaLog.CapellaLogService;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSelection.CapellaSelectionService;
@@ -161,7 +163,9 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.addComponent(ISiriusSessionManagerWrapper.class, SiriusSessionManagerWrapper.class);
 
             AppContainer.Container.addComponent(ComponentToElementMappingRule.class.getName(), ComponentToElementMappingRule.class);
+            AppContainer.Container.addComponent(ElementToComponentMappingRule.class.getName(), ElementToComponentMappingRule.class);
             AppContainer.Container.addComponent(RequirementToRequirementsSpecificationMappingRule.class.getName(), RequirementToRequirementsSpecificationMappingRule.class);
+            AppContainer.Container.addComponent(RequirementsSpecificationToRequirementMappingRule.class.getName(), RequirementsSpecificationToRequirementMappingRule.class);
             
             AppContainer.Container.addComponent(IElementDefinitionImpactViewViewModel.class, ElementDefinitionImpactViewViewModel.class);
             AppContainer.Container.addComponent(IRequirementImpactViewViewModel.class, RequirementImpactViewViewModel.class);
