@@ -51,6 +51,7 @@ import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
+import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
@@ -87,6 +88,7 @@ public class DstControllerTestFixture
     private ICapellaLogService logService;
     private ICapellaMappingConfigurationService mappingConfigurationService;
     private ICapellaSessionService capellaSessionService;
+    private ICapellaTransactionService transactionService;
 
     /**
      * @throws java.lang.Exception
@@ -99,6 +101,7 @@ public class DstControllerTestFixture
         this.logService = mock(ICapellaLogService.class);
         this.mappingConfigurationService = mock(ICapellaMappingConfigurationService.class);
         this.capellaSessionService = mock(ICapellaSessionService.class);
+        this.transactionService = mock(ICapellaTransactionService.class);
         
         when(this.capellaSessionService.SessionUpdated())
             .thenReturn(Observable.fromArray(mock(org.eclipse.sirius.business.api.session.Session.class)));
@@ -117,7 +120,7 @@ public class DstControllerTestFixture
         when(mappedThings1.GetHubElement()).thenReturn(requirementsSpecification);
         
         this.controller = new DstController(this.mappingEngine, this.hubController, this.logService, 
-                this.mappingConfigurationService, this.capellaSessionService);
+                this.mappingConfigurationService, this.capellaSessionService, this.transactionService);
         
         this.controller.GetDstMapResult().add(mappedThings0);
         this.controller.GetDstMapResult().add(mappedThings1);

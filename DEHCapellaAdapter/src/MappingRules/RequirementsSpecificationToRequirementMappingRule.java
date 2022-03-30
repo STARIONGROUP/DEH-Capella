@@ -37,6 +37,7 @@ import App.AppContainer;
 import DstController.IDstController;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
+import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Utils.Ref;
 import Utils.Stereotypes.CapellaRequirementCollection;
@@ -71,11 +72,12 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
      * 
      * @param hubController the {@linkplain IHubController}
      * @param mappingConfiguration the {@linkplain ICapellaMappingConfigurationService}
+     * @param transactionService the {@linkplain ICapellaTransactionService}
      */
     public RequirementsSpecificationToRequirementMappingRule(IHubController hubController, 
-            ICapellaMappingConfigurationService mappingConfiguration)
+            ICapellaMappingConfigurationService mappingConfiguration, ICapellaTransactionService transactionService)
     {
-        super(hubController, mappingConfiguration);
+        super(hubController, mappingConfiguration, transactionService);
     }    
     
     /**
@@ -164,9 +166,12 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
         if(!this.dstController.TryGetElementBy(x -> x instanceof NamedElement && 
                 AreTheseEquals(((NamedElement) x).getName(), hubRequirement.getName(), true), refElement))
         {        
-            var newRequirement = StereotypeUtils.InitializeCapellaElement(requirementType);
-            newRequirement.setName(hubRequirement.getName());
+            var newRequirement = this.transactionService.Create(requirementType, hubRequirement.getName());
             refElement.Set(newRequirement);
+        }
+        else
+        {
+            refElement.Set(this.transactionService.Clone(refElement.Get()));
         }
         
         return refElement.Get();
@@ -259,6 +264,7 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
     private <TElement extends CapellaElement> void AddOrUpdateContainement(TElement containedElement, RequirementsPkg container)
     {
         var collection = (EList<TElement>)container.getOwnedRequirementPkgs();
+        
         if(containedElement instanceof Requirement)
         {
             collection = (EList<TElement>)container.getOwnedRequirements();
@@ -291,10 +297,13 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
             if(!this.dstController.TryGetElementBy(x -> x instanceof NamedElement && 
                     AreTheseEquals(((NamedElement) x).getName(), thingContainer.getName(), true), refElement))
             {        
-                var newRequirementsPackage = StereotypeUtils.InitializeCapellaElement(RequirementsPkg.class);
-                newRequirementsPackage.setName(thingContainer.getName());
+                var newRequirementsPackage = this.transactionService.Create(RequirementsPkg.class, thingContainer.getName());
                 this.temporaryRequirementsContainer.add(newRequirementsPackage);
                 refElement.Set(newRequirementsPackage);
+            }
+            else
+            {
+                refElement.Set(this.transactionService.Clone(refElement.Get()));
             }
         }
         

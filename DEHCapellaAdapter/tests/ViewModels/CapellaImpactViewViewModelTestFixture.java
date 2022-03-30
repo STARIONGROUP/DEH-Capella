@@ -71,7 +71,7 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
         
         RootRowViewModel rootRowViewModel = new RootRowViewModel("", CapellaSessionRelatedBaseTestFixture.GetSessionElements(session, Notifier.class));
         when(this.sessionService.GetModels()).thenReturn(rootRowViewModel);
-        this.viewModel = new CapellaImpactViewViewModel(this.dstController, this.sessionService);
+        this.viewModel = new CapellaImpactViewViewModel(this.dstController, this.sessionService, null);
     }
     
     @Test

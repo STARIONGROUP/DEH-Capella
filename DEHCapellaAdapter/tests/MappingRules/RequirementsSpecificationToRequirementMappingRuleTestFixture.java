@@ -47,6 +47,8 @@ import org.polarsys.capella.core.data.requirement.SystemNonFunctionalRequirement
 import DstController.IDstController;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
+import Services.CapellaTransaction.CapellaTransactionService;
+import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Utils.Stereotypes.CapellaRequirementCollection;
@@ -89,6 +91,7 @@ class RequirementsSpecificationToRequirementMappingRuleTestFixture
     private Category systemNonFunctionalRequirementCategory;
     private Category systemFunctionalRequirementCategory;
     private Category systemFunctionalInterfaceRequirementCategory;
+    private ICapellaTransactionService transactionService;
 
     @BeforeEach
     void Setup()
@@ -96,10 +99,11 @@ class RequirementsSpecificationToRequirementMappingRuleTestFixture
         this.hubController = mock(IHubController.class);
         this.dstController = mock(IDstController.class);
         this.mappingConfigurationService = mock(ICapellaMappingConfigurationService.class);
+        this.transactionService = mock(ICapellaTransactionService.class);
         
         this.SetupElements();
         
-        this.mappingRule = new RequirementsSpecificationToRequirementMappingRule(this.hubController, this.mappingConfigurationService);
+        this.mappingRule = new RequirementsSpecificationToRequirementMappingRule(this.hubController, this.mappingConfigurationService, this.transactionService);
         this.mappingRule.dstController = this.dstController;
     }
     
@@ -198,7 +202,7 @@ class RequirementsSpecificationToRequirementMappingRuleTestFixture
         this.elements.add(new MappedHubRequirementRowViewModel(this.requirement3, MappingDirection.FromHubToDst));
         
         this.elements.add(new MappedHubRequirementRowViewModel(this.requirement4, 
-                StereotypeUtils.InitializeCapellaElement(SystemNonFunctionalInterfaceRequirement.class),MappingDirection.FromHubToDst));
+                new CapellaTransactionService(null).Create(SystemNonFunctionalInterfaceRequirement.class), MappingDirection.FromHubToDst));
         
         this.elements.add(new MappedHubRequirementRowViewModel(this.requirement5, MappingDirection.FromHubToDst));
     }

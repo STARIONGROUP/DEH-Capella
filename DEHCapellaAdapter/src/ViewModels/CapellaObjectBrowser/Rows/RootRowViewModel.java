@@ -26,14 +26,17 @@ package ViewModels.CapellaObjectBrowser.Rows;
 import java.util.Collection;
 
 import org.eclipse.emf.common.notify.Notifier;
+import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.capellamodeller.Project;
+import org.polarsys.capella.core.data.capellamodeller.SystemEngineering;
+import org.polarsys.capella.core.data.cs.ComponentArchitecture;
 
 /**
  * The {@linkplain RootRowViewModel} represents the root element in one containment tree
  */
-public class RootRowViewModel extends ProjectStructuralElementRowViewModel<Structure, CapellaElement>
+public class RootRowViewModel extends ProjectStructuralElementRowViewModel<SystemEngineering, CapellaElement>
 {
     /**
      * Initializes a new {@linkplain RootRowViewModel}
@@ -54,7 +57,7 @@ public class RootRowViewModel extends ProjectStructuralElementRowViewModel<Struc
      */
     public RootRowViewModel(String name, Collection<Notifier> elements)
     {
-        super(null, null, null);
+        super(null, null, CapellaElement.class);
         this.UpdateProperties(name, elements);
     }
     
@@ -67,26 +70,32 @@ public class RootRowViewModel extends ProjectStructuralElementRowViewModel<Struc
     {
         super.UpdateProperties(name);
         
-        for(var resource : elements)
+        var systemEngineering = elements.stream()
+                .filter(x -> x instanceof Project)
+                .map(x -> (Project)x)
+                .flatMap(x -> x.eContents().stream())
+                .filter(x -> x instanceof SystemEngineering)
+                .map(x -> (SystemEngineering)x)
+                .findFirst();
+        
+        if(systemEngineering.isPresent())
         {
-            if(resource instanceof Project)
-            {
-                this.GetContainedRows().add(new ProjectRowViewModel(this, (Project)resource));
-            }
+            this.UpdateElement(systemEngineering.get(), false);
         }
     }
 
+
     /**
-     * Adds to the contained element the corresponding row view model representing the provided {@linkplain CapellaElement}
+     * Adds to the contained element the corresponding row view model representing the provided {@linkplain TContainedElement}
      * 
-     * @param element the {@linkplain CapellaElement}
+     * @param element the {@linkplain TContainedElement}
      */
     @Override
     protected void AddToContainedRows(CapellaElement element)
     {
-        if(element instanceof Project)
+        if(element instanceof ComponentArchitecture)
         {
-            this.GetContainedRows().add(new ProjectRowViewModel(this, (Project)element));
+            this.GetContainedRows().add(new ComponentArchitectureRowViewModel(this, (ComponentArchitecture)element));
         }
     }
 }

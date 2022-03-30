@@ -24,7 +24,6 @@
 package Services.CapellaSession;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -97,6 +96,41 @@ public class CapellaSessionService implements ICapellaSessionService
     public Observable<Session> SessionUpdated()
     {
         return this.sessionUpdated.Observable();
+    }
+
+    /**
+     * Backing field for the {@linkplain #GetCurrentSession()}
+     */
+    private Session currentSession;
+    
+    /**
+     * Gets the current {@linkplain Session} to work with
+     * 
+     * @return the {@linkplain Session}
+     */
+    @Override
+    public Session GetCurrentSession()
+    {
+        if(currentSession == null) 
+        {
+            this.currentSession = this.GetOpenSessions().get(0);
+        }
+        else if(!this.GetOpenSessions().contains(this.currentSession))
+        {
+            this.currentSession = null;
+        }
+        
+        return this.currentSession;
+    }
+    
+    /**
+     * Sets the {@linkplain #GetCurrentSession()}
+     * @param session the new {@linkplain Session}
+     */
+    @Override
+    public void SetCurrentSession(Session session)
+    {
+        this.currentSession = session;
     }
         
     /**
@@ -255,6 +289,17 @@ public class CapellaSessionService implements ICapellaSessionService
     }
     
     /**
+     * Gets the top element from the {@linkplain #GetCurrentSession()} in the Physical Architecture package
+     * 
+     * @return a {@linkplain PhysicalComponent}
+     */
+    @Override
+    public PhysicalComponent GetTopElement()
+    {
+        return (PhysicalComponent) this.GetTopElement(this.GetProject(), Type.PA);
+    }
+        
+    /**
      * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
      * 
      * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
@@ -280,7 +325,7 @@ public class CapellaSessionService implements ICapellaSessionService
         var architecture = BlockArchitectureExt.getBlockArchitecture(architectureType, project);
         return architecture.getSystem();
     }
-    
+            
     /**
      * Gets the {@linkplain Project} element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
      * 
@@ -294,6 +339,19 @@ public class CapellaSessionService implements ICapellaSessionService
         return this.GetProject(session);
     }
 
+
+    /**
+     * Gets the {@linkplain Project} element from the {@linkplain #GetCurrentSession()}
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain Project} element
+     */
+    @Override
+    public Project GetProject()
+    {
+        return this.GetProject(this.GetCurrentSession());
+    }
+    
     /**
      * Gets the {@linkplain Project} element from the provided {@linkplain Session}
      * 

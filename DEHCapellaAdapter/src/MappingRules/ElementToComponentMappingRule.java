@@ -29,10 +29,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import org.eclipse.sirius.business.api.session.Session;
-import org.polarsys.capella.common.ef.command.AbstractReadWriteCommand;
-import org.polarsys.capella.common.helpers.TransactionHelper;
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.Property;
@@ -53,6 +49,7 @@ import DstController.IDstController;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaSession.ICapellaSessionService;
+import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Utils.Ref;
 import Utils.ValueSetUtils;
@@ -60,7 +57,6 @@ import Utils.Stereotypes.CapellaComponentCollection;
 import Utils.Stereotypes.CapellaTypeEnumerationUtility;
 import Utils.Stereotypes.HubElementCollection;
 import Utils.Stereotypes.RequirementType;
-import Utils.Stereotypes.StereotypeUtils;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import cdp4common.commondata.DefinedThing;
 import cdp4common.engineeringmodeldata.ElementBase;
@@ -80,12 +76,12 @@ import cdp4common.sitedirectorydata.TextParameterType;
  * The {@linkplain ElementToComponentMappingRule} is the mapping rule implementation for transforming Capella {@linkplain Component} to {@linkplain ElementDefinition}
  */
 public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubElementCollection, ArrayList<MappedElementDefinitionRowViewModel>>
-{    
+{
     /**
      * The {@linkplain ICapellaSessionService}
      */
     private final ICapellaSessionService sessionService;
-
+        
     /**
      * The {@linkplain HubElementCollection} of {@linkplain MappedElementDefinitionRowViewModel}
      */
@@ -105,12 +101,6 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * The {@linkplain Collection} of {@linkplain Unit} that were created during this mapping
      */
     private Collection<Unit> temporaryUnits = new ArrayList<>();
-    
-    /**
-     * An {@linkplain Component} of reference that links the current mapping with the correct {@linkplain Session}.
-     * Typically a {@linkplain ProjectElement}
-     */
-    private Component referenceElement;
 
     /**
      * Initializes a new {@linkplain ElementToComponentMappingRule}
@@ -118,11 +108,12 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * @param hubController the {@linkplain IHubController}
      * @param mappingConfiguration the {@linkplain ICapellaMappingConfigurationService}
      * @param sessionService the {@linkplain ICapellaSessionService}
-     * @param dstController the {@linkplain IDstController}
+     * @param transactionService the {@linkplain ICapellaTransactionService}
      */
-    public ElementToComponentMappingRule(IHubController hubController, ICapellaMappingConfigurationService mappingConfiguration, ICapellaSessionService sessionService)
+    public ElementToComponentMappingRule(IHubController hubController, ICapellaMappingConfigurationService mappingConfiguration,
+            ICapellaSessionService sessionService, ICapellaTransactionService transactionService)
     {
-        super(hubController, mappingConfiguration);
+        super(hubController, mappingConfiguration, transactionService);
         this.sessionService = sessionService;
     }
     
@@ -144,7 +135,6 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             
             this.elements = this.CastInput(input);
 
-            this.SetReferenceElement();
             this.Map(this.elements);
             this.SaveMappingConfiguration(this.elements, MappingDirection.FromDstToHub);
             return new ArrayList<>(this.elements);
@@ -162,19 +152,6 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         }
     }
     
-    /**
-     * Sets the {@linkplain CapellaElement} of reference, {@linkplain #referenceElement}
-     */
-    private void SetReferenceElement()
-    {
-        if(this.referenceElement != null)
-        {
-            return;
-        }
-        
-        this.referenceElement = (Component) this.sessionService.GetTopElement(this.sessionService.GetOpenSessions().get(0));
-    }
-
     /**
      * Maps the provided collection of {@linkplain ElementBase}
      * 
@@ -203,30 +180,22 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      */
     private void UpdateContainement(Component parent, Component component)
     {
-        var project = this.sessionService.GetProject(this.sessionService.GetOpenSessions().get(0));
-        
-        TransactionHelper.getExecutionManager(project).execute(new AbstractReadWriteCommand() 
+        if(parent.eContents().stream()
+                .filter(x -> x instanceof Component)
+                .map(x -> (Component)x)
+                .anyMatch(x -> AreTheseEquals(x.getId(), component.getId())))
         {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    if(parent instanceof PhysicalComponent)
-                    {
-                        ((PhysicalComponent)parent).getOwnedPhysicalComponents().add((PhysicalComponent)component);
-                    }
-                    else if(parent instanceof LogicalComponent)
-                    {
-                        ((LogicalComponent)parent).getOwnedLogicalComponents().add((LogicalComponent)component);
-                    }
-                }
-                catch(IllegalStateException exception)
-                {
-                    Logger.catching(exception);
-                }
-            }
-        });
+            return;
+        }
+        
+        if(parent instanceof PhysicalComponent)
+        {
+            ((PhysicalComponent)parent).getOwnedPhysicalComponents().add((PhysicalComponent)component);
+        }
+        else if(parent instanceof LogicalComponent)
+        {
+            ((LogicalComponent)parent).getOwnedLogicalComponents().add((LogicalComponent)component);
+        }
     }
     
     /**
@@ -251,7 +220,10 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         var allParametersAndOverrides = hubElement.getElementDefinition().getParameter().stream()
                 .filter(x -> hubElement.getParameterOverride().stream()
                         .noneMatch(o -> AreTheseEquals(x.getParameterType().getIid(), o.getParameterType().getIid())))
+                .map(x -> (ParameterOrOverrideBase)x)
                 .collect(Collectors.toList());
+        
+        allParametersAndOverrides.addAll(hubElement.getParameterOverride());
         
         this.MapProperties(allParametersAndOverrides, component);
     }
@@ -268,7 +240,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         {
             var refScale = new Ref<>(DataType.class);
             var refProperty = new Ref<Property>(Property.class);
-                        
+            
             if(!TryGetExistingProperty(component, parameter, refProperty))
             {
                 if(parameter.getScale() != null)
@@ -299,10 +271,9 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
     {
         this.QueryCollectionByNameAndShortName(scale, this.temporaryDataTypes, refScale);
         
-        if(!refScale.HasValue() && !this.dstController.TryGetDataType(scale, this.referenceElement, refScale))
+        if(!refScale.HasValue() && !this.dstController.TryGetDataType(scale, this.sessionService.GetTopElement(), refScale))
         {
-            var newDataType = StereotypeUtils.InitializeCapellaElement(PhysicalQuantity.class);
-            newDataType.setName(scale.getName());
+            var newDataType = this.transactionService.Create(PhysicalQuantity.class, scale.getName());
                         
             if(scale.getUnit() != null)
             {
@@ -310,6 +281,8 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             }
             
             this.temporaryDataTypes.add(newDataType);
+            this.transactionService.AddReferenceDataToDataPackage(newDataType);
+            refScale.Set(newDataType);
         }
     }
 
@@ -327,15 +300,15 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         
         if(!refUnit.HasValue() && !this.dstController.TryGetElementByName(unit, refUnit))
         {
-            var newUnit = StereotypeUtils.InitializeCapellaElement(Unit.class);
-            newUnit.setName(unit.getName());
+            var newUnit = this.transactionService.Create(Unit.class, unit.getName());
             refUnit.Set(newUnit);
             this.temporaryUnits.add(newUnit);
-        }
-
+            this.transactionService.AddReferenceDataToDataPackage(newUnit);
+        }        
+        
         return refUnit.Get();
     }
-
+    
     /**
      * Updates the value of the provided {@linkplain Property}
      * 
@@ -345,19 +318,19 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      */
     private void UpdateValue(ParameterOrOverrideBase parameter, Ref<Property> refProperty, Ref<DataType> refScale)
     {
-        DataValue dataValue;
+        var refDataValue = new Ref<>(DataValue.class);
         
         if (refProperty.Get().getOwnedDefaultValue() != null)
         {
-            dataValue = refProperty.Get().getOwnedDefaultValue();
+            refDataValue.Set(refProperty.Get().getOwnedDefaultValue());
         }
         else
         {
-            dataValue = this.CreateDataValue(parameter, refScale);
-            refProperty.Get().setOwnedDefaultValue(dataValue);
+            refDataValue.Set(CreateDataValue(parameter, refScale));
+            refProperty.Get().setOwnedDefaultValue(refDataValue.Get());
         }
-
-        this.UpdateValue(dataValue, parameter, refProperty);
+        
+        UpdateValue(refDataValue.Get(), parameter, refProperty);
     }
     
     /**
@@ -422,7 +395,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         
         if(valueType != null)
         {
-            dataValue = StereotypeUtils.InitializeCapellaElement(valueType);
+            dataValue = this.transactionService.Create(valueType);
             
             if(dataValue instanceof LiteralNumericValue && dstDataType.HasValue() && dstDataType.Get() instanceof PhysicalQuantity)
             {
@@ -442,19 +415,18 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      */
     private void CreateProperty(ParameterOrOverrideBase parameter, Ref<Property> refProperty, Ref<DataType> dstDataType)
     {
-        var newProperty = StereotypeUtils.InitializeCapellaElement(Property.class);
-        newProperty.setName(parameter.getParameterType().getName());
+        var newProperty = this.transactionService.Create(Property.class, parameter.getParameterType().getName());
         
         if(parameter.getParameterType() instanceof QuantityKind && dstDataType.HasValue())
         {
             newProperty.setAbstractType(dstDataType.Get());
         }
         
-        var minimumCardinality = StereotypeUtils.InitializeCapellaElement(LiteralNumericValue.class);
+        var minimumCardinality = this.transactionService.Create(LiteralNumericValue.class);
         minimumCardinality.setValue(Integer.toString(1));
         newProperty.setOwnedMinCard(minimumCardinality);
         
-        var maximumCardinality = StereotypeUtils.InitializeCapellaElement(LiteralNumericValue.class);
+        var maximumCardinality = this.transactionService.Create(LiteralNumericValue.class);
         maximumCardinality.setValue(Integer.toString(1));
         newProperty.setOwnedMaxCard(maximumCardinality);
         
@@ -499,7 +471,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
                     .orElseGet(() -> 
                     {
                         var newMappedElement = new MappedElementDefinitionRowViewModel(containedUsage.getElementDefinition(),
-                                this.GetOrCreateComponent(containedUsage.getElementDefinition()), MappingDirection.FromHubToDst);
+                                this.GetOrCreateComponent(containedUsage), MappingDirection.FromHubToDst);
                         
                         this.elements.add(newMappedElement);
                         this.UpdateContainement(mappedElement.GetDstElement(), newMappedElement.GetDstElement());
@@ -515,32 +487,32 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
     /**
      * Gets or creates a component based on an {@linkplain ElementDefinition}
      * 
-     * @param elementDefinition the {@linkplain ElementDefinition}
+     * @param elementBase the {@linkplain ElementBase}
      * @return an existing or a new {@linkplain Component}
      */
-    private Component GetOrCreateComponent(ElementDefinition elementDefinition)
+    private Component GetOrCreateComponent(ElementBase elementBase)
     {
         @SuppressWarnings("unchecked")
         var refComponentType = new Ref<>((Class<Class<? extends Component>>) Component.class.getClass());
 
-        if(!this.TryGetComponentClass(elementDefinition, refComponentType))
+        if(!this.TryGetComponentClass(elementBase, refComponentType))
         {
             refComponentType.Set(PhysicalComponent.class);
         }
            
-        return this.GetOrCreateComponent(elementDefinition.getName(), refComponentType.Get());
+        return this.GetOrCreateComponent(elementBase.getName(), refComponentType.Get());
     }
     
     /**
      * Gets the {@linkplain RequirementType} based on the {@linkplain Category} applied to the provided {@linkplain cdp4common.engineeringmodeldata.Requirement}
      * 
-     * @param elementDefinition the {@linkplain ElementDefinition}
+     * @param elementBase the {@linkplain ElementBase}
      * @param refComponentType the {@linkplain Ref} of {@linkplain RequirementType}
      * @return a {@linkplain boolean} indicating whether the {@linkplain RequirementType} is different than the default value
      */
-    private boolean TryGetComponentClass(ElementDefinition elementDefinition, Ref<Class<? extends Component>>  refComponentType)
+    private boolean TryGetComponentClass(ElementBase elementBase, Ref<Class<? extends Component>>  refComponentType)
     {
-        for (var category : elementDefinition.getCategory())
+        for (var category : elementBase.getCategory())
         {
             var componentType = CapellaTypeEnumerationUtility.ComponentTypeFrom(category.getName());
 
@@ -562,33 +534,37 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * @param componentType the {@linkplain Class} of {@linkplain #TComponent}
      * @return a {@linkplain RequirementsPkg}
      */
-    @SuppressWarnings("unchecked")
     private <TComponent extends Component> TComponent GetOrCreateComponent(String hubElementName, Class<TComponent> componentType)
     {
         var refElement = new Ref<>(componentType);
         
         var existingComponent = this.temporaryComponents.stream()
+                .filter(x -> componentType.isInstance(x))
+                .map(x -> componentType.cast(x))
                 .filter(x -> AreTheseEquals(((NamedElement) x).getName(), hubElementName, true))
                 .findFirst();
         
         if(existingComponent.isPresent())
         {
-            refElement.Set((TComponent) existingComponent.get());
+            refElement.Set(this.transactionService.Clone(existingComponent.get()));
         }
         else
         {
             if(!this.dstController.TryGetElementBy(x -> x instanceof NamedElement && 
                     AreTheseEquals(((NamedElement) x).getName(), hubElementName, true), refElement))
             {
-                var newComponent = StereotypeUtils.InitializeCapellaElement(componentType);
+                var newComponent = this.transactionService.Create(componentType, hubElementName);
                 
                 if(newComponent instanceof PhysicalComponent)
                 {
                     ((PhysicalComponent)newComponent).setNature(PhysicalComponentNature.BEHAVIOR);
                 }
                 
-                newComponent.setName(hubElementName);
                 refElement.Set(newComponent);
+            }
+            else
+            {
+                refElement.Set(this.transactionService.Clone(refElement.Get()));
             }
         }
         
