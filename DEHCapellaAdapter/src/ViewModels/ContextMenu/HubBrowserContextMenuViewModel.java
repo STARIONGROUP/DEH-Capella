@@ -352,7 +352,6 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
     }
 
     /**
-    /**
      * Sorts the {@linkplain cdp4common.engineeringmodeldata.Requirement} that can be mapped based on whatever container was selected in the requirement browser
      * 
      * @param elements the base collection of selected elements

@@ -243,7 +243,6 @@ public class CapellaTransactionService implements ICapellaTransactionService
         return newElement;
     }
     
-
     /**
      * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}
      * 

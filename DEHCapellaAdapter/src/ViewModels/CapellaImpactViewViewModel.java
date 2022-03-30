@@ -300,7 +300,6 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
         return refRowViewModel.HasValue();
     }
 
-
     /**
      * Gets the {@linkplain Thing} by its Iid from the capella sessions
      * 

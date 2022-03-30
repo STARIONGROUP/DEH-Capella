@@ -51,7 +51,6 @@ public abstract class HubToDstBaseMappingRule<TInput extends Object, TOutput> ex
      * 
      * @param hubController the {@linkplain IHubController}
      * @param mappingConfiguration the {@linkplain IMagicDrawMappingConfigurationService}
-     * @param dstController the {@linkplain IDstController}
      * @param transactionService the {@linkplain ICapellaTransactionService}
      */
     protected HubToDstBaseMappingRule(IHubController hubController, ICapellaMappingConfigurationService mappingConfiguration, ICapellaTransactionService transactionService)

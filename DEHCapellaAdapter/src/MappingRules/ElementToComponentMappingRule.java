@@ -109,7 +109,6 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * @param mappingConfiguration the {@linkplain ICapellaMappingConfigurationService}
      * @param sessionService the {@linkplain ICapellaSessionService}
      * @param transactionService the {@linkplain ICapellaTransactionService}
-     * @param dstController the {@linkplain IDstController}
      */
     public ElementToComponentMappingRule(IHubController hubController, ICapellaMappingConfigurationService mappingConfiguration,
             ICapellaSessionService sessionService, ICapellaTransactionService transactionService)
@@ -189,30 +188,14 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             return;
         }
         
-//        var project = this.sessionService.GetProject(this.sessionService.GetOpenSessions().get(0));
-//        
-//        TransactionHelper.getExecutionManager(project).execute(new AbstractReadWriteCommand() 
-//        {
-//            @Override
-//            public void run()
-//            {
-//                try
-//                {
-                    if(parent instanceof PhysicalComponent)
-                    {
-                        ((PhysicalComponent)parent).getOwnedPhysicalComponents().add((PhysicalComponent)component);
-                    }
-                    else if(parent instanceof LogicalComponent)
-                    {
-                        ((LogicalComponent)parent).getOwnedLogicalComponents().add((LogicalComponent)component);
-                    }
-//                }
-//                catch(IllegalStateException exception)
-//                {
-//                    Logger.catching(exception);
-//                }
-//            }
-//        });
+        if(parent instanceof PhysicalComponent)
+        {
+            ((PhysicalComponent)parent).getOwnedPhysicalComponents().add((PhysicalComponent)component);
+        }
+        else if(parent instanceof LogicalComponent)
+        {
+            ((LogicalComponent)parent).getOwnedLogicalComponents().add((LogicalComponent)component);
+        }
     }
     
     /**
