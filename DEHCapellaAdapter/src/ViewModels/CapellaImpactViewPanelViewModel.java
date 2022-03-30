@@ -191,7 +191,8 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
     public CapellaImpactViewPanelViewModel(IHubController hubController, IDstController dstController,
             IElementDefinitionImpactViewViewModel elementDefinitionImpactViewModel, IRequirementImpactViewViewModel requirementImpactViewModel,
             ITransferControlViewModel transferControlViewModel, IImpactViewContextMenuViewModel contextMenuViewModel,
-            ICapellaImpactViewViewModel capellaImpactViewViewModel, ICapellaMappingConfigurationService mappingConfigurationService, ICapellaLogService logService)
+            ICapellaImpactViewViewModel capellaImpactViewViewModel, ICapellaMappingConfigurationService mappingConfigurationService, 
+            ICapellaLogService logService)
     {
         super(hubController);
         this.dstController = dstController;

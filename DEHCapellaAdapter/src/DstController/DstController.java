@@ -37,13 +37,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.polarsys.capella.common.ef.command.AbstractReadWriteCommand;
-import org.polarsys.capella.common.helpers.TransactionHelper;
+import org.eclipse.emf.common.util.EList;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
-import org.polarsys.capella.core.data.capellamodeller.Project;
 import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
+import org.polarsys.capella.core.data.requirement.Requirement;
+import org.polarsys.capella.core.data.requirement.RequirementsPkg;
+import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
+import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
@@ -52,6 +54,7 @@ import Reactive.ObservableCollection;
 import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
+import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
@@ -80,7 +83,6 @@ import cdp4common.engineeringmodeldata.ParameterOrOverrideBase;
 import cdp4common.engineeringmodeldata.ParameterOverride;
 import cdp4common.engineeringmodeldata.ParameterValueSetBase;
 import cdp4common.engineeringmodeldata.Relationship;
-import cdp4common.engineeringmodeldata.Requirement;
 import cdp4common.engineeringmodeldata.RequirementsGroup;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.engineeringmodeldata.ValueSet;
@@ -129,7 +131,12 @@ public final class DstController implements IDstController
      * The {@linkplain ICapellaSessionService} instance 
      */
     private final ICapellaSessionService capellaSessionService;
-    
+
+    /**
+     * The {@linkplain ICapellaTransactionService} instance
+     */
+    private final ICapellaTransactionService transactionService;
+
     /**
      * A value indicating whether the {@linkplain DstController} should load mapping when the HUB session is refresh or reloaded
      */
@@ -261,15 +268,18 @@ public final class DstController implements IDstController
      * @param logService the {@linkplain ICapellaLogService} instance
      * @param mappingConfigurationService the {@linkplain ICapellaMappingConfigurationService} instance
      * @param capellaSessionService the {@linkplain ICapellaSessionService} instance
+     * @param transactionService the {@linkplain ICapellaTransactionService} instance
      */
     public DstController(IMappingEngineService mappingEngine, IHubController hubController, ICapellaLogService logService, 
-            ICapellaMappingConfigurationService mappingConfigurationService, ICapellaSessionService capellaSessionService)
+            ICapellaMappingConfigurationService mappingConfigurationService, ICapellaSessionService capellaSessionService,
+            ICapellaTransactionService transactionService)
     {
         this.mappingEngine = mappingEngine;
         this.hubController = hubController;
         this.logService = logService;
         this.mappingConfigurationService = mappingConfigurationService;
         this.capellaSessionService = capellaSessionService;
+        this.transactionService = transactionService;
         
         this.hubController.GetIsSessionOpenObservable().subscribe(isSessionOpen ->
         {
@@ -352,13 +362,13 @@ public final class DstController implements IDstController
         {
             allMappedElement.add((MappedElementDefinitionRowViewModel) mappedRowViewModel);
         }
-        else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(RequirementsSpecification.class))
-        {
-            ((CapellaRequirementCollection)allMappedRequirements).add((MappedDstRequirementRowViewModel) mappedRowViewModel);
-        }
         else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(cdp4common.engineeringmodeldata.Requirement.class))
         {
             ((HubRequirementCollection)allMappedRequirements).add((MappedHubRequirementRowViewModel) mappedRowViewModel);
+        }
+        else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(RequirementsSpecification.class))
+        {
+            ((CapellaRequirementCollection)allMappedRequirements).add((MappedDstRequirementRowViewModel) mappedRowViewModel);
         }
     }
     
@@ -411,7 +421,6 @@ public final class DstController implements IDstController
                         .anyMatch(d -> AreTheseEquals(d.GetDstElement().getId(), x.GetDstElement().getId())));
 
                 this.selectedHubMapResultForTransfer.clear();
-                this.selectedHubMapResultForTransfer.addAll(this.hubMapResult.stream().map(x -> x.GetDstElement()).collect(Collectors.toList()));
                 return this.hubMapResult.addAll(resultAsCollection);
             }
         }
@@ -453,50 +462,178 @@ public final class DstController implements IDstController
      */
     private boolean TransferToDst()
     {
-        var project = this.capellaSessionService.GetProject(this.capellaSessionService.GetOpenSessions().get(0));
-        var result = new Ref<>(Boolean.class, false);
-        
-        TransactionHelper.getExecutionManager(project).execute(new AbstractReadWriteCommand() 
+        try
         {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    TransferTopElement(project);
-                    result.Set(true);
-                }
-                catch(Exception exception)
-                {
-                    logger.catching(exception);
-                    result.Set(false);
-                }
-            }
-        });
-
-        return result.Get();
+            var result = this.transactionService.Commit(() -> PrepareElementsForTransferToCapella());
+    
+            this.isHubSessionRefreshSilent = true;
+            Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
+                
+            Iteration iterationClone = iterationTransaction.getLeft();
+            ThingTransaction transaction = iterationTransaction.getRight();
+            this.mappingConfigurationService.PersistExternalIdentifierMap(transaction, iterationClone);
+            transaction.createOrUpdate(iterationClone);
+            
+            this.hubController.Write(transaction);
+            result &= this.hubController.Refresh();
+            this.mappingConfigurationService.RefreshExternalIdentifierMap();
+            this.selectedHubMapResultForTransfer.clear();
+            return result;
+        } 
+        catch (Exception exception)
+        {
+            this.logService.Append(exception.toString(), exception);
+            return false;
+        }
+        finally
+        {
+            this.selectedHubMapResultForTransfer.clear();
+            this.isHubSessionRefreshSilent = true;
+        }
     }
 
     /**
-     * Transfers the whole containment tree
-     * 
-     * @param project the {@linkplain Project} to update
+     * Prepares and transfers the actual changes selected in {@linkplain #selectedHubMapResultForTransfer}
      */
-    private void TransferTopElement(Project project)
+    private void PrepareElementsForTransferToCapella()
     {
-        for (var mappedElementRowViewModel : this.hubMapResult)
+        for (var element : this.selectedHubMapResultForTransfer)
         {
-            if(mappedElementRowViewModel.GetDstElement().eContainer() == null)
+            if(element instanceof Requirement)
             {
-                var system = capellaSessionService.GetTopElement(project);
-                var newFeature = mappedElementRowViewModel.GetDstElement();
-                ((PhysicalComponent)system).getOwnedPhysicalComponents().add((PhysicalComponent) newFeature);
-                
-                break;
+                this.PrepareRequirement((Requirement)element);
+            }
+            
+            else if(element instanceof PhysicalComponent)
+            {
+                if(this.transactionService.IsCloned(element))
+                {
+                    this.PreparePhysicalComponent((PhysicalComponent)element);
+                }
+                else if(this.transactionService.IsCloned(element.eContainer()))
+                {
+                    if(element.eContainer() instanceof PhysicalComponent)
+                    {
+                        var original = this.transactionService.GetClone((PhysicalComponent)element.eContainer()).GetOriginal();
+                        original.getOwnedPhysicalComponents().removeIf(x -> AreTheseEquals(x.getId(), element.getId()));
+                        original.getOwnedPhysicalComponents().add((PhysicalComponent)element);
+                    }
+                }
             }
         }
     }
-    
+
+    /**
+     * Prepares for transfer the provided {@linkplain Requirement}
+     * 
+     * @param element the {@linkplain Requirement} element to transfer
+     */
+    private void PrepareRequirement(Requirement element)
+    {
+        if(this.transactionService.IsCloned(element))
+        {
+            var clonedReference = this.transactionService.GetClone(element);
+            clonedReference.GetOriginal().setDescription(clonedReference.GetClone().getDescription());
+            clonedReference.GetOriginal().setName(clonedReference.GetClone().getName());
+        }
+        
+        var container = (RequirementsPkg)element.eContainer();
+        Boolean containerIsCloned = null;
+        
+        while(container != null && !(containerIsCloned = this.transactionService.IsCloned(container)) && container.eContainer() instanceof RequirementsPkg)
+        {                    
+            container = (RequirementsPkg)container.eContainer();
+        }
+
+        final RequirementsPkg containerToUpdate = container;
+        
+        if(containerToUpdate == null)
+        {
+            return;
+        }
+        
+        if(containerIsCloned.booleanValue())
+        {
+            this.UpdateRequirementPackage(containerToUpdate);
+        }
+        else
+        {
+            var architecture = BlockArchitectureExt.getBlockArchitecture(Type.SA, this.capellaSessionService.GetProject());
+            architecture.getOwnedRequirementPkgs().removeIf(x -> AreTheseEquals(x.getId(), containerToUpdate.getId()));
+            architecture.getOwnedRequirementPkgs().add(containerToUpdate);
+        }
+    }
+
+    /**
+     * Updates the provided cloned {@linkplain RequirementsPkg}
+     * 
+     * @param containerToUpdate the {@linkplain RequirementsPkg}
+     */
+    private void UpdateRequirementPackage(RequirementsPkg containerToUpdate)
+    {
+        var requirementPkgCloneReference = this.transactionService.GetClone(containerToUpdate);
+        
+        this.UpdateChildrenOfType(requirementPkgCloneReference.GetOriginal().getOwnedRequirementPkgs(), 
+                requirementPkgCloneReference.GetClone().getOwnedRequirementPkgs());
+        
+        this.UpdateChildrenOfType(requirementPkgCloneReference.GetOriginal().getOwnedRequirements(), 
+                requirementPkgCloneReference.GetClone().getOwnedRequirements());
+    }
+
+    /**
+     * Adds the new {@linkplain #TElement} contained in the cloned collection to the original collection
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} the collections contains
+     * @param originalCollection the original collection
+     * @param clonedCollection the cloned collection
+     */
+    private <TElement extends CapellaElement> void UpdateChildrenOfType(EList<TElement> originalCollection,
+            EList<TElement> clonedCollection)
+    {
+        var childrenPackagesToAdd = clonedCollection.stream()
+                .filter(x -> originalCollection.stream()
+                            .noneMatch(e -> AreTheseEquals(x.getId(), e.getId(), true)))
+                .collect(Collectors.toList());
+
+        originalCollection.addAll(childrenPackagesToAdd);
+    }
+
+    /**
+     * Prepares for transfer the specified {@linkplain PhysicalComponent}
+     * 
+     * @param element the {@linkplain PhysicalComponent} element to transfer
+     */
+    private void PreparePhysicalComponent(PhysicalComponent element)
+    {
+        var clonedReference = this.transactionService.GetClone(element);
+        
+        for (var clonedProperty : clonedReference.GetClone().getContainedProperties().stream().collect(Collectors.toList()))
+        {
+            var optionalProperty = clonedReference.GetOriginal().getContainedProperties().stream()
+                    .filter(x -> AreTheseEquals(x.getId(), clonedProperty.getId()))
+                    .findFirst();
+            
+            if(optionalProperty.isPresent())
+            {
+                optionalProperty.get().setOwnedDefaultValue(clonedProperty.getOwnedDefaultValue());
+                continue;
+            }
+            
+            clonedReference.GetOriginal().getOwnedFeatures().add(clonedProperty);
+        }
+        
+        for (var containedElement : clonedReference.GetClone().getOwnedPhysicalComponents().stream().collect(Collectors.toList()))
+        {
+            if(clonedReference.GetOriginal().getOwnedPhysicalComponents().stream()
+                    .anyMatch(x -> AreTheseEquals(x.getId(), containedElement.getId())))
+            {
+                continue;
+            }
+            
+            clonedReference.GetOriginal().getOwnedPhysicalComponents().add(containedElement);
+        }
+    }
+        
     /**
      * Transfers all the {@linkplain Thing} contained in the {@linkplain dstMapResult} to the Hub
      * 
@@ -794,7 +931,7 @@ public final class DstController implements IDstController
         
         this.RegisterRequirementsGroups(transaction, groups);
         
-        for(Requirement requirement : requirementsSpecification.getRequirement())
+        for(var requirement : requirementsSpecification.getRequirement())
         {
             transaction.createOrUpdate(requirement);
             
@@ -879,6 +1016,20 @@ public final class DstController implements IDstController
      */
     private void AddOrRemoveAllFromSelectedDstMapResultForTransfer(ClassKind classKind, boolean shouldRemove)
     {
+        if(classKind == ClassKind.NotThing)
+        {
+            this.selectedHubMapResultForTransfer.clear();
+
+            if(!shouldRemove)
+            {
+                this.selectedHubMapResultForTransfer.addAll(this.hubMapResult.stream()
+                        .map(x -> x.GetDstElement())
+                        .collect(Collectors.toList()));
+            }
+            
+            return;
+        }
+        
         Predicate<? super Thing> predicateClassKind = x -> x.getClassKind() == classKind;
         
         this.selectedDstMapResultForTransfer.removeIf(predicateClassKind);

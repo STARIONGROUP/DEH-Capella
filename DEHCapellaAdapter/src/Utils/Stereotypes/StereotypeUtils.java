@@ -221,31 +221,12 @@ public final class StereotypeUtils
     }
     
     /**
-     * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}
-     * 
-     * @param <TInstance> the {@linkplain Type} of {@linkplain CapellaElement}
-     * @param clazz the {@linkplain Class} of {@linkplain #TInstance}
-     * @return an instance of the provided type
-     */
-    public static <TInstance extends CapellaElement> TInstance InitializeCapellaElement(Class<TInstance> clazz)
-    {        
-        var eClassAndFactory = StereotypeUtils.GetEClassAndFactory(clazz.getSimpleName());
-        
-        if (eClassAndFactory.getLeft() != null && eClassAndFactory.getRight() != null && eClassAndFactory.getLeft() instanceof EClass) 
-        {
-            return clazz.cast(eClassAndFactory.getRight().create((EClass)eClassAndFactory.getLeft()));
-        }
-        
-        return null;
-    }
-
-    /**
      * Gets the {@linkplain EClass} that corresponds to the provided {@linkplain String} className 
      * 
      * @param className the {@linkplain Class} name
      * @return the {@linkplain EClassifier} {@linkplain EClass}
      */
-    private static Pair<EClassifier, EFactory> GetEClassAndFactory(String className)
+    public static Pair<EClassifier, EFactory> GetEClassAndFactory(String className)
     {
         for (var ePackage : GetEPackages())
         {
@@ -269,5 +250,25 @@ public final class StereotypeUtils
     {
         return Arrays.asList(PaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, 
                 InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE);
+    }
+
+    /**
+     * Gets the highest {@linkplain RequirementPkg} that contains the provided {@linkplain Requirement}
+     * 
+     * @param element the {@linkplain Requirement} from which to find the highest parent
+     * @return a {@linkplain RequirementPkg}
+     */
+    public static RequirementsPkg GetTopRequirementPakage(Requirement element)
+    {
+        var parent = element.eContainer();
+        RequirementsPkg previousParent = null;
+        
+        while(parent instanceof RequirementsPkg)
+        {
+            previousParent = (RequirementsPkg)parent;
+            parent = parent.eContainer();
+        }
+        
+        return previousParent;
     }
 }

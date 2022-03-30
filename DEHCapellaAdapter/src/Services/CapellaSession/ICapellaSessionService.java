@@ -142,4 +142,32 @@ public interface ICapellaSessionService
      * @return a {@linkplain Project} element
      */
     Project GetProject(Session session);
+
+    /**
+     * Gets the current {@linkplain Session} to work with
+     * 
+     * @return the {@linkplain Session}
+     */
+    Session GetCurrentSession();
+
+    /**
+     * Gets the {@linkplain Project} element from the {@linkplain #GetCurrentSession()}
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain Project} element
+     */
+    Project GetProject();
+
+    /**
+     * Sets the {@linkplain #GetCurrentSession()}
+     * @param session the new {@linkplain Session}
+     */
+    void SetCurrentSession(Session session);
+
+    /**
+     * Gets the top element from the {@linkplain #GetCurrentSession()} in the Physical Architecture package
+     * 
+     * @return a {@linkplain PhysicalComponent}
+     */
+    PhysicalComponent GetTopElement();
 }

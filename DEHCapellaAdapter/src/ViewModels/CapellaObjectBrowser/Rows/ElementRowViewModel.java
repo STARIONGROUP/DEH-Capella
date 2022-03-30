@@ -23,12 +23,15 @@
  */
 package ViewModels.CapellaObjectBrowser.Rows;
 
+import java.util.stream.Collectors;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
+import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 
 /**
@@ -248,11 +251,25 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
      * Updates the represented {@linkplain CapellaElement} with the specified one
      * 
      * @param capellaElement the new {@linkplain CapellaElement}
+     * @param shouldHighlight a value indicating whether the highlight should be updated
      */
     @SuppressWarnings("unchecked")
-    public void UpdateElement(CapellaElement capellaElement)
+    public void UpdateElement(CapellaElement capellaElement, boolean shouldHighlight)
     {
         this.element = (TElement)capellaElement;
         this.UpdateProperties();
+        
+        if(shouldHighlight)
+        {
+            this.isHighlighted = true;
+        }
+        
+        if(this instanceof IHaveContainedRows)
+        {
+            var thisAsParent = (IHaveContainedRows<?>)this;
+            
+            thisAsParent.GetContainedRows().clear();
+            thisAsParent.ComputeContainedRows();
+        }
     }
 }

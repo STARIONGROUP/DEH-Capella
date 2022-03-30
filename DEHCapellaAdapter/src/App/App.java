@@ -52,6 +52,8 @@ import Services.CapellaSession.ICapellaSessionListenerService;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaSession.ISiriusSessionManagerWrapper;
 import Services.CapellaSession.SiriusSessionManagerWrapper;
+import Services.CapellaTransaction.CapellaTransactionService;
+import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.Mapping.IMapCommandService;
 import Services.Mapping.MapCommandService;
 import Services.MappingConfiguration.CapellaMappingConfigurationService;
@@ -161,6 +163,7 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.addComponent(ICapellaSelectionService.class, CapellaSelectionService.class);
             AppContainer.Container.as(CACHE).addComponent(IMapCommandService.class, MapCommandService.class);
             AppContainer.Container.addComponent(ISiriusSessionManagerWrapper.class, SiriusSessionManagerWrapper.class);
+            AppContainer.Container.as(CACHE).addComponent(ICapellaTransactionService.class, CapellaTransactionService.class);
 
             AppContainer.Container.addComponent(ComponentToElementMappingRule.class.getName(), ComponentToElementMappingRule.class);
             AppContainer.Container.addComponent(ElementToComponentMappingRule.class.getName(), ElementToComponentMappingRule.class);

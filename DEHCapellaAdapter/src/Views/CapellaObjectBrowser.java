@@ -35,6 +35,7 @@ import Renderers.CapellaObjectBrowserRenderDataProvider;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.Interfaces.IViewModel;
+import Views.ContextMenu.CapellaImpactViewContextMenu;
 import Views.ContextMenu.ContextMenu;
 import Views.ObjectBrowser.ObjectBrowser;
 
@@ -102,8 +103,7 @@ public class CapellaObjectBrowser extends ObjectBrowser
         dataContext.OnSelectionChanged((ElementRowViewModel<? extends CapellaElement>)row.getRight());
 
         SwingUtilities.invokeLater(() -> {
-            objectBrowserTree
-                    .tableChanged(new TableModelEvent(objectBrowserTree.getOutlineModel(), row.getLeft()));
+            objectBrowserTree.tableChanged(new TableModelEvent(objectBrowserTree.getOutlineModel(), row.getLeft()));
         });
     }
 
