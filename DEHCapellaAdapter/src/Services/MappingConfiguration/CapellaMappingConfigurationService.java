@@ -37,6 +37,7 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.requirement.Requirement;
 
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaSession.ICapellaSessionService;
@@ -56,7 +57,7 @@ import cdp4common.engineeringmodeldata.RequirementsSpecification;
 /**
  * The {@linkplain CapellaMappingConfigurationService} is the implementation of {@linkplain MappingConfigurationService} for the Capella adapter
  */
-public class CapellaMappingConfigurationService extends MappingConfigurationService<CapellaElement> implements ICapellaMappingConfigurationService
+public class CapellaMappingConfigurationService extends MappingConfigurationService<CapellaElement, CapellaExternalIdentifier> implements ICapellaMappingConfigurationService
 {
     /**
      * The {@linkplain ICapellaSessionService} instance
@@ -77,7 +78,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
      */
     public CapellaMappingConfigurationService(IHubController hubController, ICapellaSessionService sessionService, ICapellaTransactionService transactionService)
     {
-        super(hubController);
+        super(hubController, CapellaExternalIdentifier.class);
         this.sessionService = sessionService;
         this.transactionService = transactionService;
     }
@@ -141,7 +142,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
      */
     private boolean TryGetMappedElement(CapellaElement element, Ref<IMappedElementRowViewModel> refMappedElementRowViewModel)
     {
-        Optional<ImmutableTriple<UUID, ExternalIdentifier, UUID>> optionalCorrespondence = this.Correspondences.stream()
+        Optional<ImmutableTriple<UUID, CapellaExternalIdentifier, UUID>> optionalCorrespondence = this.Correspondences.stream()
                 .filter(x -> AreTheseEquals(x.middle.Identifier, element.getId()))
                 .findFirst();
         
@@ -151,32 +152,41 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         }
         
         var mappingDirection = optionalCorrespondence.get().middle.MappingDirection;
+        var targetArchitecture = optionalCorrespondence.get().middle.TargetArchitecture;
         var internalId = optionalCorrespondence.get().right;
+        
+        if(!(targetArchitecture == null || targetArchitecture.AreSameArchitecture(element)))
+        {
+            return false;
+        }
         
         if(element instanceof Component)
         {
             var refElementDefinition = new Ref<>(ElementDefinition.class);
-                        
+            
             var mappedElement = new MappedElementDefinitionRowViewModel(this.transactionService.Clone((Component)element), mappingDirection);
+            mappedElement.SetTargetArchitecture(targetArchitecture);
             
             if(this.HubController.TryGetThingById(internalId, refElementDefinition))
             {
                 mappedElement.SetHubElement(refElementDefinition.Get().clone(false));
             }
-            
+                        
             refMappedElementRowViewModel.Set(mappedElement);
         }
         else if(element instanceof Requirement)
-        {            
+        {
             if(mappingDirection == MappingDirection.FromHubToDst)
             {
                 var mappedElement = new MappedHubRequirementRowViewModel(this.transactionService.Clone((Requirement)element), mappingDirection);
                 this.GetMappedRequirement(mappedElement, internalId, cdp4common.engineeringmodeldata.Requirement.class);
+                mappedElement.SetTargetArchitecture(targetArchitecture);
+                
                 refMappedElementRowViewModel.Set(mappedElement);
             }
             else
             {
-                var mappedElement = new MappedDstRequirementRowViewModel(this.transactionService.Clone((Requirement)element), mappingDirection);
+                var mappedElement = new MappedDstRequirementRowViewModel((Requirement)element, mappingDirection);
                 this.GetMappedRequirement(mappedElement, internalId, RequirementsSpecification.class);
                 refMappedElementRowViewModel.Set(mappedElement);
             }
@@ -218,5 +228,25 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
     public ExternalIdentifierMap CreateExternalIdentifierMap(String newName, String modelName, boolean addTheTemporyMapping)
     {
         return super.CreateExternalIdentifierMap(newName, modelName, DstController.DstController.THISTOOLNAME, addTheTemporyMapping);
+    }
+
+    /**
+     * Adds one correspondence to the {@linkplain ExternalIdentifierMap}
+     * 
+     * @param internalId the {@linkplain UUID} that identifies the thing to correspond to
+     * @param externalId the {@linkplain Object} that identifies the object to correspond to
+     * @param mappingDirection the {@linkplain MappingDirection} the mapping belongs to
+     * @param targetArchitecture the target {@linkplain CapellaArchitecture}
+     */
+    @Override
+    public void AddToExternalIdentifierMap(UUID internalId, String externalId, CapellaArchitecture targetArchitecture,
+            MappingDirection mappingDirection)
+    {
+        var externalIdentifier = new CapellaExternalIdentifier();
+        externalIdentifier.MappingDirection = mappingDirection;
+        externalIdentifier.Identifier = externalId;
+        externalIdentifier.TargetArchitecture = targetArchitecture;
+        
+        this.AddToExternalIdentifierMap(internalId, externalIdentifier, x -> x.getMiddle().TargetArchitecture == targetArchitecture);
     }
 }

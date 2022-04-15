@@ -1,5 +1,5 @@
 /*
- * DstMappingConfigurationDialogViewModel.java
+ * DstToHubMappingConfigurationDialogViewModel.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
@@ -31,191 +31,57 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
-import org.polarsys.kitalpha.emde.model.Element;
 
 import DstController.IDstController;
 import Enumerations.MappedElementRowStatus;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
-import Reactive.ObservableCollection;
-import Reactive.ObservableValue;
 import Utils.Ref;
 import Utils.Stereotypes.StereotypeUtils;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
-import ViewModels.Dialogs.Interfaces.IDstMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.Interfaces.IDstToHubMappingConfigurationDialogViewModel;
 import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
 import ViewModels.Interfaces.IRequirementBrowserViewModel;
+import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
+import ViewModels.MappedElementListView.Interfaces.IMappedElementListViewViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
-import ViewModels.Rows.MappedDstRequirementRowViewModel;
-import Views.Dialogs.DstMappingConfigurationDialog;
-import cdp4common.commondata.NamedThing;
+import Views.Dialogs.CapellaDstToHubMappingConfigurationDialog;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import io.reactivex.Observable;
 
 /**
- * The {@linkplain DstMappingConfigurationDialogViewModel} is the main view model for the {@linkplain DstMappingConfigurationDialog}
+ * The {@linkplain DstToHubMappingConfigurationDialogViewModel} is the main view model for the {@linkplain CapellaDstToHubMappingConfigurationDialog}
  */
-public class DstMappingConfigurationDialogViewModel implements IDstMappingConfigurationDialogViewModel
-{
+public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<EObject> implements IDstToHubMappingConfigurationDialogViewModel
+{    
     /**
-     * This view model logger
-     */
-    private Logger logger = LogManager.getLogger();
-    
-    /**
-     * The {@linkplain IDstController}
-     */
-    private IDstController dstController;
-    
-    /**
-     * The {@linkplain IHubController}
-     */
-    private IHubController hubController;
-    
-    /**
-     * The {@linkplain Collection} of {@linkplain EObject} that were originally selected 
-     */
-    private Collection<EObject> originalSelection;
-        
-    /**
-     * Backing field for {@linkplain GetElementDefinitionBrowserViewModel}
-     */
-    private IElementDefinitionBrowserViewModel elementDefinitionBrowserViewModel;
-    
-    /**
-     * Gets the {@linkplain IElementDefinitionBrowserViewModel}
-     * 
-     * @return an {@linkplain IElementDefinitionBrowserViewModel}
-     */
-    @Override
-    public IElementDefinitionBrowserViewModel GetElementDefinitionBrowserViewModel()
-    {
-        return this.elementDefinitionBrowserViewModel;
-    }
-    
-    /**
-     * Backing field for {@linkplain GetRequirementBrowserViewModel}
-     */
-    private IRequirementBrowserViewModel requirementBrowserViewModel;
-    
-    /**
-     * Gets the {@linkplain IRequirementBrowserViewModel}
-     * 
-     * @return an {@linkplain IRequirementBrowserViewModel}
-     */
-    @Override
-    public IRequirementBrowserViewModel GetRequirementBrowserViewModel()
-    {
-        return this.requirementBrowserViewModel;
-    }
-
-    /**
-     * Backing field for {@linkplain GetMagicDrawObjectBrowserViewModel}
-     */
-    private ICapellaObjectBrowserViewModel capellaObjectBrowserViewModel;
-
-    /**
-     * Gets the {@linkplain IMagicDrawObjectBrowserViewModel}
-     * 
-     * @return an {@linkplain IMagicDrawObjectBrowserViewModel}
-     */
-    @Override
-    public ICapellaObjectBrowserViewModel GetCapellaObjectBrowserViewModel()
-    {
-        return this.capellaObjectBrowserViewModel;
-    }
-    
-    /**
-     * The {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel} that represents all the mapped elements
-     */
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> mappedElements = new ObservableCollection<>();
-    
-    /**
-     * Gets the collection of mapped element
-     * 
-     * @return {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
-     */
-    @Override
-    public ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetMappedElementCollection()
-    {
-        return this.mappedElements;
-    }
-
-    /**
-     * Backing field for {@linkplain GetSelectedMappedElement}
-     */
-    private ObservableValue<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> selectedMappedElement = new ObservableValue<>(null);
-    
-    /**
-     * The selected {@linkplain MappedElementRowViewModel}
-     * 
-     * @return a {@linkplain Observable} of {@linkplain MappedElementRowViewModel}
-     */
-    @Override
-    public Observable<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetSelectedMappedElement()
-    {
-        return this.selectedMappedElement.Observable();
-    }
-
-    /**
-     * Sets the selectedMappedElement
-     * 
-     * @param mappedElement the {@linkplain MappedElementRowViewModel} that is to be selected
-     */
-    @Override
-    public void SetSelectedMappedElement(MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElement)
-    {
-        mappedElement.SetIsSelected(true);
-        this.selectedMappedElement.Value(mappedElement);
-    }
-    
-    /**
-     * Backing field for {@linkplain GetShouldMapToNewHubElementCheckBoxBeEnabled}
-     */
-    private ObservableValue<Boolean> shouldMapToNewHubElementCheckBoxBeEnabled = new ObservableValue<>(true, Boolean.class);
-
-    /**
-     * Gets an {@linkplain Observable} value indicating whether the mapToNewHubElementCheckBox should be enabled 
-     * 
-     * @return an {@linkplain Observable} of {@linkplain Boolean}
-     */
-    @Override
-    public Observable<Boolean> GetShouldMapToNewHubElementCheckBoxBeEnabled()
-    {
-        return this.shouldMapToNewHubElementCheckBoxBeEnabled.Observable();
-    }
-    
-    /**
-     * Initializes a new {@linkplain DstMappingConfigurationDialogViewModel}
+     * Initializes a new {@linkplain DstToHubMappingConfigurationDialogViewModel}
      * 
      * @param dstController the {@linkplain IDstController}
      * @param hubController the {@linkplain IHubController}
      * @param elementDefinitionBrowserViewModel the {@linkplain IElementDefinitionBrowserViewModel}
      * @param requirementBrowserViewModel the {@linkplain IRequirementBrowserViewModel}
-     * @param magicDrawObjectBrowserViewModel the {@linkplain ICapellaObjectBrowserViewModel}
+     * @param capellaObjectBrowserViewModel the {@linkplain ICapellaObjectBrowserViewModel}
+     * @param mappedElementListViewViewModel the {@linkplain IMappedElementListViewViewModel}
      */
-    public DstMappingConfigurationDialogViewModel(IDstController dstController, IHubController hubController, 
+    public DstToHubMappingConfigurationDialogViewModel(IDstController dstController, IHubController hubController, 
             IElementDefinitionBrowserViewModel elementDefinitionBrowserViewModel, IRequirementBrowserViewModel requirementBrowserViewModel,
-            ICapellaObjectBrowserViewModel magicDrawObjectBrowserViewModel)
+            ICapellaObjectBrowserViewModel capellaObjectBrowserViewModel, IMappedElementListViewViewModel mappedElementListViewViewModel)
     {
-        this.elementDefinitionBrowserViewModel = elementDefinitionBrowserViewModel;
-        this.requirementBrowserViewModel = requirementBrowserViewModel; 
-        this.dstController = dstController;
-        this.hubController = hubController;
-        this.capellaObjectBrowserViewModel = magicDrawObjectBrowserViewModel;
+        super(dstController, hubController, elementDefinitionBrowserViewModel, requirementBrowserViewModel, 
+                capellaObjectBrowserViewModel, mappedElementListViewViewModel);
         
         this.InitializeObservables();
     }
@@ -223,70 +89,14 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
     /**
      * Initializes the {@linkplain Observable}s of this view model
      */
-    private void InitializeObservables()
+    protected void InitializeObservables()
     {
+        super.InitializeObservables();
+        
         this.capellaObjectBrowserViewModel.GetSelectedElement()
             .subscribe(x -> this.UpdateMappedElements(x));
-        
-        this.elementDefinitionBrowserViewModel.GetSelectedElement()
-            .subscribe(x -> this.SetHubElement(x.GetThing()));
-
-        this.requirementBrowserViewModel.GetSelectedElement()
-            .subscribe(x -> this.SetHubElement(x.GetThing()));
-        
-        this.selectedMappedElement.Observable().subscribe(
-                x -> this.shouldMapToNewHubElementCheckBoxBeEnabled.Value(
-                        x != null && x.GetRowStatus() != MappedElementRowStatus.ExistingMapping),
-                x -> this.logger.catching(x));        
     }
-
-    /**
-     * Sets the Hub element on the selected element if the element is compatible
-     * 
-     * @param thing the {@linkplain Thing} to assign
-     */
-    private void SetHubElement(Thing thing)
-    {
-        if(this.selectedMappedElement.Value() == null || this.selectedMappedElement.Value().GetRowStatus() == MappedElementRowStatus.ExistingMapping)
-        {
-            return;
-        }
-        
-        if(thing instanceof ElementDefinition
-                && this.selectedMappedElement.Value().GetTThingClass().isAssignableFrom(ElementDefinition.class))
-        {
-            this.SetHubElement(thing, ElementDefinition.class);
-        }
-        else if(thing instanceof RequirementsSpecification
-                && this.selectedMappedElement.Value().GetTThingClass().isAssignableFrom(RequirementsSpecification.class))
-        {
-            this.SetHubElement(thing, RequirementsSpecification.class);
-        }
-        else
-        {
-            this.logger.warn("Thing is not compatible with the current selected mapped element!");
-        }
-    }
-
-    /**
-     * Sets the Hub element on the selected element
-     * 
-     * @param thing the {@linkplain Thing} to assign
-     * @param clazz the class of the {@linkplain Thing}
-     */
-    @SuppressWarnings("unchecked")
-    private <TThing extends Thing & NamedThing> void SetHubElement(Thing thing, Class<TThing> clazz)
-    {
-        var mappedElementRowViewModel = (MappedElementRowViewModel<TThing, ? extends CapellaElement>)this.selectedMappedElement.Value();
-        
-        mappedElementRowViewModel.SetHubElement((TThing)thing.clone(true));
-        
-        this.shouldMapToNewHubElementCheckBoxBeEnabled.Value(false);
-        mappedElementRowViewModel.SetShouldCreateNewTargetElement(false);
-        
-        this.UpdateRowStatus(this.selectedMappedElement.Value(), clazz);
-    }
-
+    
     /**
      * Updates the mapped element collection 
      * 
@@ -323,43 +133,27 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
     /**
      * Updates this view model properties
      */
-    private void UpdateProperties()
-    {
-        this.mappedElements.clear();
-                
-        for (var mappedElementRowViewModel : this.dstController.GetDstMapResult())
-        {
-            this.mappedElements.add(mappedElementRowViewModel);
-        }
-
-        this.PreMap(this.originalSelection);
-    }
-    
-    /**
-     * Sets the mappedElement picked to open this dialog and sets the DST tree
-     * 
-     * @param selectedElements the collection of {@linkplain EObject}
-     */
     @Override
-    public void SetMappedElement(Collection<EObject> selectedElements)
+    protected void UpdateProperties()
     {
-        this.originalSelection = selectedElements;
-        this.capellaObjectBrowserViewModel.BuildTree(selectedElements);
-        this.UpdateProperties();
+        this.UpdateProperties(this.dstController.GetDstMapResult());
+        this.capellaObjectBrowserViewModel.BuildTree(this.originalSelection);
+        ((ICapellaMappedElementListViewViewModel)this.mappedElementListViewViewModel).SetShouldDisplayTargetArchitectureColumn(false);
     }
-    
+
     /**
      * Pre-map the selected elements
      * 
-     * @param selectedElement the collection of {@linkplain Element}
+     * @param selectedElement the collection of {@linkplain #TElement}
      */
-    private void PreMap(Collection<EObject> selectedElements)
+    @Override
+    protected void PreMap(Collection<EObject> selectedElements)
     {
         for (var element : selectedElements)
         {
             if(element instanceof Structure)
             {
-                this.PreMap(GetChildren(element));
+                this.PreMap((Collection<EObject>) GetChildren((Structure)element));
             }
             else if (element instanceof CapellaElement)
             {
@@ -372,14 +166,14 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
             }
         }
     }
-
+    
     /**
      * Get a {@linkplain MappedElementRowViewModel} that represents a pre-mapped {@linkplain Class}
      * 
      * @param capellaElement the {@linkplain Class} element
      * @return a {@linkplain MappedElementRowViewModel}
      */
-    private MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> GetMappedElementRowViewModel(CapellaElement capellaElement)
+    protected MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> GetMappedElementRowViewModel(CapellaElement capellaElement)
     {
         Ref<Boolean> refShouldCreateNewTargetElement = new Ref<>(Boolean.class, false);
         MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElementRowViewModel = null;
@@ -413,36 +207,6 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
         }
         
         return null;
-    }
-
-    /**
-     * Updates the {@linkplain MappedElementRowStatus} of the provided {@linkplain MappedElementRowViewModel}
-     * 
-     * @param mappedElementRowViewModel the {@linkplain MappedElementRowViewModel} of which to update the row status
-     * @param clazz the {@linkplain java.lang.Class} of the {@linkplain Thing} represented in the {@linkplain MappedElementRowViewModel}
-     */
-    private <TThing extends Thing> void UpdateRowStatus(MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElementRowViewModel, Class<TThing> clazz)
-    {
-        Ref<TThing> refThing = new Ref<>(clazz);
-        mappedElementRowViewModel.SetRowStatus(MappedElementRowStatus.None);
-        
-        if(mappedElementRowViewModel.GetShouldCreateNewTargetElementValue())
-        {
-            mappedElementRowViewModel.SetRowStatus(MappedElementRowStatus.NewElement);
-        }
-        else if(mappedElementRowViewModel.GetHubElement() != null)
-        {            
-            if(this.dstController.GetDstMapResult().stream()
-                    .filter(x -> x.GetHubElement().getClass() == clazz)
-                    .anyMatch(x -> AreTheseEquals(x.GetHubElement().getIid(), mappedElementRowViewModel.GetHubElement().getIid())))
-            {
-                mappedElementRowViewModel.SetRowStatus(MappedElementRowStatus.ExistingMapping);
-            }
-            else if(this.hubController.TryGetThingById(mappedElementRowViewModel.GetHubElement().getIid(), refThing))
-            {
-                mappedElementRowViewModel.SetRowStatus(MappedElementRowStatus.ExisitingElement);
-            }
-        }
     }
 
     /**
@@ -543,37 +307,20 @@ public class DstMappingConfigurationDialogViewModel implements IDstMappingConfig
     }
 
     /**
-     * Resets the pre-mapped things to the default way 
-     */
-    @Override
-    public void ResetPreMappedThings()
-    {
-        this.UpdateProperties();
-    }
-    
-    /**
      * Occurs when the user sets the target element of the current mapped element to be a
      * 
      * @param selected the new {@linkplain boolean} value
      */
     @Override
-    public void WhenMapToNewHubElementCheckBoxChanged(boolean selected)
+    public void WhenMapToNewElementCheckBoxChanged(boolean selected)
     {
-        if(this.selectedMappedElement.Value() == null)
-        {
-            return;
-        }
+        super.WhenMapToNewElementCheckBoxChanged(selected);
         
         if(selected && !this.selectedMappedElement.Value().GetShouldCreateNewTargetElementValue())
         {
             this.selectedMappedElement.Value().SetHubElement(null);
         }
-        
-        if(selected != this.selectedMappedElement.Value().GetShouldCreateNewTargetElementValue())
-        {
-            this.selectedMappedElement.Value().SetShouldCreateNewTargetElement(selected);
-        }
-        
+                
         if(this.selectedMappedElement.Value().GetHubElement() instanceof ElementDefinition)
         {
             this.UpdateRowStatus(this.selectedMappedElement.Value(), ElementDefinition.class);

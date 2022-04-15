@@ -25,14 +25,59 @@ package ViewModels.Rows;
 
 import org.polarsys.capella.core.data.requirement.Requirement;
 
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
+import Reactive.ObservableValue;
+import ViewModels.Interfaces.IHaveTargetArchitecture;
+import io.reactivex.Observable;
 
 /**
  * The {@linkplain MappedHubRequirementRowViewModel} is the row view model that represents a mapping between 
  * a {@linkplain cdp4common.engineeringmodeldata.Requirement} and a {@linkplain Requirement}
  */
-public class MappedHubRequirementRowViewModel extends MappedRequirementBaseRowViewModel<cdp4common.engineeringmodeldata.Requirement>
+public class MappedHubRequirementRowViewModel extends MappedRequirementBaseRowViewModel<cdp4common.engineeringmodeldata.Requirement> implements IHaveTargetArchitecture
 {
+    /**
+     * Backing field for {@linkplain #GetTargetArchitecture()}, {@linkplain #SetTargetArchitecture(Object)} and {@linkplain #GetTargetArchitectureObservable()}
+     */
+    private ObservableValue<CapellaArchitecture> targetArchitecture = new ObservableValue<>(CapellaArchitecture.PhysicalArchitecture, CapellaArchitecture.class);
+        
+    /**
+     * Gets the selected {@linkplain CapellaArchitecture}
+     * 
+     * @return the {@linkplain CapellaArchitecture}
+     */
+    @Override
+    public CapellaArchitecture GetTargetArchitecture()
+    {
+        return this.targetArchitecture.Value();
+    }
+
+    /**
+     * Sets the selected {@linkplain CapellaArchitecture}
+     * 
+     * @param value the new {@linkplain Object} value
+     */
+    @Override
+    public void SetTargetArchitecture(Object value)
+    {
+        if(value instanceof CapellaArchitecture)
+        {
+            this.targetArchitecture.Value((CapellaArchitecture)value);
+        }
+    }
+    
+    /**
+     * Gets the {@linkplain Observable} of {@linkplain CapellaArchitecture}
+     * 
+     * @return an {@linkplain Observable} of {@linkplain CapellaArchitecture}
+     */
+    @Override
+    public Observable<CapellaArchitecture> GetTargetArchitectureObservable()
+    {
+        return this.targetArchitecture.Observable();
+    }
+    
     /**
      * Initializes a new {@linkplain MappedHubRequirementRowViewModel}
      * 

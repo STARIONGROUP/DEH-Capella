@@ -438,7 +438,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         var shortName = GetShortName(name);
         
         ElementDefinition elementDefinition = this.elements.stream()
-                .filter(x -> x.GetHubElement() != null && AreTheseEquals(x.GetHubElement().getShortName().toLowerCase(), shortName.toLowerCase()))
+                .filter(x -> x.GetHubElement() != null && AreTheseEquals(x.GetHubElement().getShortName(), shortName, true))
                 .map(x -> x.GetHubElement())
                 .findFirst()
                 .orElse(this.hubController.GetOpenIteration()
@@ -736,7 +736,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         else if(valueSpecification instanceof LiteralStringValue) 
         {
             refValue.Set(((LiteralStringValue)valueSpecification).getValue());
-        }        
+        }
         
         return refValue.HasValue();
     }
@@ -963,6 +963,8 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             }
         }
 
-        valueSet.setManual(new ValueArray<>(Arrays.asList(refValue.Get()), String.class));
+        ValueArray<String> newValue = new ValueArray<>(Arrays.asList(refValue.Get()), String.class);
+        
+        valueSet.setManual(newValue);
     }
 }

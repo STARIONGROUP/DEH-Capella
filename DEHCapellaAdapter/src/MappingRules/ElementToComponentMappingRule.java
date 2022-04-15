@@ -33,9 +33,14 @@ import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.Unit;
+import org.polarsys.capella.core.data.information.datatype.BooleanType;
 import org.polarsys.capella.core.data.information.datatype.DataType;
+import org.polarsys.capella.core.data.information.datatype.Enumeration;
+import org.polarsys.capella.core.data.information.datatype.NumericTypeKind;
 import org.polarsys.capella.core.data.information.datatype.PhysicalQuantity;
+import org.polarsys.capella.core.data.information.datatype.StringType;
 import org.polarsys.capella.core.data.information.datavalue.DataValue;
+import org.polarsys.capella.core.data.information.datavalue.EnumerationLiteral;
 import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
@@ -46,6 +51,7 @@ import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 
 import App.AppContainer;
 import DstController.IDstController;
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaSession.ICapellaSessionService;
@@ -53,7 +59,6 @@ import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Utils.Ref;
 import Utils.ValueSetUtils;
-import Utils.Stereotypes.CapellaComponentCollection;
 import Utils.Stereotypes.CapellaTypeEnumerationUtility;
 import Utils.Stereotypes.HubElementCollection;
 import Utils.Stereotypes.RequirementType;
@@ -67,10 +72,16 @@ import cdp4common.engineeringmodeldata.ParameterOrOverrideBase;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.BooleanParameterType;
 import cdp4common.sitedirectorydata.Category;
+import cdp4common.sitedirectorydata.DateParameterType;
+import cdp4common.sitedirectorydata.DateTimeParameterType;
+import cdp4common.sitedirectorydata.EnumerationParameterType;
 import cdp4common.sitedirectorydata.MeasurementScale;
 import cdp4common.sitedirectorydata.MeasurementUnit;
+import cdp4common.sitedirectorydata.NumberSetKind;
+import cdp4common.sitedirectorydata.ParameterType;
 import cdp4common.sitedirectorydata.QuantityKind;
 import cdp4common.sitedirectorydata.TextParameterType;
+import cdp4common.sitedirectorydata.TimeOfDayParameterType;
 
 /**
  * The {@linkplain ElementToComponentMappingRule} is the mapping rule implementation for transforming Capella {@linkplain Component} to {@linkplain ElementDefinition}
@@ -118,9 +129,9 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
     }
     
     /**
-     * Transforms an {@linkplain CapellaComponentCollection} of {@linkplain Component} to an {@linkplain ArrayList} of {@linkplain ElementDefinition}
+     * Transforms an {@linkplain HubElementCollection} of {@linkplain Component} to an {@linkplain ArrayList} of {@linkplain ElementDefinition}
      * 
-     * @param input the {@linkplain CapellaComponentCollection} of {@linkplain Component} to transform
+     * @param input the {@linkplain HubElementCollection} of {@linkplain Component} to transform
      * @return the {@linkplain ArrayList} of {@linkplain MappedElementDefinitionRowViewModel}
      */
     @Override
@@ -136,7 +147,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             this.elements = this.CastInput(input);
 
             this.Map(this.elements);
-            this.SaveMappingConfiguration(this.elements, MappingDirection.FromDstToHub);
+            this.SaveMappingConfiguration(this.elements, MappingDirection.FromHubToDst);
             return new ArrayList<>(this.elements);
         }
         catch (Exception exception)
@@ -163,11 +174,11 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         {
             if(mappedElement.GetDstElement() == null)
             {
-                var component = this.GetOrCreateComponent(mappedElement.GetHubElement());
+                var component = this.GetOrCreateComponent(mappedElement.GetHubElement(), mappedElement.GetTargetArchitecture());
                 mappedElement.SetDstElement(component);
             }
             
-            this.MapContainedElement(mappedElement);
+            this.MapContainedElement(mappedElement, mappedElement.GetTargetArchitecture());
             this.MapProperties(mappedElement.GetHubElement(), mappedElement.GetDstElement());
         }
     }
@@ -238,43 +249,120 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
     {
         for (var parameter : parameters)
         {
-            var refScale = new Ref<>(DataType.class);
+            var refParameterType = new Ref<>(DataType.class);
             var refProperty = new Ref<Property>(Property.class);
             
             if(!TryGetExistingProperty(component, parameter, refProperty))
             {
-                if(parameter.getScale() != null)
-                {
-                    this.GetOrCreateDataType(parameter.getScale(), component, refScale);
-                }
-                
-                this.CreateProperty(parameter, refProperty, refScale);
+                this.GetOrCreateDataType(parameter, component, refParameterType);                             
+                this.CreateProperty(parameter, refProperty, refParameterType);
                 component.getOwnedFeatures().add(refProperty.Get());
             }
-            else if(refProperty.Get().getType() instanceof PhysicalQuantity)
+            else if(refProperty.Get().getType() != null)
             {
-                refScale.Set((PhysicalQuantity)refProperty.Get().getType());
+                refParameterType.Set((DataType)refProperty.Get().getType());
             }
             
-            this.UpdateValue(parameter, refProperty, refScale);
+            this.UpdateValue(parameter, refProperty, refParameterType);
         }
     }
 
+    /**
+     * Get or creates the {@linkplain DataType} that fits the provided {@linkplain Parameter}
+     * 
+     * @param parameter the {@linkplain MeasurementScale} to map
+     * @param component the target {@linkplain Component}
+     * @param refParameterType the {@linkplain Ref} of {@linkplain DataType} that will contains the output {@linkplain DataType}
+     */
+    private void GetOrCreateDataType(ParameterOrOverrideBase parameter, Component component, Ref<DataType> refParameterType)
+    {
+        if(parameter.getScale() != null)
+        {
+            this.GetOrCreateDataType(parameter.getScale(), component, refParameterType);
+        }
+        else
+        {
+            this.GetOrCreateDataType(parameter.getParameterType(), component, refParameterType);
+        }
+    }
+    
+
+    /**
+     * Get or creates the {@linkplain DataType} that matches the provided {@linkplain ParameterType}
+     * 
+     * @param parameterType the {@linkplain ParameterType} to map
+     * @param component the target {@linkplain Component}
+     * @param refParameterType the {@linkplain Ref} of {@linkplain DataType} that will contains the output {@linkplain DataType}
+     */
+    private void GetOrCreateDataType(ParameterType parameterType, Component component, Ref<DataType> refParameterType)
+    {
+        this.QueryCollectionByNameAndShortName(parameterType, this.temporaryDataTypes, refParameterType);
+        
+        if(!refParameterType.HasValue() && !this.dstController.TryGetDataType(parameterType, this.sessionService.GetTopElement(), refParameterType))
+        {
+            var newDataType = this.transactionService.Create(this.GetDataType(parameterType), parameterType.getName());
+            
+            if(newDataType instanceof Enumeration)
+            {
+                this.CreateEnumerationLiterals((Enumeration)newDataType, (EnumerationParameterType)parameterType);
+            }
+            
+            this.temporaryDataTypes.add(newDataType);
+            this.transactionService.AddReferenceDataToDataPackage(newDataType);
+            refParameterType.Set(newDataType);
+        }
+    }
+
+    /**
+     * Creates the possible {@linkplain EnumerationLiteral} for the provided {@linkplain Enumeration} based on the provided {@linkplain EnumerationParameterType}
+     * 
+     * @param enumerationDataType the {@linkplain Enumeration} data type
+     * @param enumerationParameterType the {@linkplain EnumerationParameterType} parameter type
+     */
+    private void CreateEnumerationLiterals(Enumeration enumerationDataType, EnumerationParameterType enumerationParameterType)
+    {
+        for (var valueDefinition : enumerationParameterType.getValueDefinition())
+        {
+            enumerationDataType.getOwnedLiterals().add(this.transactionService.Create(EnumerationLiteral.class, valueDefinition.getName()));
+        }
+    }
+
+    /**
+     * Determine the {@linkplain DataType} {@linkplain Class} based on the provided {@linkplain ParameterType}
+     * 
+     * @param parameterType the {@linkplain ParameterType}
+     * @return a {@linkplain Class} of {@linkplain DataType}
+     */
+    private Class<? extends DataType> GetDataType(ParameterType parameterType)
+    {
+        if(parameterType instanceof BooleanParameterType)
+        {
+            return BooleanType.class;
+        }
+        else if(parameterType instanceof EnumerationParameterType)
+        {
+            return Enumeration.class;
+        }
+        
+        return StringType.class;
+    }
+    
     /**
      * Get or creates the {@linkplain DataType} that matches the provided {@linkplain MeasurementScale}
      * 
      * @param scale the {@linkplain MeasurementScale} to map
      * @param component the target {@linkplain Component}
-     * @param refScale the {@linkplain Ref} of {@linkplain DataType} that will contains the output {@linkplain DataType}
+     * @param refParameterType the {@linkplain Ref} of {@linkplain DataType} that will contains the output {@linkplain DataType}
      */
-    private void GetOrCreateDataType(MeasurementScale scale, Component component, Ref<DataType> refScale)
+    private void GetOrCreateDataType(MeasurementScale scale, Component component, Ref<DataType> refParameterType)
     {
-        this.QueryCollectionByNameAndShortName(scale, this.temporaryDataTypes, refScale);
+        this.QueryCollectionByNameAndShortName(scale, this.temporaryDataTypes, refParameterType);
         
-        if(!refScale.HasValue() && !this.dstController.TryGetDataType(scale, this.sessionService.GetTopElement(), refScale))
+        if(!refParameterType.HasValue() && !this.dstController.TryGetDataType(scale, this.sessionService.GetTopElement(), refParameterType))
         {
             var newDataType = this.transactionService.Create(PhysicalQuantity.class, scale.getName());
-                        
+            newDataType.setKind(scale.getNumberSet() == NumberSetKind.INTEGER_NUMBER_SET ? NumericTypeKind.INTEGER : NumericTypeKind.FLOAT);
+            
             if(scale.getUnit() != null)
             {
                 newDataType.setUnit(this.GetOrCreateUnit(scale.getUnit()));
@@ -282,7 +370,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             
             this.temporaryDataTypes.add(newDataType);
             this.transactionService.AddReferenceDataToDataPackage(newDataType);
-            refScale.Set(newDataType);
+            refParameterType.Set(newDataType);
         }
     }
 
@@ -343,18 +431,34 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
     private void UpdateValue(DataValue dataValue, ParameterOrOverrideBase parameter, Ref<Property> refProperty)
     {
         var value = ValueSetUtils.QueryParameterBaseValueSet(parameter, null, null);
-
+        var valueString = value.getActualValue().get(0);
+        
         if(dataValue instanceof LiteralNumericValue)
         {
-            ((LiteralNumericValue)dataValue).setValue(value.getActualValue().get(0));
+            ((LiteralNumericValue)dataValue).setValue(valueString);
         }
         else if(dataValue instanceof LiteralBooleanValue)
         {
-            ((LiteralBooleanValue)dataValue).setValue(Boolean.valueOf(value.getActualValue().get(0)));
+            ((LiteralBooleanValue)dataValue).setValue(Boolean.valueOf(valueString));
         }
         else if(dataValue instanceof LiteralStringValue)
         {
-            ((LiteralStringValue)dataValue).setValue(value.getActualValue().get(0));
+            ((LiteralStringValue)dataValue).setValue(valueString);
+        }
+        else if(dataValue instanceof EnumerationLiteral)
+        {
+            var enumerationValueDefinition = ((EnumerationParameterType)parameter.getParameterType()).getValueDefinition().stream()
+                .filter(x -> AreTheseEquals(x.getShortName(), valueString, true))
+                .findFirst();
+            
+            if(enumerationValueDefinition.isPresent())
+            {
+                ((Enumeration)refProperty.Get().getAbstractType()).getOwnedLiterals().stream()
+                    .filter(x -> 
+                        AreTheseEquals(x.getName(), enumerationValueDefinition.get().getName(), true))
+                    .findFirst()
+                    .ifPresent(x -> ((EnumerationLiteral)dataValue).setDomainValue(x));
+            }
         }
     }
 
@@ -378,8 +482,12 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         {
             return LiteralStringValue.class;
         }
+        if(parameter.getParameterType() instanceof EnumerationParameterType)
+        {
+            return EnumerationLiteral.class;
+        }
         
-        return null;
+        return LiteralStringValue.class;
     }
     
     /**
@@ -417,7 +525,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
     {
         var newProperty = this.transactionService.Create(Property.class, parameter.getParameterType().getName());
         
-        if(parameter.getParameterType() instanceof QuantityKind && dstDataType.HasValue())
+        if(dstDataType.HasValue())
         {
             newProperty.setAbstractType(dstDataType.Get());
         }
@@ -460,7 +568,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * 
      * @param mappedElement the {@linkplain MappedElementDefinitionRowViewModel}
      */
-    private void MapContainedElement(MappedElementDefinitionRowViewModel mappedElement)
+    private void MapContainedElement(MappedElementDefinitionRowViewModel mappedElement, CapellaArchitecture targetArchitecture)
     {
         for (var containedUsage : mappedElement.GetHubElement().getContainedElement().stream()
                 .filter(x -> x.getInterfaceEnd() == InterfaceEndKind.NONE).collect(Collectors.toList()))
@@ -471,8 +579,9 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
                     .orElseGet(() -> 
                     {
                         var newMappedElement = new MappedElementDefinitionRowViewModel(containedUsage.getElementDefinition(),
-                                this.GetOrCreateComponent(containedUsage), MappingDirection.FromHubToDst);
+                                this.GetOrCreateComponent(containedUsage, targetArchitecture), MappingDirection.FromHubToDst);
                         
+                        newMappedElement.SetTargetArchitecture(targetArchitecture);
                         this.elements.add(newMappedElement);
                         this.UpdateContainement(mappedElement.GetDstElement(), newMappedElement.GetDstElement());
                         return newMappedElement;
@@ -480,7 +589,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             
             this.MapProperties(containedUsage, usageDefinitionMappedElement.GetDstElement());
 
-            this.MapContainedElement(usageDefinitionMappedElement);
+            this.MapContainedElement(usageDefinitionMappedElement, targetArchitecture);
         }        
     }
 
@@ -488,14 +597,15 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * Gets or creates a component based on an {@linkplain ElementDefinition}
      * 
      * @param elementBase the {@linkplain ElementBase}
+     * @param targetArchitecture the {@linkplain CapellaArchitecture} that determines the type of the component
      * @return an existing or a new {@linkplain Component}
      */
-    private Component GetOrCreateComponent(ElementBase elementBase)
+    private Component GetOrCreateComponent(ElementBase elementBase, CapellaArchitecture targetArchitecture)
     {
         @SuppressWarnings("unchecked")
         var refComponentType = new Ref<>((Class<Class<? extends Component>>) Component.class.getClass());
 
-        if(!this.TryGetComponentClass(elementBase, refComponentType))
+        if(!this.TryGetComponentClass(elementBase, refComponentType, targetArchitecture))
         {
             refComponentType.Set(PhysicalComponent.class);
         }
@@ -508,21 +618,34 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * 
      * @param elementBase the {@linkplain ElementBase}
      * @param refComponentType the {@linkplain Ref} of {@linkplain RequirementType}
+     * @param targetArchitecture the {@linkplain CapellaArchitecture} that determines the type of the component
      * @return a {@linkplain boolean} indicating whether the {@linkplain RequirementType} is different than the default value
      */
-    private boolean TryGetComponentClass(ElementBase elementBase, Ref<Class<? extends Component>>  refComponentType)
+    private boolean TryGetComponentClass(ElementBase elementBase, Ref<Class<? extends Component>> refComponentType, CapellaArchitecture targetArchitecture)
     {
-        for (var category : elementBase.getCategory())
+        if(targetArchitecture == CapellaArchitecture.LogicalArchitecture)
         {
-            var componentType = CapellaTypeEnumerationUtility.ComponentTypeFrom(category.getName());
-
-            if(componentType != null)
+            refComponentType.Set(LogicalComponent.class);
+        }
+        else if(targetArchitecture == CapellaArchitecture.PhysicalArchitecture)
+        {
+            refComponentType.Set(PhysicalComponent.class);
+        }
+        
+        if(!refComponentType.HasValue())
+        {        
+            for (var category : elementBase.getCategory())
             {
-                refComponentType.Set((Class<? extends Component>) componentType.ClassType());
-                break;
+                var componentType = CapellaTypeEnumerationUtility.ComponentTypeFrom(category.getName());
+        
+                if(componentType != null)
+                {
+                    refComponentType.Set((Class<? extends Component>) componentType.ClassType());
+                    break;
+                }
             }
         }
-           
+        
         return refComponentType.HasValue();
     }
 

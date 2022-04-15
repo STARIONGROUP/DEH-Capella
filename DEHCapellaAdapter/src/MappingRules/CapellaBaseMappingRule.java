@@ -31,6 +31,7 @@ import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingEngineService.MappingRule;
+import ViewModels.Interfaces.IHaveTargetArchitecture;
 import ViewModels.Rows.MappedElementRowViewModel;
 
 /**
@@ -73,8 +74,17 @@ public abstract class CapellaBaseMappingRule<TInput extends Object, TOutput> ext
     {
         for (var element : elements)
         {
-            this.mappingConfiguration.AddToExternalIdentifierMap(
-                    element.GetHubElement().getIid(), element.GetDstElement().getId(), mappingDirection);
+            if(element instanceof IHaveTargetArchitecture)
+            {
+                this.mappingConfiguration.AddToExternalIdentifierMap(
+                        element.GetHubElement().getIid(), element.GetDstElement().getId(), 
+                        ((IHaveTargetArchitecture)element).GetTargetArchitecture(), mappingDirection);
+            }
+            else
+            {
+                this.mappingConfiguration.AddToExternalIdentifierMap(
+                        element.GetHubElement().getIid(), element.GetDstElement().getId(), mappingDirection);
+            }
         }
     }
 }

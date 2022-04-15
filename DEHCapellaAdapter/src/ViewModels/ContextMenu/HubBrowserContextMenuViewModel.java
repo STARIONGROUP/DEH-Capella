@@ -23,41 +23,16 @@
  */
 package ViewModels.ContextMenu;
 
-import static Utils.Operators.Operators.AreTheseEquals;
-
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.polarsys.capella.core.data.cs.Component;
-import org.polarsys.capella.core.data.requirement.Requirement;
 
-import DstController.IDstController;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Reactive.ObservableValue;
-import Services.CapellaLog.ICapellaLogService;
-import Services.CapellaSession.ICapellaSessionService;
-import Services.CapellaTransaction.ICapellaTransactionService;
-import Utils.Ref;
-import Utils.Stereotypes.HubElementCollection;
-import Utils.Stereotypes.HubRequirementCollection;
-import Utils.Tasks.Task;
+import Services.Mapping.IMapCommandService;
 import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
 import ViewModels.Interfaces.IHubBrowserContextMenuViewModel;
 import ViewModels.Interfaces.IObjectBrowserViewModel;
-import ViewModels.Interfaces.IRequirementBrowserViewModel;
-import ViewModels.Rows.MappedElementDefinitionRowViewModel;
-import ViewModels.Rows.MappedHubRequirementRowViewModel;
-import cdp4common.commondata.Thing;
-import cdp4common.engineeringmodeldata.ElementDefinition;
-import cdp4common.engineeringmodeldata.RequirementsGroup;
-import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import io.reactivex.Observable;
 
 /**
@@ -71,39 +46,14 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
     protected final Logger logger = LogManager.getLogger();
     
     /**
-     * The {@linkplain IElementDefinitionBrowserViewModel}
-     */
-    private final IElementDefinitionBrowserViewModel elementDefinitionBrowserViewModel;
-    
-    /**
-     * The {@linkplain IRequirementBrowserViewModel}
-     */
-    private final IRequirementBrowserViewModel requirementBrowserViewModel;
-    
-    /**
-     * The {@linkplain ICapellaSessionService}
-     */
-    private final ICapellaSessionService capellaSessionService;
-    
-    /**
      * The {@linkplain IHubController}
      */
     private final IHubController hubController;
 
     /**
-     * The {@linkplain ICapellaLogService}
+     * The {@linkplain IMapCommandService}
      */
-    private final ICapellaLogService logService;
-
-    /**
-     * The {@linkplain IDstController}
-     */
-    private final IDstController dstController;
-    
-    /**
-     * The {@linkplain ICapellaTransactionService}
-     */
-    private final ICapellaTransactionService transactionService;
+    private final IMapCommandService mapCommandService;
 
     /**
      * Maps the top element towards the DST
@@ -111,7 +61,7 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
     @Override
     public void MapTopElement()
     {
-        this.Map(this.hubController.GetOpenIteration().getTopElement());
+        this.mapCommandService.MapTopElement(this.hubController.GetOpenIteration().getTopElement(), MappingDirection.FromHubToDst);
     }
     
     /**
@@ -120,7 +70,7 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
     @Override
     public void MapSelection()
     {
-        this.Map(null);
+        this.mapCommandService.MapSelection(MappingDirection.FromHubToDst);
     }
 
     /**
@@ -140,11 +90,6 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
     }
 
     /**
-     * Backing field for {@linkplain #CanMapSelection()}
-     */
-    private ObservableValue<Boolean> canMapSelection = new ObservableValue<>();
-
-    /**
      * Gets an {@linkplain Observable} of {@linkplain Boolean} indicating whether the {@linkplain #MapSelection()} can execute
      * 
      * @return an {@linkplain Observable} of {@linkplain Boolean}
@@ -152,7 +97,7 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
     @Override
     public Observable<Boolean> CanMapSelection()
     {
-        return this.canMapSelection.Observable();
+        return this.mapCommandService.CanExecuteObservable();
     }
 
     /**
@@ -174,27 +119,13 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
     /**
      * Initializes a new {@linkplain HubBrowserContextMenuViewModel}
      * 
-     * @param elementDefinitionBrowserViewModel the {@linkplain IElementDefinitionBrowserViewModel}
-     * @param requirementBrowserViewModel the {@linkplain IRequirementBrowserViewModel}
-     * @param capellaSessionService the {@linkplain ICapellaSessionService}
+     * @param mapCommandService the {@linkplain IMapCommandService}
      * @param hubController the {@linkplain IHubController}
-     * @param logService the {@linkplain ICapellaLogService}
-     * @param dstController the {@linkplain IDstController}
-     * @param transactionService the {@linkplain ICapellaTransactionService}
      */
-    public HubBrowserContextMenuViewModel(IElementDefinitionBrowserViewModel elementDefinitionBrowserViewModel,
-            IRequirementBrowserViewModel requirementBrowserViewModel, ICapellaSessionService capellaSessionService,
-            IHubController hubController, ICapellaLogService logService, IDstController dstController,
-            ICapellaTransactionService transactionService)
+    public HubBrowserContextMenuViewModel(IMapCommandService mapCommandService, IHubController hubController)
     {
-        this.elementDefinitionBrowserViewModel = elementDefinitionBrowserViewModel;
-        this.requirementBrowserViewModel = requirementBrowserViewModel;
-        this.capellaSessionService = capellaSessionService;
         this.hubController = hubController;
-        this.logService = logService;
-        this.dstController = dstController;
-        this.transactionService = transactionService;
-        
+        this.mapCommandService = mapCommandService;        
         this.InitializeObservables();
     }
     
@@ -203,18 +134,8 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
      */
     private void InitializeObservables()
     {
-        this.canMapSelection.Value(this.capellaSessionService.HasAnyOpenSession() && this.hubController.GetIsSessionOpen());
-        this.UpdateCanMapTopElement();
-        
-        Observable.combineLatest(this.capellaSessionService.HasAnyOpenSessionObservable().startWith(this.capellaSessionService.HasAnyOpenSession()), 
-                this.hubController.GetIsSessionOpenObservable().startWith(this.hubController.GetIsSessionOpen()),
-            (hasAnyOpenSession, isHubSessionOpen) -> hasAnyOpenSession && isHubSessionOpen)
-        .subscribe(x -> 
-            this.canMapSelection.Value(x));
-        
-        this.canMapSelection.Observable()
-            .subscribe(x -> UpdateCanMapTopElement());
-
+        this.UpdateCanMapTopElement();                
+        this.mapCommandService.CanExecuteObservable().subscribe(x -> UpdateCanMapTopElement());
         this.hubController.GetSessionEventObservable().subscribe(x -> this.UpdateCanMapTopElement());
     }
 
@@ -223,156 +144,8 @@ public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuVie
      */
     private void UpdateCanMapTopElement()
     {
-        this.canMapTopElement.Value(this.canMapSelection.Value() 
+        this.canMapTopElement.Value(this.mapCommandService.CanExecute() 
                 && this.browserType == IElementDefinitionBrowserViewModel.class 
                 && this.hubController.GetOpenIteration().getTopElement() != null);
-    }
-    
-    /**
-     * Maps either the specified top element {@linkplain ElementDefinition} or the currently selected elements
-     * 
-     * @param topElement the {@linkplain ElementDefinition} optional
-     */
-    private void Map(ElementDefinition topElement)
-    {
-        var elements = new ArrayList<Thing>();
-        
-        if(topElement != null)
-        {
-            elements.add(topElement);
-        }
-        
-        StopWatch timer = StopWatch.createStarted();
-        
-        Task.Run(() -> this.MapSelectedElements(SortMappableThings(elements)), boolean.class)
-            .Observable()
-            .subscribe(t -> 
-            {
-                if(timer.isStarted())
-                {
-                    timer.stop();
-                }
-   
-                this.logService.Append(String.format("Mapping action is done in %s ms", timer.getTime(TimeUnit.MILLISECONDS)), t.GetResult().booleanValue());
-                
-            }, t -> this.logger.catching(t));
-    }
-
-    /**
-     * Maps the selected elements from the current tree
-     * 
-     * @param elementsAndRequirements a {@linkplain Pair} of {@linkplain HubElementCollection} and {@linkplain HubRequirementCollection}
-     * @return a value indicating whether the mapping operation succeeded
-     */
-    private boolean MapSelectedElements(Pair<HubElementCollection, HubRequirementCollection> elementsAndRequirements)
-    {
-        this.logService.Append("Mapping in progress of %s elements ...", elementsAndRequirements.getLeft().size());
-        this.logService.Append("Mapping in progress of %s requirements ...", elementsAndRequirements.getRight().size());
-        
-        return this.dstController.Map(elementsAndRequirements.getLeft(), MappingDirection.FromHubToDst) 
-                & this.dstController.Map(elementsAndRequirements.getRight(), MappingDirection.FromHubToDst);
-    }
-
-    /**
-     * Sorts the provided collection of {@linkplain Thing}
-     * 
-     * @param elements the {@linkplain ArrayList} of {@linkplain Thing} to sort
-     * @return a {@linkplain Pair} where the left element is a {@linkplain HubElementCollection} and the {@linkplain HubRequirementCollection}
-     */
-    private Pair<HubElementCollection, HubRequirementCollection> SortMappableThings(ArrayList<Thing> elements)
-    {
-        if(elements.isEmpty())
-        {
-            elements.addAll(this.elementDefinitionBrowserViewModel.GetSelectedElements().stream()
-                    .map(x -> x.GetThing())
-                    .filter(x -> x instanceof ElementDefinition)
-                    .collect(Collectors.toList()));
-            
-            elements.addAll(this.requirementBrowserViewModel.GetSelectedElements().stream()
-                    .map(x -> x.GetThing()).collect(Collectors.toList()));
-        }
-                
-        var hubElements = new HubElementCollection();
-        var hubRequirements = new HubRequirementCollection();
-        
-        hubElements.addAll(elements.stream()
-                .filter(x -> x instanceof ElementDefinition)
-                .map(x -> (ElementDefinition)x)
-                .map(x -> 
-                {
-                    var refElement = new Ref<>(Component.class);
-                    this.dstController.TryGetElementByName(x, refElement);
-                    
-                    return new MappedElementDefinitionRowViewModel(x, this.transactionService.Clone(refElement.Get()), MappingDirection.FromHubToDst);
-                })
-                .collect(Collectors.toList()));
-        
-        this.SortRequirements(elements, hubRequirements);
-                
-        return Pair.of(hubElements, hubRequirements);
-    }
-
-    /**
-     * Sorts the {@linkplain cdp4common.engineeringmodeldata.Requirement} that can be mapped based on whatever container was selected in the requirement browser
-     * 
-     * @param elements the base collection of selected elements
-     * @param hubRequirements the {@linkplain HuRequirementCollection} to pass on to the mapping rule
-     */
-    private void SortRequirements(ArrayList<Thing> elements, HubRequirementCollection hubRequirements)
-    {
-        hubRequirements.addAll(elements.stream()
-                .filter(x -> x instanceof cdp4common.engineeringmodeldata.Requirement)
-                .map(x -> (cdp4common.engineeringmodeldata.Requirement)x)
-                .map(x -> 
-                {
-                    var refElement = new Ref<>(Requirement.class);
-                    this.dstController.TryGetElementByName(x, refElement);
-                    
-                    return new MappedHubRequirementRowViewModel(x, this.transactionService.Clone(refElement.Get()), MappingDirection.FromHubToDst);
-                })
-                .collect(Collectors.toList()));
-        
-
-        for (var requirementsSpecification : elements.stream()
-                .filter(x -> x instanceof RequirementsSpecification)
-                .map(x -> (RequirementsSpecification)x)
-                .collect(Collectors.toList()))
-        {
-            SortRequirements(hubRequirements, requirementsSpecification, null);
-        }
-        
-        for (var requirementsGroup : elements.stream()
-                .filter(x -> x instanceof RequirementsGroup)
-                .map(x -> (RequirementsGroup)x)
-                .collect(Collectors.toList()))
-        {            
-            SortRequirements(hubRequirements, requirementsGroup.getContainerOfType(RequirementsSpecification.class), 
-                    x -> AreTheseEquals(x.getGroup().getIid(), requirementsGroup.getIid()));
-        }
-    }
-
-    /**
-     * Sorts the {@linkplain cdp4common.engineeringmodeldata.Requirement} that can be mapped based on whatever container was selected in the requirement browser
-     * 
-     * @param elements the base collection of selected elements
-     * @param hubRequirements the {@linkplain HuRequirementCollection} to pass on to the mapping rule
-     * @param requirementsSpecification the {@linkplain RequirementsSpecification} that contains all the requirements
-     * @param filterOnGroup a {@linkplain Predicate} to test if only the requirements contained in a certain group should be selected
-     */
-    private void SortRequirements(HubRequirementCollection hubRequirements, RequirementsSpecification requirementsSpecification,
-            Predicate<cdp4common.engineeringmodeldata.Requirement> filterOnGroup)
-    {
-        for (var requirement : requirementsSpecification.getRequirement()
-                .stream()
-                .collect(Collectors.toList()))
-        {
-            if(filterOnGroup == null || filterOnGroup.test(requirement))
-            {
-                var refElement = new Ref<>(Requirement.class);
-                this.dstController.TryGetElementByName(requirement, refElement);
-            
-                hubRequirements.add(new MappedHubRequirementRowViewModel(requirement, this.transactionService.Clone(refElement.Get()), MappingDirection.FromHubToDst));
-            }
-        }
     }
 }

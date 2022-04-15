@@ -28,7 +28,6 @@ package ViewModels.Interfaces;
  */
 public interface ICapellaHubBrowserPanelViewModel extends IHubBrowserPanelViewModel
 {
-
     /**
      * The {@linkplain IHubBrowserContextMenuViewModel} for the requirement browser
      * 

@@ -23,8 +23,6 @@
  */
 package Views.ContextMenu;
 
-import cdp4common.commondata.ClassKind;
-
 /**
  * The {@linkplain CapellaImpactViewContextMenu} is the context menu for the {@linkplain CapellaObjectBrowser}
  */
@@ -36,6 +34,6 @@ public class CapellaImpactViewContextMenu extends ImpactViewContextMenu
      */
     public CapellaImpactViewContextMenu()
     {
-        super(ClassKind.NotThing);
+        super(null);
     }
 }

@@ -26,6 +26,7 @@ package DstController;
 import java.util.Collection;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
@@ -33,12 +34,15 @@ import org.polarsys.capella.core.data.information.Unit;
 import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.data.information.datatype.PhysicalQuantity;
 
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
 import Services.MappingEngineService.IMappableThingCollection;
 import Utils.Ref;
 import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.DefinedThing;
+import cdp4common.commondata.NamedThing;
+import cdp4common.commondata.ShortNamedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.sitedirectorydata.MeasurementScale;
 import io.reactivex.Observable;
@@ -166,10 +170,11 @@ public interface IDstController extends IDstControllerBase
     /**
      * Tries to get a {@linkplain DataType} that matches the provided {@linkplain MeasurementScale}
      * 
-     * @param scale the {@linkplain MeasurementScale} of reference
+     * @param <TThing> the type of {@linkplain Thing} that is {@linkplain NamedThing} and {@linkplain ShortNamedThing}
+     * @param thing the {@linkplain #TThing} of reference
      * @param referenceElement a {@linkplain CapellaElement} that will point to the right session
      * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
      * @return a {@linkplain boolean}
      */
-    boolean TryGetDataType(MeasurementScale scale, CapellaElement referenceElement, Ref<DataType> refDataType);
+    <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, CapellaElement referenceElement, Ref<DataType> refDataType);
 }

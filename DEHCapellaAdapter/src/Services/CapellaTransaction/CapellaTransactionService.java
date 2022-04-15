@@ -41,12 +41,19 @@ import org.polarsys.capella.common.ef.command.AbstractReadWriteCommand;
 import org.polarsys.capella.common.helpers.TransactionHelper;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.DataPkg;
 import org.polarsys.capella.core.data.information.Unit;
+import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.data.information.datatype.PhysicalQuantity;
+import org.polarsys.capella.core.data.la.LogicalArchitecture;
+import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.polarsys.capella.core.data.pa.PhysicalArchitecture;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
+import Enumerations.CapellaArchitecture;
 import Services.CapellaSession.ICapellaSessionService;
 import Utils.Ref;
 import Utils.Stereotypes.StereotypeUtils;
@@ -75,6 +82,11 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * Holds the newly created {@linkplain CapellaElement} for future reference such as in {@linkplain #IsClonedOrNew(EObject)}, {@linkplain #GetNew(String, Class)}
      */
     private HashMap<String, CapellaElement> newReferences = new HashMap<>();
+
+    /**
+     * Holds the associated target {@linkplain CapellaArchitecture} by {@linkplain CapellaElement} id. Typically {@linkplain Requirement}
+     */
+    private HashMap<String, CapellaArchitecture> registeredTargetArchitecture = new HashMap<>();
     
     /**
      * Gets a read only {@linkplain Collection} of the clones reference
@@ -209,7 +221,24 @@ public class CapellaTransactionService implements ICapellaTransactionService
         return this.newReferences.containsKey(((CapellaElement)element).getId())
                 && this.newReferences.get(((CapellaElement)element).getId()) == element;
     }
-    
+
+    /**
+     * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}, and registers the target {@linkplain CapellaArchitecture}
+     * 
+     * @param <TInstance> the {@linkplain Type} of {@linkplain CapellaElement}
+     * @param clazz the {@linkplain Class} of {@linkplain #TInstance}
+     * @param name the name of the newly created {@linkplain CapellaElement}, used to query the {@linkplain #newReferences} collection
+     * @param targetArchitecture the {@linkplain CapellaArchitecture} to register for the new element
+     * @return an instance of the provided type
+     */
+    @Override
+    public <TInstance extends NamedElement> TInstance Create(Class<TInstance> clazz, String name, CapellaArchitecture targetArchitecture)
+    {
+        var newElement = this.Create(clazz, name);
+        this.RegisterTargetArchitecture(newElement, targetArchitecture);
+        return newElement;
+    }
+
     /**
      * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}
      * 
@@ -223,7 +252,7 @@ public class CapellaTransactionService implements ICapellaTransactionService
     public <TInstance extends NamedElement> TInstance Create(Class<TInstance> clazz, String name)
     {
         var optionalExistingNewElement = this.newReferences.values().stream()
-                .filter(x -> x instanceof NamedElement)
+                .filter(x -> x instanceof NamedElement && clazz.isInstance(x))
                 .map(x -> (NamedElement)x)
                 .filter(x -> AreTheseEquals(x.getName(), name, true))
                 .findAny();
@@ -263,6 +292,30 @@ public class CapellaTransactionService implements ICapellaTransactionService
         }
         
         return null;
+    }    
+
+    /**
+     * Gets the registered target {@linkplain CapellaArchitecture} for the specified {@linkplain CapellaElement}
+     * 
+     * @param capellaElement the {@linkplain CapellaElement}
+     * @return the {@linkplain CapellaArchitecture}
+     */
+    @Override
+    public CapellaArchitecture GetTargetArchitecture(CapellaElement capellaElement)
+    {
+        return this.registeredTargetArchitecture.get(capellaElement.getId());
+    }    
+
+    /**
+     * Register the target {@linkplain CapellaArchitecture} for the specified {@linkplain CapellaElement}
+     * 
+     * @param capellaElement the {@linkplain CapellaElement}
+     * @param targetArchitecture the target {@linkplain CapellaArchitecture}
+     */
+    @Override
+    public void RegisterTargetArchitecture(CapellaElement capellaElement, CapellaArchitecture targetArchitecture)
+    {
+        this.registeredTargetArchitecture.putIfAbsent(capellaElement.getId(), targetArchitecture);
     }
     
     /**
@@ -273,17 +326,18 @@ public class CapellaTransactionService implements ICapellaTransactionService
     {
         this.cloneReferences.clear();
         this.newReferences.clear();
+        this.registeredTargetArchitecture.clear();
     }
     
     /**
-     * Adds the provided {@linkplain PhysicalQuantity} to the {@linkplain DataPackage} of the current project
+     * Adds the provided {@linkplain DataType} to the {@linkplain DataPackage} of the current project
      * 
-     * @param newPhysicalQuantity the new {@linkplain PhysicalQuantity}
+     * @param newDataType the new {@linkplain DataType}
      */
     @Override
-    public void AddReferenceDataToDataPackage(PhysicalQuantity newPhysicalQuantity)
+    public void AddReferenceDataToDataPackage(DataType newDataType)
     {
-        this.AddReferenceDataToDataPackage(x -> x.getOwnedDataTypes(), newPhysicalQuantity);
+        this.AddReferenceDataToDataPackage(x -> x.getOwnedDataTypes(), newDataType);
     }
 
     /**

@@ -100,11 +100,11 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
         assertDoesNotThrow(() -> result.Set(this.service.LoadMapping()));
         assertTrue(result.Get().isEmpty());
         
-        var componentExternalId = new ExternalIdentifier();
+        var componentExternalId = new CapellaExternalIdentifier();
         componentExternalId.Identifier = this.LogicalComponentId;
         componentExternalId.MappingDirection = MappingDirection.FromDstToHub;
         
-        var requirementExternalId = new ExternalIdentifier();
+        var requirementExternalId = new CapellaExternalIdentifier();
         requirementExternalId.Identifier = this.UserRequirementId;
         requirementExternalId.MappingDirection = MappingDirection.FromDstToHub;
         

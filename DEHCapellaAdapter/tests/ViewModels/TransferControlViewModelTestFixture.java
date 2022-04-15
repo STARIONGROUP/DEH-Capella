@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.ecore.EObject;
 
 import static org.mockito.Mockito.any;
@@ -41,10 +42,13 @@ import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import DstController.IDstController;
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
 import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
+import Services.HistoryService.ICapellaLocalExchangeHistoryService;
+import Services.LocalExchangeHistory.ILocalExchangeHistoryService;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import io.reactivex.Observable;
@@ -56,6 +60,7 @@ class TransferControlViewModelTestFixture
     private ICapellaLogService logService;
     private TransferControlViewModel viewModel;
     private ObservableValue<MappingDirection> mappingDirections;
+    private ICapellaLocalExchangeHistoryService transferHistory;
 
     /**
      * @throws java.lang.Exception
@@ -65,6 +70,8 @@ class TransferControlViewModelTestFixture
     {
         this.logService = mock(ICapellaLogService.class);
         this.dstController = mock(IDstController.class);
+        this.transferHistory = mock(ICapellaLocalExchangeHistoryService.class);
+        
         var dstMapResult = new ObservableCollection<Thing>();
         dstMapResult.add(new ElementDefinition());
         dstMapResult.add(new ElementDefinition());
@@ -77,7 +84,7 @@ class TransferControlViewModelTestFixture
         when(this.dstController.GetSelectedDstMapResultForTransfer()).thenReturn(dstMapResult);
         when(this.dstController.GetSelectedHubMapResultForTransfer()).thenReturn(new ObservableCollection<CapellaElement>());
                 
-        this.viewModel = new TransferControlViewModel(this.dstController, this.logService);
+        this.viewModel = new TransferControlViewModel(this.dstController, this.logService, this.transferHistory);
     }
 
     @Test

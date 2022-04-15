@@ -35,7 +35,6 @@ import io.reactivex.Observable;
  */
 public interface ICapellaSelectionService
 {
-
     /**
      * Gets an {@linkplain Observable} of {@linkplain EObject} that yields whenever the selection has changed
      * 

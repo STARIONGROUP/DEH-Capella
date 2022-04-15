@@ -32,17 +32,22 @@ import java.util.function.Predicate;
 
 import javax.swing.tree.TreeModel;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.ecore.EObject;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.ctx.SystemAnalysis;
+import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.polarsys.capella.core.data.la.LogicalComponentPkg;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponentPkg;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 
 import DstController.IDstController;
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
 import Services.CapellaSession.ICapellaSessionService;
@@ -55,7 +60,9 @@ import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import ViewModels.Interfaces.ICapellaImpactViewViewModel;
+import ViewModels.Interfaces.IHaveTargetArchitecture;
 import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
+import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.Iteration;
 import io.reactivex.Observable;
@@ -63,6 +70,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain CapellaImpactViewViewModel} is the main view model for the requirement impact view in the impact view panel
  */
+@SuppressWarnings("unused")
 public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel implements ICapellaImpactViewViewModel
 {
     /**
@@ -211,7 +219,8 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
             {
                 var refRowViewModel = new Ref<ElementRowViewModel<? extends CapellaElement>>(null);
                 
-                if(this.TryGetRowViewModelById(rootRowViewModel.GetContainedRows(), mappedElementRowViewModel.GetDstElement(), refRowViewModel))
+                if(this.TryGetRowViewModelById(rootRowViewModel.GetContainedRows(), mappedElementRowViewModel.GetDstElement(), refRowViewModel)
+                        && this.VerifyArchitecture(mappedElementRowViewModel, refRowViewModel.Get().GetElement()))
                 {
                     refRowViewModel.Get().UpdateElement(mappedElementRowViewModel.GetDstElement(), true);
                     continue;
@@ -219,32 +228,14 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
                 
                 var refCapellaElementParentToUpdate = new Ref<>(CapellaElement.class);
                 
-                if(this.TryToFindParent(rootRowViewModel.GetContainedRows(), mappedElementRowViewModel.GetDstElement().eContainer(), refRowViewModel, refCapellaElementParentToUpdate))
+                if(this.TryToFindParent(rootRowViewModel.GetContainedRows(), mappedElementRowViewModel.GetDstElement().eContainer(), refRowViewModel, refCapellaElementParentToUpdate)
+                        && this.VerifyArchitecture(mappedElementRowViewModel, refCapellaElementParentToUpdate.Get()))
                 {
                     refRowViewModel.Get().UpdateElement(refCapellaElementParentToUpdate.Get(), true);
                 }
                 else
                 {
-                    var parent = this.FindUncontainedParent(mappedElementRowViewModel.GetDstElement());
-                    
-                    if(mappedElementRowViewModel.GetDstElement() instanceof Requirement 
-                            && this.TryGetRowViewModelOfType(rootRowViewModel.GetContainedRows(), SystemAnalysis.class, refRowViewModel))
-                    {
-                        var systemAnalysis = this.transactionService.Clone((SystemAnalysis)refRowViewModel.Get().GetElement());
-                        systemAnalysis.getOwnedRequirementPkgs().removeIf(x -> AreTheseEquals(x.getId(), parent.getId()));
-                        systemAnalysis.getOwnedRequirementPkgs().add((RequirementsPkg)parent);
-                        refRowViewModel.Get().UpdateElement(systemAnalysis, true);
-                    }
-                    else if(mappedElementRowViewModel.GetDstElement() instanceof PhysicalComponent 
-                            && this.TryGetRowViewModelOfType(rootRowViewModel.GetContainedRows(), PhysicalComponentPkg.class, refRowViewModel))
-                    {
-                        @SuppressWarnings("unchecked")
-                        var rootPhysicalElementRowViewModel = ((IHaveContainedRows<? extends ElementRowViewModel<?>>)refRowViewModel.Get()).GetContainedRows().get(0);
-                        var rootElement = this.transactionService.Clone((PhysicalComponent)rootPhysicalElementRowViewModel.GetElement());
-                        rootElement.getOwnedPhysicalComponents().removeIf(x -> AreTheseEquals(x.getId(), parent.getId()));
-                        rootElement.getOwnedPhysicalComponents().add((PhysicalComponent)parent);
-                        rootPhysicalElementRowViewModel.UpdateElement(rootElement, true);
-                    }
+                    this.ComputeDifferences(rootRowViewModel, mappedElementRowViewModel);
                 }                
             }
         }
@@ -254,6 +245,64 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
         }
             
         return rootRowViewModel;
+    }
+
+    /**
+     * Computes the differences when none of the modifiable parent are contained in the tree already
+     * 
+     * @param rootRowViewModel the {@linkplain RootRowViewModel}
+     * @param mappedElementRowViewModel the {@linkplain MappedElementRowViewModel}
+     */
+    @SuppressWarnings("unchecked")
+    private void ComputeDifferences(RootRowViewModel rootRowViewModel, MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElementRowViewModel)
+    {
+        var parent = this.FindUncontainedParent(mappedElementRowViewModel.GetDstElement());
+        var refRowViewModel = new Ref<ElementRowViewModel<? extends CapellaElement>>(null);
+        
+        if(mappedElementRowViewModel.GetDstElement() instanceof Requirement 
+                && this.TryGetRowViewModelOfType(rootRowViewModel.GetContainedRows(), 
+                        ((IHaveTargetArchitecture)mappedElementRowViewModel).GetTargetArchitecture().GetArchitectureClass(), refRowViewModel))
+        {
+            var architectureRowViewModel = this.transactionService.Clone((BlockArchitecture)refRowViewModel.Get().GetElement());
+            architectureRowViewModel.getOwnedRequirementPkgs().removeIf(x -> AreTheseEquals(x.getId(), parent.getId()));
+            architectureRowViewModel.getOwnedRequirementPkgs().add((RequirementsPkg)parent);
+            refRowViewModel.Get().UpdateElement(architectureRowViewModel, true);
+        }
+        else if(mappedElementRowViewModel.GetDstElement() instanceof PhysicalComponent 
+                && this.TryGetRowViewModelOfType(rootRowViewModel.GetContainedRows(), PhysicalComponentPkg.class, refRowViewModel))
+        {
+            var rootPhysicalElementRowViewModel = ((IHaveContainedRows<? extends ElementRowViewModel<?>>)refRowViewModel.Get()).GetContainedRows().get(0);
+            var rootElement = this.transactionService.Clone((PhysicalComponent)rootPhysicalElementRowViewModel.GetElement());
+            rootElement.getOwnedPhysicalComponents().removeIf(x -> AreTheseEquals(x.getId(), parent.getId()));
+            rootElement.getOwnedPhysicalComponents().add((PhysicalComponent)parent);
+            rootPhysicalElementRowViewModel.UpdateElement(rootElement, true);
+        }
+        else if(mappedElementRowViewModel.GetDstElement() instanceof LogicalComponent 
+                && this.TryGetRowViewModelOfType(rootRowViewModel.GetContainedRows(), LogicalComponentPkg.class, refRowViewModel))
+        {
+            var rootLogicalElementRowViewModel = ((IHaveContainedRows<? extends ElementRowViewModel<?>>)refRowViewModel.Get()).GetContainedRows().get(0);
+            var rootElement = this.transactionService.Clone((LogicalComponent)rootLogicalElementRowViewModel.GetElement());
+            rootElement.getOwnedLogicalComponents().removeIf(x -> AreTheseEquals(x.getId(), parent.getId()));
+            rootElement.getOwnedLogicalComponents().add((LogicalComponent)parent);
+            rootLogicalElementRowViewModel.UpdateElement(rootElement, true);
+        }
+    }
+
+    /**
+     * Verifies that the target {@linkplain CapellaElement} is contained in the {@linkplain CapellaArchitecture} specified by the provided {@linkplain MappedElementRowViewModel} 
+     * 
+     * @param mappedElementRowViewModel the {@linkplain MappedElementRowViewModel}
+     * @param targetElement the {@linkplain CapellaElement} to update
+     * @return a {@linkplain boolean} value
+     */
+    private boolean VerifyArchitecture(MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElementRowViewModel, CapellaElement targetElement)
+    {
+        if(!(mappedElementRowViewModel instanceof IHaveTargetArchitecture))
+        {
+            return false;
+        }
+        
+        return CapellaArchitecture.From(targetElement) == ((IHaveTargetArchitecture)mappedElementRowViewModel).GetTargetArchitecture();
     }
 
     /**
@@ -459,11 +508,11 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
         if(rowViewModel.SwitchIsSelectedValue())
         {
             this.AddOrRemoveSelectedRowToTransfer(rowViewModel, 
-                    x -> 
+                    row -> 
             {
-                if(!this.dstController.GetSelectedHubMapResultForTransfer().contains(x.GetElement()))
+                if(this.dstController.GetSelectedHubMapResultForTransfer().stream().noneMatch(x -> x == row.GetElement()))
                 {
-                    this.dstController.GetSelectedHubMapResultForTransfer().add(x.GetElement());
+                    this.dstController.GetSelectedHubMapResultForTransfer().add(row.GetElement());
                 }
                 
                 return true;
@@ -472,7 +521,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
         else
         {
             this.AddOrRemoveSelectedRowToTransfer(rowViewModel, 
-                    x -> !this.dstController.GetSelectedHubMapResultForTransfer().Remove(x.GetElement()), new Ref<>(Boolean.class));
+                    row -> !this.dstController.GetSelectedHubMapResultForTransfer().removeIf(x -> x == row.GetElement()), new Ref<>(Boolean.class));
         }
     }
     

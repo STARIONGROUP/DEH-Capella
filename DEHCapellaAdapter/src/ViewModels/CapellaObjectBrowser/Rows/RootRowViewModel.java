@@ -24,6 +24,7 @@
 package ViewModels.CapellaObjectBrowser.Rows;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.ecore.EObject;
@@ -31,7 +32,11 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.capellamodeller.Project;
 import org.polarsys.capella.core.data.capellamodeller.SystemEngineering;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
+import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
+import org.polarsys.capella.core.data.oa.OperationalAnalysis;
+import org.polarsys.capella.core.data.pa.PhysicalArchitecture;
 
 /**
  * The {@linkplain RootRowViewModel} represents the root element in one containment tree
@@ -59,6 +64,39 @@ public class RootRowViewModel extends ProjectStructuralElementRowViewModel<Syste
     {
         super(null, null, CapellaElement.class);
         this.UpdateProperties(name, elements);
+    }
+    
+    /**
+     * Initializes a new {@linkplain RootRowViewModel}
+     * 
+     * @param name the name of this row
+     * @param elements the {@linkplain Collection} of {@linkplain Notifier}
+     */
+    public RootRowViewModel(String name, List<EObject> elements)
+    {
+        super(null, null, CapellaElement.class);
+        this.UpdateProperties(name, elements);
+    }
+    /**
+     * Updates this view model properties
+     * 
+     * @param elements the children element that this row contains
+     */
+    protected void UpdateProperties(String name, List<EObject> elements)
+    {
+        super.UpdateProperties(name);
+        
+        for (var element : elements)
+        {
+            if(element instanceof Component)
+            {
+                this.GetContainedRows().add(new ComponentRowViewModel(null, (Component)element));
+            }
+            else if(element instanceof ComponentArchitecture)
+            {
+                this.GetContainedRows().add(new BlockArchitectureRowViewModel(null, (ComponentArchitecture) element));
+            }
+        }
     }
     
     /**
@@ -93,9 +131,9 @@ public class RootRowViewModel extends ProjectStructuralElementRowViewModel<Syste
     @Override
     protected void AddToContainedRows(CapellaElement element)
     {
-        if(element instanceof ComponentArchitecture)
+        if(element instanceof BlockArchitecture)
         {
-            this.GetContainedRows().add(new ComponentArchitectureRowViewModel(this, (ComponentArchitecture)element));
+            this.GetContainedRows().add(new BlockArchitectureRowViewModel(this, (BlockArchitecture)element));
         }
     }
 }
