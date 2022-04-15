@@ -1,9 +1,9 @@
 /*
- * DstMappingConfigurationDialog.java
+ * MappingConfigurationDialog.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
- * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
+ * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski 
  *
  * This file is part of DEH-Capella
  *
@@ -33,58 +33,49 @@ import java.awt.Insets;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
-import javax.swing.DefaultListModel;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
-
 import Annotations.ExludeFromCodeCoverageGeneratedReport;
-import Renderers.MappedElementRowViewModelRenderer;
+import Enumerations.MappingDirection;
 import Utils.ImageLoader.ImageLoader;
-import ViewModels.Dialogs.Interfaces.IDstMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.Interfaces.IMappingConfigurationDialogViewModel;
 import ViewModels.Interfaces.IViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import Views.CapellaObjectBrowser;
+import Views.MappedElementListView;
 import Views.Interfaces.IDialog;
 import Views.ObjectBrowser.ObjectBrowser;
 import cdp4common.commondata.ClassKind;
-import cdp4common.commondata.Thing;
+import cdp4common.engineeringmodeldata.ElementDefinition;
+import cdp4common.engineeringmodeldata.RequirementsSpecification;
 
 /**
- * The {@linkplain DstMappingConfigurationDialog} is the dialog view to allow to configure a mapping 
- * to be defined between a selection of DST elements and the hub element
+ * The MappingConfigurationDialog is the base view for all capella mapping configuration dialog
+ * 
+ * @param <TViewModel> the type of view model the implementing class should be attached to
  */
-@SuppressWarnings("serial")
 @ExludeFromCodeCoverageGeneratedReport
-public class DstMappingConfigurationDialog extends JDialog implements IDialog<IDstMappingConfigurationDialogViewModel, Boolean>
+@SuppressWarnings("serial")
+public abstract class MappingConfigurationDialog<TViewModel extends IMappingConfigurationDialogViewModel<?>> extends JDialog  implements IDialog<TViewModel, Boolean>
 {
-    /**
-     * The current class log4J {@linkplain Logger}
-     */
-    private final Logger logger = LogManager.getLogger();
-    
     /**
      * Backing field for {@linkplain #GetDialogResult()}
      */
     private Boolean dialogResult;
 
     /**
-     * This view attached {@linkplain IViewModel}
+     * This view attached {@linkplain #IViewModel}
      */
-    private IDstMappingConfigurationDialogViewModel dataContext;
+    private TViewModel dataContext;
     
     /**
      * The {@linkplain ObjectBrowser} view for {@linkplain ElementDefinition}
@@ -94,7 +85,12 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
     /**
      * The {@linkplain ObjectBrowser} view for {@linkplain RequirementsSpecification}
      */
-    private ObjectBrowser requirementBrowser;
+    private ObjectBrowser requirementBrowser;    
+
+    /**
+     * The {@linkplain MappedElementListView} view for the {@linkplain MappedElementRowViewModel}
+     */
+    private MappedElementListView mappedElementListView;
 
     /**
      * View components declarations
@@ -104,37 +100,53 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
     private JButton cancelButton;
     private JSplitPane browserSplitPane;
     private CapellaObjectBrowser capellaObjectBrowser;
-    private JList<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> mappedElementListView;
-    private DefaultListModel<MappedElementRowViewModel<? extends Thing,  ? extends CapellaElement>> mappedElementSource;
     private boolean hasBeenPaintedOnce;
     private JSplitPane mainSplitPane;
-    private JPanel panel;
+    private JPanel hubBrowserPanel;
     private JTabbedPane hubBrowserTreeViewsContainer;
-    private JCheckBox mapToNewHubElementCheckBox;
-    private JScrollPane scrollPane;
+    private JCheckBox mapToNewElementCheckBox;
     private JButton resetButton;
+    private JPanel mappedElementsPanel;
     
     /**
-     * Initializes a new {@linkplain DstMappingConfigurationDialog}
+     * Initializes a new {@linkplain CapellaDstToHubMappingConfigurationDialog}
+     * 
+     * @param mappingDirection the {@linkplain MappingDirection} the concrete view is working on  
+     * @param mappedElementListView the {@linkplain MappedElementListView} instance
      */
-    public DstMappingConfigurationDialog()
+    public MappingConfigurationDialog(MappingDirection mappingDirection, MappedElementListView mappedElementListView)
     {
-        this.Initialize();
+        this.mappedElementListView = mappedElementListView;
+        this.Initialize(mappingDirection);
+    }
+
+    /**
+     * Initializes a new {@linkplain CapellaDstToHubMappingConfigurationDialog}
+     * 
+     * @param mappingDirection the {@linkplain MappingDirection} the concrete view is working on
+     */
+    public MappingConfigurationDialog(MappingDirection mappingDirection)
+    {
+        this.mappedElementListView = new MappedElementListView();
+        this.Initialize(mappingDirection);
     }
 
     /**
      * Initializes this view visual components and properties
+     * 
+     * @param mappingDirection the {@linkplain MappingDirection} the concrete view is working on  
      */
     @ExludeFromCodeCoverageGeneratedReport
-    private void Initialize()
+    private void Initialize(MappingDirection mappingDirection)
     {
-        setTitle("Capella Mapping Configuration");
-        setType(Type.POPUP);
-        setModal(true);
-        setBounds(100, 100, 549, 504);
-        setMinimumSize(new Dimension(800, 600));
+        var titleSuffix = mappingDirection == MappingDirection.FromDstToHub ? "Capella to the Hub" : "Hub to Capella";
+        this.setTitle(String.format("Mapping Configuration dialog from %s", titleSuffix));
+        this.setType(Type.POPUP);
+        this.setModal(true);
+        this.setBounds(100, 100, 549, 504);
+        this.setMinimumSize(new Dimension(800, 600));
         this.setIconImage(ImageLoader.GetIcon("icon16.png").getImage());
-        getContentPane().setLayout(new BorderLayout());
+        this.getContentPane().setLayout(new BorderLayout());
         this.contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(this.contentPanel, BorderLayout.CENTER);
         GridBagLayout gbl_contentPanel = new GridBagLayout();
@@ -142,7 +154,7 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
         gbl_contentPanel.rowHeights = new int[] {0};
         gbl_contentPanel.columnWeights = new double[]{1.0};
         gbl_contentPanel.rowWeights = new double[]{1.0};
-        contentPanel.setLayout(gbl_contentPanel);
+        this.contentPanel.setLayout(gbl_contentPanel);
         
         this.mainSplitPane = new JSplitPane();
         this.mainSplitPane.setDividerLocation(0.5);
@@ -154,16 +166,26 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
         this.mainSplitPane.setLeftComponent(this.browserSplitPane);
 
         this.capellaObjectBrowser = new CapellaObjectBrowser();
-        this.browserSplitPane.setLeftComponent(this.capellaObjectBrowser);
         
-        panel = new JPanel();
-        browserSplitPane.setRightComponent(panel);
+        this.hubBrowserPanel = new JPanel();
+        
+        if(mappingDirection == MappingDirection.FromDstToHub)
+        {
+            this.browserSplitPane.setLeftComponent(this.capellaObjectBrowser);
+            this.browserSplitPane.setRightComponent(this.hubBrowserPanel);
+        }
+        else
+        {
+            this.browserSplitPane.setRightComponent(this.capellaObjectBrowser);
+            this.browserSplitPane.setLeftComponent(this.hubBrowserPanel);            
+        }
+                
         GridBagLayout gbl_panel = new GridBagLayout();
         gbl_panel.columnWidths = new int[]{0, 0};
         gbl_panel.rowHeights = new int[]{0, 0, 0};
         gbl_panel.columnWeights = new double[]{1.0, Double.MIN_VALUE};
         gbl_panel.rowWeights = new double[]{1.0, 0.0, Double.MIN_VALUE};
-        panel.setLayout(gbl_panel);
+        this.hubBrowserPanel.setLayout(gbl_panel);
         
         
         this.hubBrowserTreeViewsContainer = new JTabbedPane(SwingConstants.TOP);
@@ -174,52 +196,50 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
         gbc_hubBrowserTreeViewsContainer.gridy = 0;
         
         this.elementDefinitionBrowser = new ObjectBrowser();
-        elementDefinitionBrowser.setBackground(Color.WHITE);
-        hubBrowserTreeViewsContainer.addTab("Element Definitions", ImageLoader.GetIcon(ClassKind.Iteration), this.elementDefinitionBrowser, null);
+        this.elementDefinitionBrowser.setBackground(Color.WHITE);
+        this.hubBrowserTreeViewsContainer.addTab("Element Definitions", ImageLoader.GetIcon(ClassKind.Iteration), this.elementDefinitionBrowser, null);
         
         this.requirementBrowser = new ObjectBrowser();
-        hubBrowserTreeViewsContainer.addTab("Requirements", ImageLoader.GetIcon(ClassKind.RequirementsSpecification), this.requirementBrowser, null);
+        this.hubBrowserTreeViewsContainer.addTab("Requirements", ImageLoader.GetIcon(ClassKind.RequirementsSpecification), this.requirementBrowser, null);
         
-        panel.add(this.hubBrowserTreeViewsContainer, gbc_hubBrowserTreeViewsContainer);
+        this.hubBrowserPanel.add(this.hubBrowserTreeViewsContainer, gbc_hubBrowserTreeViewsContainer);
         
-        mapToNewHubElementCheckBox = new JCheckBox("Map the current selected row to a new Hub element");
-        mapToNewHubElementCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
+        this.mapToNewElementCheckBox = new JCheckBox("Map the current selected row to a new Hub element");
+        this.mapToNewElementCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
+        
         GridBagConstraints gbc_mapToNewHubElementCheckBox = new GridBagConstraints();
         gbc_mapToNewHubElementCheckBox.anchor = GridBagConstraints.WEST;
         gbc_mapToNewHubElementCheckBox.gridx = 0;
         gbc_mapToNewHubElementCheckBox.gridy = 1;
-        panel.add(mapToNewHubElementCheckBox, gbc_mapToNewHubElementCheckBox);
         
-        JPanel mappedElementsPanel = new JPanel();
-        mainSplitPane.setRightComponent(mappedElementsPanel);
+        this.hubBrowserPanel.add(this.mapToNewElementCheckBox, gbc_mapToNewHubElementCheckBox);
         
-        this.mappedElementSource = new DefaultListModel<>();
-        GridBagLayout gbl_mappedElementsPanel = new GridBagLayout();
-        gbl_mappedElementsPanel.columnWidths = new int[] {0};
-        gbl_mappedElementsPanel.rowHeights = new int[] {0};
-        gbl_mappedElementsPanel.columnWeights = new double[]{1.0};
-        gbl_mappedElementsPanel.rowWeights = new double[]{1.0};
-        mappedElementsPanel.setLayout(gbl_mappedElementsPanel);
+        this.mappedElementsPanel = new JPanel();
+
+        GridBagLayout mappedElementsPanelLayout = new GridBagLayout();
+        gbl_panel.columnWidths = new int[]{0, 0};
+        gbl_panel.rowHeights = new int[]{0, 0, 0};
+        gbl_panel.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+        gbl_panel.rowWeights = new double[]{1.0, 0.0, Double.MIN_VALUE};
+        this.mappedElementsPanel.setLayout(mappedElementsPanelLayout);
         
-        this.mappedElementListView = new JList<>(mappedElementSource);
-        mappedElementListView.setToolTipText("<html><p>The collection of previously mapped elements (<span style=\"color: #E37814;\">Orange</span>),<br>as well as pre-mapped element to existing Hub element (<span style=\"color: #0E5AE8;\">Blue</span>),<br>and element mapped to \"to be created\" Hub element (<span style=\"color: #20B818;\">Green</span>)</P></html>");
-        this.mappedElementListView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        this.mappedElementListView.setSelectionBackground(new Color(104, 143, 184));
-        this.mappedElementListView.setCellRenderer(new MappedElementRowViewModelRenderer());
+        this.mappedElementListView.setBackground(Color.WHITE);
         
-        scrollPane = new JScrollPane(this.mappedElementListView);
+        this.mappedElementsPanel.add(this.mappedElementListView);
+        
+        this.mainSplitPane.setRightComponent(this.mappedElementsPanel);
         GridBagConstraints gbc_scrollPane = new GridBagConstraints();
         gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
         gbc_scrollPane.fill = GridBagConstraints.BOTH;
         gbc_scrollPane.gridx = 0;
         gbc_scrollPane.gridy = 0;
-        mappedElementsPanel.add(scrollPane, gbc_scrollPane);
-        
+        mappedElementsPanel.setLayout(new BoxLayout(mappedElementsPanel, BoxLayout.Y_AXIS));
+                
         GridBagConstraints gbc_splitPane = new GridBagConstraints();
         gbc_splitPane.fill = GridBagConstraints.BOTH;
         gbc_splitPane.gridx = 0;
         gbc_splitPane.gridy = 0;
-        contentPanel.add(mainSplitPane, gbc_splitPane);
+        this.contentPanel.add(mainSplitPane, gbc_splitPane);
         
         JPanel buttonPane = new JPanel();
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -275,7 +295,7 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
     }
     
     /**
-     * Binds the {@linkplain TViewModel} viewModel to the implementing view
+     * Binds the {@linkplain #TViewModel} viewModel to the implementing view
      * 
      * @param viewModel the view model to bind
      */
@@ -284,59 +304,23 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
         this.elementDefinitionBrowser.SetDataContext(this.dataContext.GetElementDefinitionBrowserViewModel());
         this.requirementBrowser.SetDataContext(this.dataContext.GetRequirementBrowserViewModel());
         this.capellaObjectBrowser.SetDataContext(this.dataContext.GetCapellaObjectBrowserViewModel());
-        
-        for (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElement : this.dataContext.GetMappedElementCollection())
-        {
-            this.mappedElementSource.addElement(mappedElement);
-        }
-        
-        this.mappedElementListView.addListSelectionListener(x -> 
-        {
-            if(this.mappedElementListView.getSelectedValue() != null)
-            {
-                this.dataContext.SetSelectedMappedElement(this.mappedElementListView.getSelectedValue());
-            }
-        });
+        this.mappedElementListView.SetDataContext(this.dataContext.GetMappedElementListViewViewModel());
         
         this.dataContext.GetSelectedMappedElement().subscribe(x -> 
         {
             if(x != null)
             {
-                this.mappedElementListView.setSelectedValue(x, true);
-                this.RefreshMappedElementListView();
                 this.UpdateMapToNewHubElementCheckBoxState(x.GetShouldCreateNewTargetElementValue());
             }
         });
         
-        this.dataContext.GetMappedElementCollection().ItemAdded()
-            .subscribe(x -> 
-            {
-                this.mappedElementSource.addElement(x);
-                this.RefreshMappedElementListView();
-            });
-        
-        this.dataContext.GetMappedElementCollection().ItemRemoved()
-            .subscribe(x -> 
-            {
-                this.mappedElementSource.removeElement(x);
-                this.RefreshMappedElementListView();
-            });
-        
-        this.dataContext.GetMappedElementCollection().IsEmpty()
-            .filter(x -> x)
-            .subscribe(x -> 
-            {
-                this.mappedElementSource.clear();
-                this.RefreshMappedElementListView();
-            });
-        
-        this.mapToNewHubElementCheckBox.addActionListener(x -> 
+        this.mapToNewElementCheckBox.addActionListener(x -> 
         {
-            this.dataContext.WhenMapToNewHubElementCheckBoxChanged(this.mapToNewHubElementCheckBox.isSelected());
+            this.dataContext.WhenMapToNewElementCheckBoxChanged(this.mapToNewElementCheckBox.isSelected());
         });
         
-        this.dataContext.GetShouldMapToNewHubElementCheckBoxBeEnabled()
-            .subscribe(x -> this.mapToNewHubElementCheckBox.setEnabled(x));
+        this.dataContext.GetShouldMapToNewElementCheckBoxBeEnabled()
+            .subscribe(x -> this.mapToNewElementCheckBox.setEnabled(x));
         
         this.okButton.addActionListener(x -> this.CloseDialog(true));        
         this.cancelButton.addActionListener(x -> this.CloseDialog(false));
@@ -344,21 +328,13 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
     }
 
     /**
-     * Refreshes the mapped element list view
-     */
-    private void RefreshMappedElementListView()
-    {
-        this.mappedElementListView.ensureIndexIsVisible(this.mappedElementSource.getSize());
-    }
-    
-    /**
      * Updates the visual state of the {@linkplain mapToNewHubElementCheckBox} according to the selected mapped element
      * 
      * @param shouldCreateNewTargetElement the new value
      */
     private void UpdateMapToNewHubElementCheckBoxState(boolean shouldCreateNewTargetElement)
     {
-        SwingUtilities.invokeLater(() -> this.mapToNewHubElementCheckBox.setSelected(shouldCreateNewTargetElement));        
+        SwingUtilities.invokeLater(() -> this.mapToNewElementCheckBox.setSelected(shouldCreateNewTargetElement));        
     }
 
     /**
@@ -366,9 +342,10 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
      * 
      * @param viewModel the {@link IViewModel} to assign
      */
+    @SuppressWarnings("unchecked")
     public void SetDataContext(IViewModel viewModel)
     {
-        this.dataContext = (IDstMappingConfigurationDialogViewModel) viewModel;
+        this.dataContext = (TViewModel) viewModel;
         this.Bind();
     }
     
@@ -378,7 +355,7 @@ public class DstMappingConfigurationDialog extends JDialog implements IDialog<ID
     * @return an {@link IViewModel}
     */
     @Override
-    public IDstMappingConfigurationDialogViewModel GetDataContext()
+    public TViewModel GetDataContext()
     {
         return this.dataContext;
     }

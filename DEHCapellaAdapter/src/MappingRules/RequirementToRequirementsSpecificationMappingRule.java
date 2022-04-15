@@ -152,6 +152,11 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             {
                 this.Logger.error(String.format("Could not map requirement %s", mappedRequirement.GetDstElement().getName()));
             }
+            
+            if(refRequirement.HasValue())
+            {
+                this.UpdateProperties(mappedRequirement.GetDstElement(), refRequirementsSpecification, refRequirement);
+            }
         }
     }
     
@@ -218,7 +223,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
         var optionalRequirement = refRequirementsSpecification.Get()
                 .getRequirement()
                 .stream()
-                .filter(x -> this.AreShortNamesEquals(x, GetShortName(dstRequirement)))
+                .filter(x -> this.AreShortNamesEquals(x, GetShortName(dstRequirement)) || AreTheseEquals(x.getName(), dstRequirement.getName(), true))
                 .findFirst();
         
         if(optionalRequirement.isPresent())
@@ -229,23 +234,34 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
         {
             var requirement = new cdp4common.engineeringmodeldata.Requirement();
             requirement.setIid(UUID.randomUUID());
-            requirement.setName(dstRequirement.getName());
-            requirement.setShortName(GetShortName(dstRequirement));
             requirement.setOwner(this.hubController.GetCurrentDomainOfExpertise());
-            
             requirement.setGroup(refRequirementsGroup.Get());
             refRequirementsSpecification.Get().getRequirement().add(requirement);
             refRequirement.Set(requirement);
         }
         
+        return refRequirement.HasValue();
+    }
+
+    /**
+     * Updates the target {@linkplain cdp4common.engineeringmodeldata.Requirement} properties
+     * 
+     * @param dstRequirement the source {@linkplain Requirement}
+     * @param refRequirementsSpecification the {@linkplain Ref} of {@linkplain RequirementsSpecification} container
+     * @param refRequirement the {@linkplain Ref} of {@linkplain cdp4common.engineeringmodeldata.Requirement} target
+     */
+    private void UpdateProperties(Requirement dstRequirement,
+            Ref<RequirementsSpecification> refRequirementsSpecification,
+            Ref<cdp4common.engineeringmodeldata.Requirement> refRequirement)
+    {
         this.UpdateOrCreateDefinition(dstRequirement, refRequirement);
+        refRequirement.Get().setName(dstRequirement.getName());
+        refRequirement.Get().setShortName(GetShortName(dstRequirement));
 
         refRequirementsSpecification.Get().getRequirement().removeIf(x -> x.getIid().equals(refRequirement.Get().getIid()));
         refRequirementsSpecification.Get().getRequirement().add(refRequirement.Get());
         
         this.MapCategories(dstRequirement, refRequirement.Get());
-        
-        return refRequirement.HasValue();
     }
 
 

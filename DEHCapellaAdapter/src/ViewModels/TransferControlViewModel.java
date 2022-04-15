@@ -32,6 +32,8 @@ import DstController.IDstController;
 import Enumerations.MappingDirection;
 import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
+import Services.HistoryService.ICapellaLocalExchangeHistoryService;
+import Services.LocalExchangeHistory.ILocalExchangeHistoryService;
 import ViewModels.Interfaces.ITransferControlViewModel;
 import io.reactivex.Observable;
 
@@ -40,6 +42,21 @@ import io.reactivex.Observable;
  */
 public class TransferControlViewModel implements ITransferControlViewModel
 {
+    /**
+     * The {@linkplain IDstController}
+     */
+    private IDstController dstController;
+    
+    /**
+     * The {@linkplain ICapellaLogService}
+     */
+    private ICapellaLogService logService;
+    
+    /**
+     * The {@linkplain ICapellaLocalExchangeHistoryService}
+     */
+    private final ICapellaLocalExchangeHistoryService exchangeHistory;
+    
     /**
      * The number of selected things to transfer
      */
@@ -57,23 +74,15 @@ public class TransferControlViewModel implements ITransferControlViewModel
     }
     
     /**
-     * The {@linkplain IDstController}
-     */
-    private IDstController dstController;
-    
-    /**
-     * The {@linkplain ICapellaLogService}
-     */
-    private ICapellaLogService logService;
-
-    /**
      * Initializes a new {@linkplain TransferControlViewModel}
      * 
      * @param dstController the {@linkplain IDstController}
      * @param logService the {@linkplain IMagicDrawUILogService}
+     * @param exchangeHistory the {@linkplain ICapellaLocalExchangeHistoryService}
      */
-    public TransferControlViewModel(IDstController dstController, ICapellaLogService logService)
+    public TransferControlViewModel(IDstController dstController, ICapellaLogService logService, ICapellaLocalExchangeHistoryService exchangeHistory)
     {
+        this.exchangeHistory = exchangeHistory;
         this.dstController = dstController;
         this.logService = logService;
         
@@ -120,6 +129,8 @@ public class TransferControlViewModel implements ITransferControlViewModel
            
            boolean result = this.dstController.Transfer();
 
+           this.exchangeHistory.Write();
+           
            if(timer.isStarted())
            {
                timer.stop();

@@ -29,7 +29,6 @@ import org.eclipse.core.commands.ExecutionException;
 
 import App.AppContainer;
 import Enumerations.MappingDirection;
-import HubController.IHubController;
 import Services.Mapping.IMapCommandService;
 
 /**
@@ -49,10 +48,10 @@ public class MapToHubCommand extends AbstractHandler
      */
     public MapToHubCommand()
     {
-        this.setBaseEnabled(this.commandService.CanExecute());
-        
         this.commandService.CanExecuteObservable()
                 .subscribe(x -> this.setBaseEnabled(x));
+        
+        this.setBaseEnabled(this.commandService.CanExecute());        
     }
     
     /**

@@ -47,11 +47,13 @@ import Services.CapellaSession.ICapellaSessionListenerService;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.NavigationService.INavigationService;
 import Utils.Ref;
-import ViewModels.Dialogs.Interfaces.IDstMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.Interfaces.IDstToHubMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.Interfaces.IHubToDstMappingConfigurationDialogViewModel;
+import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
+import ViewModels.Interfaces.IRequirementBrowserViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
-import Views.Dialogs.DstMappingConfigurationDialog;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
@@ -61,13 +63,16 @@ class MapCommandServiceTestFixture
     private ICapellaSelectionService selectionService;
     private IDstController dstController;
     private INavigationService navigationService;
-    private IDstMappingConfigurationDialogViewModel dstMappingDialog;
+    private IDstToHubMappingConfigurationDialogViewModel dstMappingDialog;
     private ICapellaLogService logService;
     private IHubController hubController;
     private MapCommandService service;
     private ObservableValue<Boolean> hasAnyOpenSession;
     private ObservableValue<Boolean> isSessionOpen;
     private ICapellaSessionService sessionService;
+    private IElementDefinitionBrowserViewModel elementDefinitionBrowserViewModel;
+    private IRequirementBrowserViewModel requirementBrowserViewModel;
+    private IHubToDstMappingConfigurationDialogViewModel hubToDstMappingConfigurationDialogViewModel;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -75,10 +80,13 @@ class MapCommandServiceTestFixture
         this.selectionService = mock(ICapellaSelectionService.class);
         this.dstController = mock(IDstController.class);
         this.navigationService = mock(INavigationService.class);
-        this.dstMappingDialog = mock(IDstMappingConfigurationDialogViewModel.class);
+        this.dstMappingDialog = mock(IDstToHubMappingConfigurationDialogViewModel.class);
         this.logService = mock(ICapellaLogService.class);
         this.hubController = mock(IHubController.class);
         this.sessionService = mock(ICapellaSessionService.class);
+        this.elementDefinitionBrowserViewModel = mock(IElementDefinitionBrowserViewModel.class);
+        this.requirementBrowserViewModel = mock(IRequirementBrowserViewModel.class);
+        this.hubToDstMappingConfigurationDialogViewModel = mock(IHubToDstMappingConfigurationDialogViewModel.class);
         
         this.hasAnyOpenSession = new ObservableValue<Boolean>();
         this.isSessionOpen = new ObservableValue<Boolean>();
@@ -87,7 +95,8 @@ class MapCommandServiceTestFixture
                 
         this.service = new MapCommandService(this.selectionService, this.dstController, 
                 this.navigationService, this.dstMappingDialog, this.logService, 
-                this.hubController, this.sessionService);
+                this.hubController, this.sessionService, this.elementDefinitionBrowserViewModel, this.requirementBrowserViewModel,
+                this.hubToDstMappingConfigurationDialogViewModel);
     }
 
     @Test
@@ -121,11 +130,11 @@ class MapCommandServiceTestFixture
         
         var mappedElementResultFromTheMappingDialog = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
         when(this.dstMappingDialog.GetMappedElementCollection()).thenReturn(mappedElementResultFromTheMappingDialog);
-        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult));
+        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult, MappingDirection.FromDstToHub));
         dialogResult.Set(false);
-        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult));
+        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult, MappingDirection.FromDstToHub));
         dialogResult.Set(true);
-        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult));
+        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult, MappingDirection.FromDstToHub));
         var mappedElement0 = new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(PhysicalComponent.class), MappingDirection.FromDstToHub);
         var mappedElement1 = new MappedDstRequirementRowViewModel(new RequirementsSpecification(), mock(Requirement.class), MappingDirection.FromDstToHub);
         mappedElementResultFromTheMappingDialog.add(mappedElement0);
@@ -133,9 +142,9 @@ class MapCommandServiceTestFixture
                 
         when(this.dstController.Map(any(), any())).thenReturn(false);
 
-        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult));
+        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult, MappingDirection.FromDstToHub));
         when(this.dstController.Map(any(), any())).thenReturn(true);
-        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult));
+        assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult, MappingDirection.FromDstToHub));
         Thread.sleep(100);
         verify(this.logService, times(3)).Append(any(String.class), any(Boolean.class));
         verify(this.logService, times(4)).Append(any(String.class), any(Integer.class));

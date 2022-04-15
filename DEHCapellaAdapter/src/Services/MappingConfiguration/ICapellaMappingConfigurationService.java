@@ -24,16 +24,17 @@
 package Services.MappingConfiguration;
 
 import java.util.Collection;
+import java.util.UUID;
 
-import org.eclipse.emf.ecore.EObject;
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
-
+import Enumerations.CapellaArchitecture;
+import Enumerations.MappingDirection;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
+import cdp4common.engineeringmodeldata.ExternalIdentifierMap;
 
 /**
  * The {@linkplain ICapellaMappingConfigurationService} is the main interface definition for the {@linkplain CapellaMappingConfigurationService}
  */
-public interface ICapellaMappingConfigurationService extends IMappingConfigurationService
+public interface ICapellaMappingConfigurationService extends IMappingConfigurationService<CapellaExternalIdentifier>
 {
     /**
      * Loads the mapping configuration and generates the map result respectively
@@ -41,4 +42,15 @@ public interface ICapellaMappingConfigurationService extends IMappingConfigurati
      * @return a {@linkplain Collection} of {@linkplain IMappedElementRowViewModel}
      */
     Collection<IMappedElementRowViewModel> LoadMapping();
+
+    /**
+     * Adds one correspondence to the {@linkplain ExternalIdentifierMap}
+     * 
+     * @param internalId the {@linkplain UUID} that identifies the thing to correspond to
+     * @param externalId the {@linkplain Object} that identifies the object to correspond to
+     * @param mappingDirection the {@linkplain MappingDirection} the mapping belongs to
+     * @param targetArchitecture the target {@linkplain CapellaArchitecture}
+     */
+    void AddToExternalIdentifierMap(UUID internalId, String externalId, CapellaArchitecture targetArchitecture,
+            MappingDirection mappingDirection);
 }

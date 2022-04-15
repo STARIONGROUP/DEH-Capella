@@ -29,9 +29,15 @@ import java.util.Map;
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.Unit;
+import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.data.information.datatype.PhysicalQuantity;
+import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
+
+import Enumerations.CapellaArchitecture;
 
 /**
  * The ICapellaTransactionService is the interface definition for {@linkplain CapellaTransactionService}
@@ -85,11 +91,11 @@ public interface ICapellaTransactionService
     void AddReferenceDataToDataPackage(Unit newUnit);
 
     /**
-     * Adds the provided {@linkplain PhysicalQuantity} to the {@linkplain DataPackage} of the current project
+     * Adds the provided {@linkplain DataType} to the {@linkplain DataPackage} of the current project
      * 
-     * @param newPhysicalQuantity the new {@linkplain PhysicalQuantity}
+     * @param newDataType the new {@linkplain DataType}
      */
-    void AddReferenceDataToDataPackage(PhysicalQuantity newPhysicalQuantity);
+    void AddReferenceDataToDataPackage(DataType newDataType);
 
     /**
      * Gets the {@linkplain ClonedReferenceElement} where the element id == the provided {@linkplain #TElement} id
@@ -145,4 +151,31 @@ public interface ICapellaTransactionService
      * @return a {@linkplain ClonedReferenceElement} of type {@linkplain #TElement}
      */
     <TElement extends CapellaElement> TElement GetNew(String id, Class<TElement> elementType);
+
+    /**
+     * Register the target {@linkplain CapellaArchitecture} for the specified {@linkplain CapellaElement}
+     * 
+     * @param capellaElement the {@linkplain CapellaElement}
+     * @param targetArchitecture the target {@linkplain CapellaArchitecture}
+     */
+    void RegisterTargetArchitecture(CapellaElement capellaElement, CapellaArchitecture targetArchitecture);
+
+    /**
+     * Gets the registered target {@linkplain CapellaArchitecture} for the specified {@linkplain CapellaElement}
+     * 
+     * @param capellaElement the {@linkplain CapellaElement}
+     * @return the {@linkplain CapellaArchitecture}
+     */
+    CapellaArchitecture GetTargetArchitecture(CapellaElement capellaElement);
+
+    /**
+     * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}, and registers the target {@linkplain CapellaArchitecture}
+     * 
+     * @param <TInstance> the {@linkplain Type} of {@linkplain CapellaElement}
+     * @param clazz the {@linkplain Class} of {@linkplain #TInstance}
+     * @param name the name of the newly created {@linkplain CapellaElement}, used to query the {@linkplain #newReferences} collection
+     * @param targetArchitecture the {@linkplain CapellaArchitecture} to register for the new element
+     * @return an instance of the provided type
+     */
+    <TInstance extends NamedElement> TInstance Create(Class<TInstance> clazz, String name, CapellaArchitecture targetArchitecture);
 }

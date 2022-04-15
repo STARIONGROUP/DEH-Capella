@@ -1,5 +1,5 @@
 /*
- * ComponentArchitectureRowViewModel.java
+ * BlockArchitectureRowViewModel.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
@@ -25,6 +25,7 @@ package ViewModels.CapellaObjectBrowser.Rows;
 
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.capellamodeller.Folder;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
@@ -33,9 +34,9 @@ import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 
 /**
- * The {@linkplain ComponentArchitectureRowViewModel} is the row view model that represents {@linkplain ComponentArchitecture}
+ * The {@linkplain BlockArchitectureRowViewModel} is the row view model that represents {@linkplain ComponentArchitecture}
  */
-public class ComponentArchitectureRowViewModel extends ProjectStructuralElementRowViewModel<ComponentArchitecture, Structure>
+public class BlockArchitectureRowViewModel extends ProjectStructuralElementRowViewModel<BlockArchitecture, Structure>
 {
     /**
      * Initializes a new {@linkplain ComponentRowViewModel}
@@ -43,7 +44,7 @@ public class ComponentArchitectureRowViewModel extends ProjectStructuralElementR
      * @param parent the {@linkplain IRowViewModel} parent of this view model
      * @param element the {@linkplain ComponentArchitecture} that this row view model represents
      */
-    public ComponentArchitectureRowViewModel(IElementRowViewModel<?> parent, ComponentArchitecture element)
+    public BlockArchitectureRowViewModel(IElementRowViewModel<?> parent, BlockArchitecture element)
     {
         super(parent, element, Structure.class);
     }

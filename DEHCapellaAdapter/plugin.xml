@@ -14,6 +14,10 @@
             id="DEH.Capella.OpenImpactViewPanel">
       </command>
       <command categoryId="DEH.Capella.Commands.CommandsCategory"
+            name="Open Local Exchange History"
+            id="DEH.Capella.OpenLocalExchangeHistory">
+      </command>
+      <command categoryId="DEH.Capella.Commands.CommandsCategory"
             id="DEH.Capella.MapToHub"
             name="Map Selection To Hub">
       </command>
@@ -24,6 +28,9 @@
       </handler>
       <handler class="Commands.OpenImpactViewCommand"
             commandId="DEH.Capella.OpenImpactViewPanel">
+      </handler>      
+      <handler class="Commands.OpenLocalExchangeHistoryCommand"
+            commandId="DEH.Capella.OpenLocalExchangeHistory">
       </handler>
       <handler class="Commands.MapToHubCommand"
             commandId="DEH.Capella.MapToHub">
@@ -40,6 +47,10 @@
             	</command>
             	<command commandId="DEH.Capella.OpenImpactViewPanel"
                   id="DEH.Capella.Menus.OpenImpactViewPanel"
+                  mnemonic="S">
+            	</command>
+            	<command commandId="DEH.Capella.OpenLocalExchangeHistory"
+                  id="DEH.Capella.Menus.OpenLocalExchangeHistory"
                   mnemonic="S">
             	</command>
 			</menu>
@@ -69,6 +80,13 @@
                    id="DEH.Capella.Toolbars.OpenImpactViewPanel"
                    tooltip="Open/Close the Impact View Panel">
 	        </command>
+	        <separator name="additions" visible="false"/>
+	        <command commandId="DEH.Capella.OpenLocalExchangeHistory"
+                   icon="icons/icon16.png"
+                   style="push"
+                   id="DEH.Capella.Toolbars.OpenLocalExchangeHistory"
+                   tooltip="View Local Exchange History">
+        	</command>
      	</menuContribution>
 		<menuContribution allPopups="false" locationURI="popup:org.eclipse.ui.popup.any">
 		      <command commandId="DEH.Capella.MapToHub"

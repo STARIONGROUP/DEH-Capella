@@ -52,6 +52,8 @@ import HubController.IHubController;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
+import Services.HistoryService.ICapellaLocalExchangeHistoryService;
+import Services.LocalExchangeHistory.ILocalExchangeHistoryService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
@@ -89,6 +91,7 @@ public class DstControllerTestFixture
     private ICapellaMappingConfigurationService mappingConfigurationService;
     private ICapellaSessionService capellaSessionService;
     private ICapellaTransactionService transactionService;
+    private ICapellaLocalExchangeHistoryService transferHistory;
 
     /**
      * @throws java.lang.Exception
@@ -102,6 +105,7 @@ public class DstControllerTestFixture
         this.mappingConfigurationService = mock(ICapellaMappingConfigurationService.class);
         this.capellaSessionService = mock(ICapellaSessionService.class);
         this.transactionService = mock(ICapellaTransactionService.class);
+        this.transferHistory = mock(ICapellaLocalExchangeHistoryService.class);
         
         when(this.capellaSessionService.SessionUpdated())
             .thenReturn(Observable.fromArray(mock(org.eclipse.sirius.business.api.session.Session.class)));
@@ -120,7 +124,7 @@ public class DstControllerTestFixture
         when(mappedThings1.GetHubElement()).thenReturn(requirementsSpecification);
         
         this.controller = new DstController(this.mappingEngine, this.hubController, this.logService, 
-                this.mappingConfigurationService, this.capellaSessionService, this.transactionService);
+                this.mappingConfigurationService, this.capellaSessionService, this.transactionService, this.transferHistory);
         
         this.controller.GetDstMapResult().add(mappedThings0);
         this.controller.GetDstMapResult().add(mappedThings1);

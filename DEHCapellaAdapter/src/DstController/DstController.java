@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -40,13 +41,15 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.datatype.DataType;
+import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
-import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import MappingRules.ComponentToElementMappingRule;
@@ -55,6 +58,7 @@ import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
+import Services.HistoryService.ICapellaLocalExchangeHistoryService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
@@ -70,9 +74,12 @@ import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import ViewModels.Rows.MappedRequirementBaseRowViewModel;
+import cdp4common.ChangeKind;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Definition;
+import cdp4common.commondata.NamedThing;
+import cdp4common.commondata.ShortNamedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.BinaryRelationship;
 import cdp4common.engineeringmodeldata.ElementDefinition;
@@ -136,6 +143,11 @@ public final class DstController implements IDstController
      * The {@linkplain ICapellaTransactionService} instance
      */
     private final ICapellaTransactionService transactionService;
+    
+    /**
+     * The {@linkplain ICapellaLocalExchangeHistoryService} instance
+     */
+    private final ICapellaLocalExchangeHistoryService exchangeHistory;
 
     /**
      * A value indicating whether the {@linkplain DstController} should load mapping when the HUB session is refresh or reloaded
@@ -177,12 +189,12 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetSelectedHubMapResultForTransfer}
      */    
-    private ObservableCollection<CapellaElement> selectedHubMapResultForTransfer = new ObservableCollection<>(CapellaElement.class);
+    private ObservableCollection<CapellaElement> selectedHubMapResultForTransfer = new ObservableCollection<>();
     
     /**
      * Gets the {@linkplain ObservableCollection} of that are selected for transfer to the Capella
      * 
-     * @return an {@linkplain ObservableCollection} of {@linkplain CapellaElement}
+     * @return an {@linkplain ObservableCollection} {@linkplain CapellaElement}
      */
     @Override
     public ObservableCollection<CapellaElement> GetSelectedHubMapResultForTransfer()
@@ -269,10 +281,11 @@ public final class DstController implements IDstController
      * @param mappingConfigurationService the {@linkplain ICapellaMappingConfigurationService} instance
      * @param capellaSessionService the {@linkplain ICapellaSessionService} instance
      * @param transactionService the {@linkplain ICapellaTransactionService} instance
+     * @param exchangeHistory the {@linkplain ICapellaLocalExchangeHistoryService} instance
      */
     public DstController(IMappingEngineService mappingEngine, IHubController hubController, ICapellaLogService logService, 
             ICapellaMappingConfigurationService mappingConfigurationService, ICapellaSessionService capellaSessionService,
-            ICapellaTransactionService transactionService)
+            ICapellaTransactionService transactionService, ICapellaLocalExchangeHistoryService exchangeHistory)
     {
         this.mappingEngine = mappingEngine;
         this.hubController = hubController;
@@ -280,6 +293,7 @@ public final class DstController implements IDstController
         this.mappingConfigurationService = mappingConfigurationService;
         this.capellaSessionService = capellaSessionService;
         this.transactionService = transactionService;
+        this.exchangeHistory = exchangeHistory;
         
         this.hubController.GetIsSessionOpenObservable().subscribe(isSessionOpen ->
         {
@@ -468,7 +482,7 @@ public final class DstController implements IDstController
     
             this.isHubSessionRefreshSilent = true;
             Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
-                
+
             Iteration iterationClone = iterationTransaction.getLeft();
             ThingTransaction transaction = iterationTransaction.getRight();
             this.mappingConfigurationService.PersistExternalIdentifierMap(transaction, iterationClone);
@@ -499,25 +513,22 @@ public final class DstController implements IDstController
     {
         for (var element : this.selectedHubMapResultForTransfer)
         {
+            var targetArchitecture = this.transactionService.GetTargetArchitecture(element);
+            
             if(element instanceof Requirement)
             {
-                this.PrepareRequirement((Requirement)element);
+                this.PrepareRequirement((Requirement)element, targetArchitecture);
             }
             
-            else if(element instanceof PhysicalComponent)
+            else if(element instanceof Component)
             {
                 if(this.transactionService.IsCloned(element))
                 {
-                    this.PreparePhysicalComponent((PhysicalComponent)element);
+                    this.PrepareComponent((Component)element);
                 }
                 else if(this.transactionService.IsCloned(element.eContainer()))
                 {
-                    if(element.eContainer() instanceof PhysicalComponent)
-                    {
-                        var original = this.transactionService.GetClone((PhysicalComponent)element.eContainer()).GetOriginal();
-                        original.getOwnedPhysicalComponents().removeIf(x -> AreTheseEquals(x.getId(), element.getId()));
-                        original.getOwnedPhysicalComponents().add((PhysicalComponent)element);
-                    }
+                    this.PrepareComponentContainer((Component)element);
                 }
             }
         }
@@ -527,14 +538,16 @@ public final class DstController implements IDstController
      * Prepares for transfer the provided {@linkplain Requirement}
      * 
      * @param element the {@linkplain Requirement} element to transfer
+     * @param targetArchitecture the {@linkplain CapellaArchitecture} where to transfer the {@linkplain Requirement}
      */
-    private void PrepareRequirement(Requirement element)
+    private void PrepareRequirement(Requirement element, CapellaArchitecture targetArchitecture)
     {
         if(this.transactionService.IsCloned(element))
         {
             var clonedReference = this.transactionService.GetClone(element);
             clonedReference.GetOriginal().setDescription(clonedReference.GetClone().getDescription());
             clonedReference.GetOriginal().setName(clonedReference.GetClone().getName());
+            this.exchangeHistory.Append(element, ChangeKind.UPDATE);
         }
         
         var container = (RequirementsPkg)element.eContainer();
@@ -555,12 +568,16 @@ public final class DstController implements IDstController
         if(containerIsCloned.booleanValue())
         {
             this.UpdateRequirementPackage(containerToUpdate);
+            this.exchangeHistory.Append(containerToUpdate, ChangeKind.UPDATE);
         }
         else
         {
-            var architecture = BlockArchitectureExt.getBlockArchitecture(Type.SA, this.capellaSessionService.GetProject());
+            var architecture = BlockArchitectureExt.getBlockArchitecture(targetArchitecture.GetType(), this.capellaSessionService.GetProject());
             architecture.getOwnedRequirementPkgs().removeIf(x -> AreTheseEquals(x.getId(), containerToUpdate.getId()));
             architecture.getOwnedRequirementPkgs().add(containerToUpdate);
+
+            this.exchangeHistory.Append(containerToUpdate, ChangeKind.CREATE);
+            this.exchangeHistory.Append(element, ChangeKind.CREATE);
         }
     }
 
@@ -598,12 +615,70 @@ public final class DstController implements IDstController
         originalCollection.addAll(childrenPackagesToAdd);
     }
 
+
     /**
-     * Prepares for transfer the specified {@linkplain PhysicalComponent}
+     * Prepares the specified {@linkplain Component} by updating its container only
      * 
-     * @param element the {@linkplain PhysicalComponent} element to transfer
+     * @param element the {@linkplain Component} element to add to its defined container
      */
-    private void PreparePhysicalComponent(PhysicalComponent element)
+    private void PrepareComponentContainer(Component element)
+    {
+        if(element instanceof PhysicalComponent)
+        {
+            this.PrepareComponentContainer((PhysicalComponent)element.eContainer(), (PhysicalComponent)element, x -> x.getOwnedPhysicalComponents());
+        }
+        else if(element instanceof LogicalComponent)
+        {
+            this.PrepareComponentContainer((LogicalComponent)element.eContainer(), (LogicalComponent)element, x -> x.getOwnedLogicalComponents());
+        }
+    }
+    
+    /**
+     * Prepares for transfer the specified {@linkplain #TElement} by updating its container only
+     * 
+     * @param <TElement> the type of {@linkplain Component} to prepare
+     * @param container the {@linkplain #TElement} element to update
+     * @param element the {@linkplain #TElement} element to transfer
+     * @param childrenSelector a {@linkplain Function} that returns a {@linkplain Collection} of {@linkplain #TElement}, 
+     * used to query the contained {@linkplain #TElement} regardless of whether the input {@linkplain #TElement} is a clone or an original
+     */
+    private <TElement extends Component> void PrepareComponentContainer(TElement container, TElement element, Function<TElement, EList<TElement>> childrenSelector)
+    {
+        var original = this.transactionService.GetClone(container).GetOriginal();
+        childrenSelector.apply(original).removeIf(x -> AreTheseEquals(x.getId(), element.getId()));
+        childrenSelector.apply(original).add(element);
+        this.exchangeHistory.Append(container, ChangeKind.UPDATE);
+        this.exchangeHistory.Append(element, ChangeKind.CREATE);
+    }
+    
+    /**
+     * Prepares for transfer the specified {@linkplain Component}
+     * 
+     * @param element the {@linkplain Component}
+     */
+    private void PrepareComponent(Component element)
+    {
+        if(element instanceof PhysicalComponent)
+        {
+            this.PrepareComponent((PhysicalComponent)element, x -> x.getOwnedPhysicalComponents());
+        }
+        else if(element instanceof LogicalComponent)
+        {
+            this.PrepareComponent((LogicalComponent)element, x -> x.getOwnedLogicalComponents());
+        }
+        
+        this.exchangeHistory.Append(element, ChangeKind.UPDATE);
+    }
+
+    /**
+     * Prepares for transfer the specified {@linkplain element}
+     * 
+     * @param <TElement> the type of {@linkplain Component} to prepare
+     * @param element the {@linkplain #TElement} element to transfer
+     * @param childrenSelector a {@linkplain Function} that returns a {@linkplain Collection} of {@linkplain #TElement}, 
+     * used to query the contained {@linkplain #TElement} regardless of whether the input {@linkplain #TElement} is a clone or an original
+     */
+    private <TElement extends Component> void PrepareComponent(TElement element, Function<TElement, EList<TElement>> childrenSelector)
     {
         var clonedReference = this.transactionService.GetClone(element);
         
@@ -616,21 +691,24 @@ public final class DstController implements IDstController
             if(optionalProperty.isPresent())
             {
                 optionalProperty.get().setOwnedDefaultValue(clonedProperty.getOwnedDefaultValue());
+
+                this.exchangeHistory.Append(clonedProperty, optionalProperty.get());
                 continue;
             }
             
             clonedReference.GetOriginal().getOwnedFeatures().add(clonedProperty);
+            this.exchangeHistory.Append(clonedProperty, ChangeKind.CREATE);
         }
         
-        for (var containedElement : clonedReference.GetClone().getOwnedPhysicalComponents().stream().collect(Collectors.toList()))
+        for (var containedElement : childrenSelector.apply(clonedReference.GetClone()).stream().collect(Collectors.toList()))
         {
-            if(clonedReference.GetOriginal().getOwnedPhysicalComponents().stream()
+            if(childrenSelector.apply(clonedReference.GetOriginal()).stream()
                     .anyMatch(x -> AreTheseEquals(x.getId(), containedElement.getId())))
             {
                 continue;
             }
             
-            clonedReference.GetOriginal().getOwnedPhysicalComponents().add(containedElement);
+            childrenSelector.apply(clonedReference.GetOriginal()).add(containedElement);
         }
     }
         
@@ -648,6 +726,12 @@ public final class DstController implements IDstController
             Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
             Iteration iterationClone = iterationTransaction.getLeft();
             ThingTransaction transaction = iterationTransaction.getRight();
+
+            if(!this.hubController.TrySupplyAndCreateLogEntry(transaction))
+            {
+                this.logService.Append("Transfer to the HUB aborted!");
+                return true;
+            }
             
             this.PrepareThingsForTransfer(iterationClone, transaction);
 
@@ -781,6 +865,7 @@ public final class DstController implements IDstController
      */
     private void UpdateValueSet(ParameterValueSetBase clone, ValueSet valueSet)
     {
+        this.exchangeHistory.Append(clone, valueSet);
         clone.setManual(valueSet.getManual());
         clone.setValueSwitch(valueSet.getValueSwitch());
     }
@@ -978,6 +1063,11 @@ public final class DstController implements IDstController
             if(thing.getContainer() == null || containerList.stream().noneMatch(x -> x.getIid().equals(thing.getIid())))
             {
                 containerList.add(thing);
+                this.exchangeHistory.Append(thing, ChangeKind.CREATE);   
+            }
+            else
+            {
+                this.exchangeHistory.Append(thing, ChangeKind.UPDATE);
             }
 
             transaction.createOrUpdate(thing);
@@ -1016,20 +1106,6 @@ public final class DstController implements IDstController
      */
     private void AddOrRemoveAllFromSelectedDstMapResultForTransfer(ClassKind classKind, boolean shouldRemove)
     {
-        if(classKind == ClassKind.NotThing)
-        {
-            this.selectedHubMapResultForTransfer.clear();
-
-            if(!shouldRemove)
-            {
-                this.selectedHubMapResultForTransfer.addAll(this.hubMapResult.stream()
-                        .map(x -> x.GetDstElement())
-                        .collect(Collectors.toList()));
-            }
-            
-            return;
-        }
-        
         Predicate<? super Thing> predicateClassKind = x -> x.getClassKind() == classKind;
         
         this.selectedDstMapResultForTransfer.removeIf(predicateClassKind);
@@ -1056,7 +1132,7 @@ public final class DstController implements IDstController
         if(!shouldRemove)
         {
             this.selectedHubMapResultForTransfer.addAll(this.hubMapResult.stream()
-                    .map(MappedElementRowViewModel::GetDstElement)
+                    .map(x -> x.GetDstElement())
                     .collect(Collectors.toList()));
         }
     }
@@ -1107,7 +1183,7 @@ public final class DstController implements IDstController
         {
             var element = elements.stream().filter(predicate).findFirst();
             
-            if(element.isPresent() && refElement.GetType().isAssignableFrom(element.get().getClass()))
+            if(element.isPresent() && refElement.GetType().isInstance(element.get()))
             {
                 refElement.Set((TElement) element.get());
                 break;
@@ -1120,13 +1196,14 @@ public final class DstController implements IDstController
     /**
      * Tries to get a {@linkplain DataType} that matches the provided {@linkplain MeasurementScale}
      * 
-     * @param scale the {@linkplain MeasurementScale} of reference
+     * @param <TThing> the type of {@linkplain Thing} that is {@linkplain NamedThing} and {@linkplain ShortNamedThing}
+     * @param thing the {@linkplain #TThing} of reference
      * @param referenceElement a {@linkplain CapellaElement} that will point to the right session
      * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
      * @return a {@linkplain boolean}
      */
     @Override
-    public boolean TryGetDataType(MeasurementScale scale, CapellaElement referenceElement, Ref<DataType> refDataType)
+    public <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, CapellaElement referenceElement, Ref<DataType> refDataType)
     {
         var sessionUri = this.capellaSessionService.GetSession(referenceElement).getSessionResource().getURI();
         
@@ -1138,8 +1215,8 @@ public final class DstController implements IDstController
                 .collect(Collectors.toList());
         
         var optionalScale = dataTypes.stream()
-                .filter(x -> AreTheseEquals(x.getName(), scale.getName(), true) 
-                        || AreTheseEquals(x.getName(), scale.getShortName(), true))
+                .filter(x -> AreTheseEquals(x.getName(), thing.getName(), true) 
+                        || AreTheseEquals(x.getName(), thing.getShortName(), true))
                 .findAny();
         
         if(optionalScale.isPresent())

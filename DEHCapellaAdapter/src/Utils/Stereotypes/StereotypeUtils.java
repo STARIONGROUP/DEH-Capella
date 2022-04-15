@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.emf.ecore.EClass;
@@ -43,10 +44,16 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.cs.ArchitectureAllocation;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
+import org.polarsys.capella.core.data.cs.provider.ArchitectureAllocationItemProvider;
 import org.polarsys.capella.core.data.fa.FaPackage;
+import org.polarsys.capella.core.data.helpers.cs.delegates.ArchitectureAllocationHelper;
 import org.polarsys.capella.core.data.information.InformationPackage;
 import org.polarsys.capella.core.data.information.datatype.DatatypePackage;
 import org.polarsys.capella.core.data.information.datavalue.DatavaluePackage;
+import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
+import org.polarsys.capella.core.data.la.LaPackage;
 import org.polarsys.capella.core.data.pa.PaPackage;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementPackage;
@@ -54,6 +61,7 @@ import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 import org.polarsys.kitalpha.emde.model.Element;
 
+import Enumerations.CapellaArchitecture;
 import Utils.Ref;
 
 /**
@@ -92,7 +100,24 @@ public final class StereotypeUtils
     public static String GetShortName(NamedElement namedElement)
     {
         return GetShortName(namedElement.getName());
+    }    
+
+    /**
+     * Gets a 10-25 compliant short name from the provided {@linkplain Requirement} requirement ID or name
+     * 
+     * @param requirement the {@linkplain Requirement} to base the short name on its name
+     * @return a {@linkplain string}
+     */
+    public static String GetShortName(Requirement requirement)
+    {
+        if(StringUtils.isBlank(requirement.getRequirementId()))
+        {
+            return GetShortName(requirement.getName());
+        }
+
+        return requirement.getRequirementId();        
     }
+    
     /**
      * Gets the children from the provided {@linkplain EObject} if they are assignable from with the provided {@linkplain Class}
      * 
@@ -106,7 +131,7 @@ public final class StereotypeUtils
     {
         var result = new ArrayList<TCapellaElement>();
         
-        if(element.eContents() == null)
+        if(element == null || element.eContents() == null)
         {
             return result;
         }
@@ -248,10 +273,30 @@ public final class StereotypeUtils
      */
     private static List<EPackage> GetEPackages()
     {
-        return Arrays.asList(PaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, 
+        return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, 
                 InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE);
     }
 
+    /**
+     * Gets the containing {@linkplain CapellaArchitecture} of the provided {@linkplain CapellaElemet}
+     * 
+     * @param capellaElement the {@linkplain CapellaElement}
+     * @return the {@linkplain CapellaArchitecture}
+     */
+    @SuppressWarnings("null")
+    public static CapellaArchitecture GetArchitecture(CapellaElement capellaElement)
+    {
+        var parent = capellaElement.eContainer();
+        BlockArchitecture architecture;
+        
+        while(!(parent instanceof BlockArchitecture && (architecture = (BlockArchitecture)parent) != null))
+        {
+            parent = parent.eContainer();
+        }
+        
+        return CapellaArchitecture.From(architecture);
+    }
+    
     /**
      * Gets the highest {@linkplain RequirementPkg} that contains the provided {@linkplain Requirement}
      * 
@@ -270,5 +315,50 @@ public final class StereotypeUtils
         }
         
         return previousParent;
+    }
+
+    /**
+     * Gets value representation string out of the specified {@linkplain LiteralNumericValue}
+     * 
+     * @param value the {@linkplain LiteralNumericValue}
+     * @return a {@linkplain String}
+     */
+    public static String GetValueRepresentation(LiteralNumericValue value)
+    {         
+        var unit = StereotypeUtils.GetUnitRepresention(value);
+        
+        return String.format("%s%s", value.getValue(), unit == null ? StereotypeUtils.GetTypeRepresentation(value) : unit);
+    }
+    
+    /**
+     * Gets the type of the provided value as string
+     * 
+     * @param value the {@linkplain LiteralNumericValue}
+     * @return a {@linkplain String}
+     */
+    private static String GetTypeRepresentation(LiteralNumericValue value)
+    {
+        if(value.getType() != null)
+        {
+            return String.format(" %s", value.getType().getName());
+        }
+        
+        return " ";
+    }
+
+    /**
+     * Gets the {@linkplain Unit} as string
+     * 
+     * @param value the {@linkplain LiteralNumericValue}
+     * @return a {@linkplain String}
+     */
+    private static String GetUnitRepresention(LiteralNumericValue value)
+    {
+        if(value.getUnit() != null)
+        {
+            return String.format(" [%s]", value.getUnit().getName());
+        }
+        
+        return null;
     }
 }

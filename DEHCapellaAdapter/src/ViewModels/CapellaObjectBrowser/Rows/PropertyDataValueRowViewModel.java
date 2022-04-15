@@ -24,8 +24,12 @@
 package ViewModels.CapellaObjectBrowser.Rows;
 
 import org.polarsys.capella.core.data.information.datavalue.DataValue;
+import org.polarsys.capella.core.data.information.datavalue.EnumerationLiteral;
+import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
+import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
 
+import Utils.Stereotypes.StereotypeUtils;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 
@@ -56,40 +60,21 @@ public class PropertyDataValueRowViewModel extends PropertyValueBaseRowViewModel
     {
         if(this.GetElement() instanceof LiteralNumericValue)
         {
-            var property = (LiteralNumericValue)this.GetElement();            
-            var unit = this.GetUnit(property);
-            
-            return String.format("%s%s", property.getValue(), unit == null ? this.GetType(property) : unit);
+            return StereotypeUtils.GetValueRepresentation((LiteralNumericValue)this.GetElement());
         }
+        else if(this.GetElement() instanceof LiteralBooleanValue) 
+        {
+            return (String.valueOf(((LiteralBooleanValue)this.GetElement()).isValue()));
+        }
+        else if(this.GetElement() instanceof LiteralStringValue) 
+        {
+            return (((LiteralStringValue)this.GetElement()).getValue());
+        }
+        else if(this.GetElement() instanceof EnumerationLiteral)
+        {
+            return ((EnumerationLiteral)this.GetElement()).getDomainValue().getName();
+        }   
         
         return "";
-    }
-
-    /**
-     * @param property
-     * @return
-     */
-    private String GetType(LiteralNumericValue property)
-    {
-        if(property.getType() != null)
-        {
-            return String.format(" %s", property.getType().getName());
-        }
-        
-        return " ";
-    }
-
-    /**
-     * @param property
-     * @return
-     */
-    private String GetUnit(LiteralNumericValue property)
-    {
-        if(property.getUnit() != null)
-        {
-            return String.format(" [%s]", property.getUnit().getName());
-        }
-        
-        return null;
     }
 }

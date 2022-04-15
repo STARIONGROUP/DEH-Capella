@@ -23,7 +23,9 @@
  */
 package ViewModels.CapellaObjectBrowser;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import javax.swing.tree.TreeModel;
 
@@ -36,6 +38,7 @@ import Services.CapellaSession.ICapellaSessionService;
 import ViewModels.ObjectBrowserBaseViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
 
 /**
@@ -93,8 +96,19 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
     @Override
     public void BuildTree(Collection<EObject> elements)
     {
+        RootRowViewModel rootRowViewModel;
+        
+        if(elements != null)
+        {
+            rootRowViewModel = new RootRowViewModel("", (List<EObject>)elements);
+        }
+        else
+        {
+            rootRowViewModel = this.SessionService.GetModels();
+        }
+        
         this.browserTreeModel.Value(DefaultOutlineModel.createOutlineModel(
-                new CapellaObjectBrowserTreeViewModel(this.SessionService.GetModels()),
+                new CapellaObjectBrowserTreeViewModel(rootRowViewModel),
                 new CapellaObjectBrowserTreeRowViewModel(), true));
                 
         this.isTheTreeVisible.Value(true);

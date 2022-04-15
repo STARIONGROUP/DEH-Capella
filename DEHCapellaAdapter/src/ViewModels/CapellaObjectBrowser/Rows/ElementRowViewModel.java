@@ -25,10 +25,12 @@ package ViewModels.CapellaObjectBrowser.Rows;
 
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.requirement.Requirement;
 
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
@@ -40,12 +42,7 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
  * @param <TElement> the type of {@linkplain CapellaElement} this row view model represents
  */
 public abstract class ElementRowViewModel<TElement extends CapellaElement> implements IElementRowViewModel<TElement>
-{
-    /**
-     * The current class Logger
-     */
-    protected final Logger Logger = LogManager.getLogger();
-    
+{    
     /**
      * The value indicating whether this row should be highlighted as "selected for transfer"
      */
@@ -225,9 +222,14 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
     {
         if(element != null)
         {
-            if(this.element instanceof NamedElement)
+            if(this.element instanceof Requirement && !StringUtils.isBlank(((Requirement)this.element).getRequirementId()))
             {
-                this.name = ((NamedElement)this.element).getName();
+                var requirement = (Requirement)this.element;
+                this.name = String.format("%s - %s", requirement.getRequirementId(), requirement.getName());
+            }
+            else if(this.element instanceof NamedElement)
+            {
+                this.name =  ((NamedElement)this.element).getName();
             }
             else
             {

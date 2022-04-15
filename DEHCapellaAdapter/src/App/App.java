@@ -30,9 +30,9 @@ import static org.picocontainer.Characteristics.NO_CACHE;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.core.runtime.Platform;
-import org.osgi.framework.FrameworkUtil;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.picocontainer.Characteristics;
 
 import DstController.DstController;
@@ -54,12 +54,16 @@ import Services.CapellaSession.ISiriusSessionManagerWrapper;
 import Services.CapellaSession.SiriusSessionManagerWrapper;
 import Services.CapellaTransaction.CapellaTransactionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
+import Services.HistoryService.CapellaLocalExchangeHistoryService;
+import Services.HistoryService.ICapellaLocalExchangeHistoryService;
 import Services.Mapping.IMapCommandService;
 import Services.Mapping.MapCommandService;
 import Services.MappingConfiguration.CapellaMappingConfigurationService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingEngineService.IMappingEngineService;
 import Services.MappingEngineService.MappingEngineService;
+import Services.VersionNumber.CapellaAdapterVersionNumberService;
+import Services.VersionNumber.IAdapterVersionNumberService;
 import ViewModels.CapellaHubBrowserPanelViewModel;
 import ViewModels.CapellaImpactViewPanelViewModel;
 import ViewModels.CapellaImpactViewViewModel;
@@ -70,8 +74,10 @@ import ViewModels.TransferControlViewModel;
 import ViewModels.CapellaObjectBrowser.CapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.ContextMenu.HubBrowserContextMenuViewModel;
-import ViewModels.Dialogs.DstMappingConfigurationDialogViewModel;
-import ViewModels.Dialogs.Interfaces.IDstMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.DstToHubMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.HubToDstMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.Interfaces.IDstToHubMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.Interfaces.IHubToDstMappingConfigurationDialogViewModel;
 import ViewModels.Interfaces.ICapellaHubBrowserPanelViewModel;
 import ViewModels.Interfaces.ICapellaImpactViewPanelViewModel;
 import ViewModels.Interfaces.ICapellaImpactViewViewModel;
@@ -80,6 +86,8 @@ import ViewModels.Interfaces.IHubBrowserContextMenuViewModel;
 import ViewModels.Interfaces.IHubBrowserPanelViewModel;
 import ViewModels.Interfaces.IRequirementImpactViewViewModel;
 import ViewModels.Interfaces.ITransferControlViewModel;
+import ViewModels.MappedElementListView.CapellaMappedElementListViewViewModel;
+import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
 
 /**
  * The {@linkplain App} class is the main entry point for the DEH-Capella adapter
@@ -112,16 +120,8 @@ public class App extends AbstractUIPlugin
      */
     private void LogAdapterInitialization()
     {
-        var versionString = "";
-        var bundle = FrameworkUtil.getBundle(this.getClass());
-        
-        if(bundle != null)
-        {
-            var version = bundle.getVersion();
-            versionString = String.format("Version %d.%d.%d ", version.getMajor(), version.getMinor(), version.getMicro());
-        }
-        
-        var message = String.format("DEH-Capella adapter %sinitialized with success", versionString);
+        var version = AppContainer.Container.getComponent(IAdapterVersionNumberService.class).GetVersion();
+        var message = String.format("DEH-Capella adapter %s initialized with success", version);
         
         this.logger.info("----------------------------------------------------------------------------");
         this.logger.info(String.format("---------%s---------", message));
@@ -164,6 +164,8 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.as(CACHE).addComponent(IMapCommandService.class, MapCommandService.class);
             AppContainer.Container.addComponent(ISiriusSessionManagerWrapper.class, SiriusSessionManagerWrapper.class);
             AppContainer.Container.as(CACHE).addComponent(ICapellaTransactionService.class, CapellaTransactionService.class);
+            AppContainer.Container.addComponent(IAdapterVersionNumberService.class, CapellaAdapterVersionNumberService.class);
+            AppContainer.Container.as(CACHE).addComponent(ICapellaLocalExchangeHistoryService.class, CapellaLocalExchangeHistoryService.class);
 
             AppContainer.Container.addComponent(ComponentToElementMappingRule.class.getName(), ComponentToElementMappingRule.class);
             AppContainer.Container.addComponent(ElementToComponentMappingRule.class.getName(), ElementToComponentMappingRule.class);
@@ -177,9 +179,11 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.addComponent(ITransferControlViewModel.class, TransferControlViewModel.class);
             AppContainer.Container.addComponent(ICapellaObjectBrowserViewModel.class, CapellaObjectBrowserViewModel.class);
             AppContainer.Container.addComponent(ICapellaImpactViewViewModel.class, CapellaImpactViewViewModel.class);
-            AppContainer.Container.addComponent(IDstMappingConfigurationDialogViewModel.class, DstMappingConfigurationDialogViewModel.class);
-            AppContainer.Container.as(NO_CACHE).addComponent(IHubBrowserContextMenuViewModel.class, HubBrowserContextMenuViewModel.class);           
-            AppContainer.Container.addComponent(ICapellaHubBrowserPanelViewModel.class, CapellaHubBrowserPanelViewModel.class);           
+            AppContainer.Container.addComponent(IDstToHubMappingConfigurationDialogViewModel.class, DstToHubMappingConfigurationDialogViewModel.class);
+            AppContainer.Container.addComponent(IHubToDstMappingConfigurationDialogViewModel.class, HubToDstMappingConfigurationDialogViewModel.class);
+            AppContainer.Container.as(NO_CACHE).addComponent(IHubBrowserContextMenuViewModel.class, HubBrowserContextMenuViewModel.class);
+            AppContainer.Container.addComponent(ICapellaHubBrowserPanelViewModel.class, CapellaHubBrowserPanelViewModel.class);
+            AppContainer.Container.addComponent(ICapellaMappedElementListViewViewModel.class, CapellaMappedElementListViewViewModel.class);
         }
         catch (Exception exception) 
         {
