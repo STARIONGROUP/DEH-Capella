@@ -87,7 +87,7 @@ import org.eclipse.sirius.business.api.session.SessionManager;
 
 public class CapellaSessionServiceTestFixture extends CapellaSessionRelatedBaseTestFixture
 {
-    private CapellaSessionService service;
+    private ICapellaSessionService service;
     private ObservableValue<Session> sessionAdded;
     private ObservableValue<Session> sessionRemoved;
     private ObservableValue<Session> sessionUpdated;
@@ -145,7 +145,7 @@ public class CapellaSessionServiceTestFixture extends CapellaSessionRelatedBaseT
                             .GetContainedRows().get(0)).GetContainedRows().get(0))
                             .GetContainedRows().get(1)).GetContainedRows().get(4)).GetRequirementType();
         
-        assertEquals(RequirementType.Undefined, requirementType);
+        assertEquals(null, requirementType);
         assertEquals(StringUtils.EMPTY, requirementType.toString());
     }
 

@@ -30,6 +30,10 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellamodeller.Project;
+import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
+import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
@@ -74,4 +78,96 @@ public interface ICapellaSessionService
      * @return a {@linkplain HashMap} of {@linkplain URI} and a {@linkplain List} of {@linkplain CapellaElement}
      */
     HashMap<URI, List<CapellaElement>> GetAllCapellaElementsFromOpenSessions();
+
+    /**
+     * Gets the {@linkplain Observable} of {@linkplain Session} that indicates when the emitted session gets saved
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
+     */
+    Observable<Session> SessionUpdated();
+
+    /**
+     * Gets the {@linkplain Project} from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
+     * 
+     * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
+     * @return a {@linkplain CapellaElement}
+     */
+    Project GetProject(CapellaElement referenceElement);
+
+    /**
+     * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
+     * 
+     * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
+     * @param architectureType the architecture {@linkplain Type}
+     * @return a {@linkplain CapellaElement}
+     */
+    CapellaElement GetTopElement(CapellaElement referenceElement, Type architectureType);
+
+    /**
+     * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement} in the Physical Architecture package
+     * 
+     * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
+     * @return a {@linkplain CapellaElement}
+     */
+    CapellaElement GetTopElement(CapellaElement referenceElement);
+
+    /**
+     * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
+     * 
+     * @param project the {@linkplain Project} used to search the correct session
+     * @param architectureType the architecture {@linkplain Type}
+     * @return a {@linkplain CapellaElement}
+     */
+    Component GetTopElement(Project project, Type architectureType);
+
+    /**
+     * Gets the top element from the provided {@linkplain Session} in the Physical Architecture package
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain PhysicalComponent}
+     */
+    PhysicalComponent GetTopElement(Session session);
+
+    /**
+     * Gets the open {@linkplain Session}s
+     * 
+     * @return a {@linkplain List} of {@linkplain Session}
+     */
+    List<Session> GetOpenSessions();
+
+    /**
+     * Gets the {@linkplain Project} element from the provided {@linkplain Session}
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain Project} element
+     */
+    Project GetProject(Session session);
+
+    /**
+     * Gets the current {@linkplain Session} to work with
+     * 
+     * @return the {@linkplain Session}
+     */
+    Session GetCurrentSession();
+
+    /**
+     * Gets the {@linkplain Project} element from the {@linkplain #GetCurrentSession()}
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain Project} element
+     */
+    Project GetProject();
+
+    /**
+     * Sets the {@linkplain #GetCurrentSession()}
+     * @param session the new {@linkplain Session}
+     */
+    void SetCurrentSession(Session session);
+
+    /**
+     * Gets the top element from the {@linkplain #GetCurrentSession()} in the Physical Architecture package
+     * 
+     * @return a {@linkplain PhysicalComponent}
+     */
+    PhysicalComponent GetTopElement();
 }

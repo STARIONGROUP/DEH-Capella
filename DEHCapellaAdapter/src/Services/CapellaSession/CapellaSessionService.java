@@ -36,6 +36,11 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellamodeller.Project;
+import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
+import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
+import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
 import Reactive.ObservableValue;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
@@ -64,7 +69,7 @@ public class CapellaSessionService implements ICapellaSessionService
     /**
      * Backing field for {@linkplain HasAnyOpenSessionObservable}
      */
-    private ObservableValue<Boolean> hasAnyOpenSession = new ObservableValue<Boolean>(false, Boolean.class);
+    private ObservableValue<Boolean> hasAnyOpenSession = new ObservableValue<>(false, Boolean.class);
 
     /**
      * Gets the {@linkplain Observable} of value indicating whether there is any session open
@@ -77,6 +82,57 @@ public class CapellaSessionService implements ICapellaSessionService
         return this.hasAnyOpenSession.Observable();
     }
     
+    /**
+     * Backing field for {@linkplain HasAnyOpenSessionObservable}
+     */
+    private ObservableValue<Session> sessionUpdated = new ObservableValue<>();
+
+    /**
+     * Gets the {@linkplain Observable} of {@linkplain Session} that indicates when the emitted session gets saved
+     * 
+     * @return an {@linkplain Observable} of {@linkplain Session}
+     */
+    @Override
+    public Observable<Session> SessionUpdated()
+    {
+        return this.sessionUpdated.Observable();
+    }
+
+    /**
+     * Backing field for the {@linkplain #GetCurrentSession()}
+     */
+    private Session currentSession;
+    
+    /**
+     * Gets the current {@linkplain Session} to work with
+     * 
+     * @return the {@linkplain Session}
+     */
+    @Override
+    public Session GetCurrentSession()
+    {
+        if(currentSession == null) 
+        {
+            this.currentSession = this.GetOpenSessions().get(0);
+        }
+        else if(!this.GetOpenSessions().contains(this.currentSession))
+        {
+            this.currentSession = null;
+        }
+        
+        return this.currentSession;
+    }
+    
+    /**
+     * Sets the {@linkplain #GetCurrentSession()}
+     * @param session the new {@linkplain Session}
+     */
+    @Override
+    public void SetCurrentSession(Session session)
+    {
+        this.currentSession = session;
+    }
+        
     /**
      * Initializes a new {@linkplain CapellaSessionService}
      * 
@@ -93,7 +149,11 @@ public class CapellaSessionService implements ICapellaSessionService
         this.sessionManager.AddListener(this.sessionListener);
 
         this.sessionListener.SessionUpdated()
-            .subscribe(x -> this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession()));
+            .subscribe(x -> 
+            {
+                this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession());
+                this.sessionUpdated.Value(x);
+            });
             
         this.sessionListener.SessionAdded()
             .subscribe(x -> this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession()));
@@ -125,6 +185,16 @@ public class CapellaSessionService implements ICapellaSessionService
         return this.sessionManager.HasAnyOpenSession();
     }
     
+    /**
+     * Gets the open {@linkplain Session}s
+     * 
+     * @return a {@linkplain List} of {@linkplain Session}
+     */
+    @Override
+    public List<Session> GetOpenSessions()
+    {
+        return this.sessionManager.GetSessions().stream().collect(Collectors.toList());
+    }
     
     /**
      * Gets the models of the active sessions
@@ -192,5 +262,117 @@ public class CapellaSessionService implements ICapellaSessionService
         });
         
         return sessionAndObjectsMap;
+    }
+
+    /**
+     * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement} in the Physical Architecture package
+     * 
+     * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
+     * @return a {@linkplain CapellaElement}
+     */
+    @Override
+    public CapellaElement GetTopElement(CapellaElement referenceElement)
+    {
+        return this.GetTopElement(referenceElement, Type.PA);
+    }
+
+    /**
+     * Gets the top element from the provided {@linkplain Session} in the Physical Architecture package
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain PhysicalComponent}
+     */
+    @Override
+    public PhysicalComponent GetTopElement(Session session)
+    {
+        return (PhysicalComponent) this.GetTopElement(this.GetProject(session), Type.PA);
+    }
+    
+    /**
+     * Gets the top element from the {@linkplain #GetCurrentSession()} in the Physical Architecture package
+     * 
+     * @return a {@linkplain PhysicalComponent}
+     */
+    @Override
+    public PhysicalComponent GetTopElement()
+    {
+        return (PhysicalComponent) this.GetTopElement(this.GetProject(), Type.PA);
+    }
+        
+    /**
+     * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
+     * 
+     * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
+     * @param architectureType the architecture {@linkplain Type}
+     * @return a {@linkplain Component}
+     */
+    @Override
+    public Component GetTopElement(CapellaElement referenceElement, Type architectureType)
+    {
+        return GetTopElement(this.GetProject(referenceElement), architectureType);
+    }
+
+    /**
+     * Gets the top element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
+     * 
+     * @param project the {@linkplain Project} used to search the correct session
+     * @param architectureType the architecture {@linkplain Type}
+     * @return a {@linkplain CapellaElement}
+     */
+    @Override
+    public Component GetTopElement(Project project, Type architectureType)
+    {
+        var architecture = BlockArchitectureExt.getBlockArchitecture(architectureType, project);
+        return architecture.getSystem();
+    }
+            
+    /**
+     * Gets the {@linkplain Project} element from the {@linkplain Session} that owns the provided {@linkplain CapellaElement}
+     * 
+     * @param referenceElement the {@linkplain CapellaElement} used to search the correct session
+     * @return a {@linkplain CapellaElement}
+     */
+    @Override
+    public Project GetProject(CapellaElement referenceElement)
+    {
+        var session = this.GetSession(referenceElement);
+        return this.GetProject(session);
+    }
+
+
+    /**
+     * Gets the {@linkplain Project} element from the {@linkplain #GetCurrentSession()}
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain Project} element
+     */
+    @Override
+    public Project GetProject()
+    {
+        return this.GetProject(this.GetCurrentSession());
+    }
+    
+    /**
+     * Gets the {@linkplain Project} element from the provided {@linkplain Session}
+     * 
+     * @param session the {@linkplain Session}
+     * @return a {@linkplain Project} element
+     */
+    @Override
+    public Project GetProject(Session session)
+    {
+        var contents = session.getTransactionalEditingDomain().getResourceSet().getAllContents();
+        
+        Notifier element;
+        
+        while(contents.hasNext() && (element = contents.next()) !=null)
+        {
+            if(element instanceof Project)
+            {
+                return (Project)element;
+            }
+        }
+        
+        return null;
     }
 }

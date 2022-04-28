@@ -23,7 +23,6 @@
  */
 package Renderers;
 
-
 import java.awt.Color;
 
 import javax.swing.Icon;
@@ -31,13 +30,12 @@ import javax.swing.Icon;
 import org.polarsys.capella.core.data.capellacore.AbstractPropertyValue;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.capellamodeller.Project;
+import org.polarsys.capella.core.data.capellamodeller.SystemEngineering;
 import org.polarsys.capella.core.data.cs.Component;
-import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.fa.ComponentPort;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.DataValue;
 import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.RequirementPackage;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 
 import Utils.ImageLoader.ImageLoader;
@@ -147,9 +145,9 @@ public class CapellaObjectBrowserRenderDataProvider extends ObjectBrowserRenderD
         {
             var element = (IElementRowViewModel<?>)rowViewModel;
             
-            if(element.GetElement() instanceof Project)
+            if(element.GetElement() instanceof SystemEngineering)
             {
-                return ImageLoader.GetIcon(ClassKind.Iteration);
+                return ImageLoader.GetDstIcon();
             }
             else if(element.GetElement() instanceof Structure)
             {

@@ -23,6 +23,7 @@
  */
 package ViewModels.CapellaObjectBrowser.Rows;
 
+import Utils.Stereotypes.CapellaTypeEnumerationUtility;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import Utils.Stereotypes.RequirementType;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
@@ -39,7 +40,7 @@ public class RequirementRowViewModel extends ElementRowViewModel<Requirement>
      * @param parent the {@linkplain IRowViewModel} parent of this view model
      * @param element the {@linkplain TRequirement} represented by this row view model
      */
-    protected RequirementRowViewModel(IElementRowViewModel<?> parent, Requirement element)
+    public RequirementRowViewModel(IElementRowViewModel<?> parent, Requirement element)
     {
         super(parent, element);
     }
@@ -61,6 +62,6 @@ public class RequirementRowViewModel extends ElementRowViewModel<Requirement>
      */
     public RequirementType GetRequirementType()
     {
-        return RequirementType.From(this.GetElement().getClass());
+        return CapellaTypeEnumerationUtility.From(this.GetElement().getClass());
     }
 }

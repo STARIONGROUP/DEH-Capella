@@ -31,9 +31,9 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import DstController.IDstController;
 import HubController.IHubController;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
-import Services.MappingEngineService.MappingRule;
 import Utils.Ref;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.Thing;
@@ -46,42 +46,22 @@ import cdp4dal.operations.ThingTransactionImpl;
 import cdp4dal.operations.TransactionContextResolver;
 
 /**
- * The DstToHubBaseMappingRule is the mapping rule for rules that maps from DST to the Hub
+ * The DstToHubBaseMappingRule is the mapping rule for rules that maps from the DST to the HUB
  *  
- * @param TInput the input type the rule will process
- * @param TOutput the output type the rule will return
+ * @param <TInput> the input type the rule will process
+ * @param <TOutput> the output type the rule will return
  */
-public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> extends MappingRule<TInput, TOutput>
+public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> extends CapellaBaseMappingRule<TInput, TOutput>
 {
-    /**
-     * The {@linkplain IHubController}
-     */
-    protected final IHubController hubController;
-
-    /**
-     * The {@linkplain IMagicDrawMappingConfigurationService} instance
-     */
-    protected final ICapellaMappingConfigurationService mappingConfiguration;
-    
-    /**
-     * Initializes a new {@linkplain DstToHubBaseMappingRule}
-     */
-    public DstToHubBaseMappingRule()
-    {
-        this.hubController = null;
-        this.mappingConfiguration = null;        
-    }
-    
     /**
      * Initializes a new {@linkplain DstToHubBaseMappingRule}
      * 
      * @param hubController the {@linkplain IHubController}
-     * @param mappingConfiguration the {@linkplain IMagicDrawMappingConfigurationService}
+     * @param mappingConfiguration the {@linkplain ICapellaMappingConfigurationService}
      */
     protected DstToHubBaseMappingRule(IHubController hubController, ICapellaMappingConfigurationService mappingConfiguration)
     {
-        this.hubController = hubController;
-        this.mappingConfiguration = mappingConfiguration;        
+        super(hubController, mappingConfiguration);
     }
     
     /**
@@ -94,7 +74,7 @@ public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> ex
     protected void MapCategory(CategorizableThing thing, String categoryName, ClassKind... permissibleClass)
     {
         try
-        {         
+        {
             Ref<Category> refCategory = new Ref<>(Category.class);
             var categoryShortName = GetShortName(categoryName);
             
@@ -115,7 +95,7 @@ public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> ex
             }
             else
             {
-                this.Logger.debug(String.format("The Category %s could not be found or created for the element %s", categoryShortName, thing));
+                this.Logger.debug(String.format("The Category %s could not be found or created", categoryShortName));
             }
         }
         catch(Exception exception)
@@ -174,6 +154,6 @@ public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> ex
             this.Logger.error(String.format("Could not create the %s because %s", newThing.getClassKind(), exception));
             this.Logger.catching(exception);
             return false;
-        }       
+        }
     }
 }

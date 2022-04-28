@@ -26,6 +26,7 @@ package ViewModels.CapellaObjectBrowser.Rows;
 import java.lang.reflect.Modifier;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
 import org.polarsys.capella.core.data.capellacore.AbstractPropertyValue;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.information.Property;
@@ -88,7 +89,7 @@ public class PropertyRowViewModel extends ElementRowViewModel<Property> implemen
     }
 
     /**
-     * @return
+     * Process data values for the represented {@linkplain Property}
      */
     @SuppressWarnings("unchecked")
     private void ProcessDataValues()
@@ -117,7 +118,7 @@ public class PropertyRowViewModel extends ElementRowViewModel<Property> implemen
             } 
             catch (Exception exception)
             {
-                this.Logger.catching(exception);
+                LogManager.getLogger().catching(exception);
             }
         }
     }

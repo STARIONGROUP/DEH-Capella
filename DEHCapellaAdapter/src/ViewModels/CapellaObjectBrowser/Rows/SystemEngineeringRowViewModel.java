@@ -24,6 +24,7 @@
 package ViewModels.CapellaObjectBrowser.Rows;
 
 import org.polarsys.capella.core.data.capellamodeller.SystemEngineering;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
 
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
@@ -32,7 +33,7 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 /**
  * The {@linkplain SystemEngineeringRowViewModel} is the row view model that represent a {@linkplain SystemEngineering} model in the capella browser
  */
-public class SystemEngineeringRowViewModel extends ProjectStructuralElementRowViewModel<SystemEngineering, ComponentArchitecture>
+public class SystemEngineeringRowViewModel extends ProjectStructuralElementRowViewModel<SystemEngineering, BlockArchitecture>
 {
     /**
      * Initializes a new {@linkplain ComponentRowViewModel}
@@ -42,7 +43,7 @@ public class SystemEngineeringRowViewModel extends ProjectStructuralElementRowVi
      */
     public SystemEngineeringRowViewModel(IElementRowViewModel<?> parent, SystemEngineering element)
     {
-        super(parent, element, ComponentArchitecture.class);
+        super(parent, element, BlockArchitecture.class);
     }
     
     /**
@@ -51,8 +52,8 @@ public class SystemEngineeringRowViewModel extends ProjectStructuralElementRowVi
      * @param element the {@linkplain TContainedElement}
      */
     @Override
-    protected void AddToContainedRows(ComponentArchitecture element)
+    protected void AddToContainedRows(BlockArchitecture element)
     {
-        this.GetContainedRows().add(new ComponentArchitectureRowViewModel(this, (ComponentArchitecture)element));
+        this.GetContainedRows().add(new BlockArchitectureRowViewModel(this, (BlockArchitecture)element));
     }
 }

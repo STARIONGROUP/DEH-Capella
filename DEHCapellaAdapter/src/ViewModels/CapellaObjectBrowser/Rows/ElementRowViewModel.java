@@ -23,12 +23,17 @@
  */
 package ViewModels.CapellaObjectBrowser.Rows;
 
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.requirement.Requirement;
 
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
+import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 
 /**
@@ -37,12 +42,7 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
  * @param <TElement> the type of {@linkplain CapellaElement} this row view model represents
  */
 public abstract class ElementRowViewModel<TElement extends CapellaElement> implements IElementRowViewModel<TElement>
-{
-    /**
-     * The current class Logger
-     */
-    protected final Logger Logger = LogManager.getLogger();
-    
+{    
     /**
      * The value indicating whether this row should be highlighted as "selected for transfer"
      */
@@ -185,8 +185,6 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
     
     /**
      * Sets a value indicating whether the current row is expanded
-     * 
-     * @return a {@linkplain boolean}
      */
     @Override
     public void SetIsExpanded(boolean isExpanded)
@@ -198,7 +196,7 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
      * Initializes a new {@linkplain ElementRowViewModel}
      * 
      * @param parent the {@linkplain IElementRowViewModel} parent view model of this row view model
-     * @param element the {@linkplain TElement} {@linkplain Element} which is represented
+     * @param element the {@linkplain #TElement} {@linkplain Element} which is represented
      */
     public ElementRowViewModel(IElementRowViewModel<?> parent, TElement element)
     {
@@ -224,9 +222,14 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
     {
         if(element != null)
         {
-            if(this.element instanceof NamedElement)
+            if(this.element instanceof Requirement && !StringUtils.isBlank(((Requirement)this.element).getRequirementId()))
             {
-                this.name = ((NamedElement)this.element).getName();
+                var requirement = (Requirement)this.element;
+                this.name = String.format("%s - %s", requirement.getRequirementId(), requirement.getName());
+            }
+            else if(this.element instanceof NamedElement)
+            {
+                this.name =  ((NamedElement)this.element).getName();
             }
             else
             {
@@ -250,11 +253,25 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
      * Updates the represented {@linkplain CapellaElement} with the specified one
      * 
      * @param capellaElement the new {@linkplain CapellaElement}
+     * @param shouldHighlight a value indicating whether the highlight should be updated
      */
     @SuppressWarnings("unchecked")
-    public void UpdateElement(CapellaElement capellaElement)
+    public void UpdateElement(CapellaElement capellaElement, boolean shouldHighlight)
     {
         this.element = (TElement)capellaElement;
         this.UpdateProperties();
+        
+        if(shouldHighlight)
+        {
+            this.isHighlighted = true;
+        }
+        
+        if(this instanceof IHaveContainedRows)
+        {
+            var thisAsParent = (IHaveContainedRows<?>)this;
+            
+            thisAsParent.GetContainedRows().clear();
+            thisAsParent.ComputeContainedRows();
+        }
     }
 }

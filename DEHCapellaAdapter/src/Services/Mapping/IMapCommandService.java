@@ -31,7 +31,6 @@ import io.reactivex.Observable;
  */
 public interface IMapCommandService
 {
-
     /**
      * Maps the selection from the {@linkplain ISelectionService} to the specified {@linkplain MappingDirection}
      * 
@@ -58,4 +57,13 @@ public interface IMapCommandService
      * @return a {@linkplain Boolean} value
      */
     boolean CanExecute();
+
+    /**
+     * Maps the specified top element to the specified {@linkplain MappingDirection}
+     * 
+     * @param <TElement> the type of the top element
+     * @param topElement the {@linkplain #TElement} top element
+     * @param mappingDirection the {@linkplain MappingDirection}
+     */
+    <TElement> void MapTopElement(TElement topElement, MappingDirection mappingDirection);
 }

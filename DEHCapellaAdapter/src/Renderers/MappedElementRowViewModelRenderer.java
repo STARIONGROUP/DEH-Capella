@@ -40,8 +40,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import Annotations.ExludeFromCodeCoverageGeneratedReport;
+import Enumerations.MappingDirection;
+import ViewModels.Interfaces.IHaveTargetArchitecture;
 import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.Thing;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
+import Enumerations.CapellaArchitecture;
+import java.awt.FlowLayout;
+import java.awt.BorderLayout;
+import javax.swing.BoxLayout;
+import net.miginfocom.swing.MigLayout;
  
 /**
  * The {@linkplain MappedElementRowViewModelRenderer} is the custom renderer that allows to display {@linkplain MappedElementRowViewModel} in a {@linkplain JList}
@@ -64,12 +73,35 @@ public class MappedElementRowViewModelRenderer extends JPanel implements ListCel
      * The {@linkplain JLabel} for the Hub Element
      */
     private JLabel hubElement;
+    
+    /**
+     * The {@linkplain JPanel} that contains the {@linkplain #targetArchitectureComboBox}
+     */
+    private JPanel targetArchitecturePanel;
+    
+    /**
+     * The {@linkplain JLabel} for the target architecture
+     */
+    private JLabel targetArchitectureLabel;
+    
+    /**
+     * The {@linkplain JComboBox} to choose the target architecture for the represented mapping
+     */
+    private JComboBox<CapellaArchitecture> targetArchitectureComboBox;
+
+    /**
+     * The {@linkplain MappingDirection} that applies to this represented mapping
+     */
+    private final MappingDirection mappingDirection;
 
     /**
      * Initializes a new {@linkplain MappedElementRowViewModelRenderer}
+     * 
+     * @param mappingDirection the {@linkplain MappingDirection} that applies to this renderer
      */
-    public MappedElementRowViewModelRenderer() 
+    public MappedElementRowViewModelRenderer(MappingDirection mappingDirection) 
     {
+        this.mappingDirection = mappingDirection;
         this.Initialize();
     }
 
@@ -79,25 +111,25 @@ public class MappedElementRowViewModelRenderer extends JPanel implements ListCel
     private void Initialize()
     {
         GridBagLayout gridBagLayout = new GridBagLayout();
-        gridBagLayout.columnWidths = new int[] {400, 0, 0};
-        gridBagLayout.rowHeights = new int[]{0, 0};
-        gridBagLayout.columnWeights = new double[]{0.0, 0.0, 1.0};
-        gridBagLayout.rowWeights = new double[]{1.0, Double.MIN_VALUE};
+        gridBagLayout.columnWidths = new int[] {400, 0, 0, 30};
+        gridBagLayout.rowHeights = new int[] {0};
+        gridBagLayout.columnWeights = new double[]{1.0, 0.0, 0.0, 1.0};
+        gridBagLayout.rowWeights = new double[]{1.0};
         setLayout(gridBagLayout);
         
         this.dstElement = new JLabel("");
         dstElement.setHorizontalAlignment(SwingConstants.CENTER);
         GridBagConstraints gbc_dstElement = new GridBagConstraints();
-        gbc_dstElement.anchor = GridBagConstraints.WEST;
-        gbc_dstElement.fill = GridBagConstraints.VERTICAL;
-        gbc_dstElement.insets = new Insets(5, 5, 0, 5);
-        gbc_dstElement.gridx = 0;
+        gbc_dstElement.fill = GridBagConstraints.BOTH;
+        gbc_dstElement.insets = new Insets(5, 5, 0, 0);
+        gbc_dstElement.gridx = mappingDirection == MappingDirection.FromDstToHub ? 0 : 3;
         gbc_dstElement.gridy = 0;
         add(this.dstElement, gbc_dstElement);
         
         JLabel lblNewLabel_1 = new JLabel("<html><body>&#x1F872;</body></html>");
         lblNewLabel_1.setHorizontalAlignment(SwingConstants.CENTER);
         GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
+        gbc_lblNewLabel_1.anchor = GridBagConstraints.EAST;
         gbc_lblNewLabel_1.fill = GridBagConstraints.VERTICAL;
         gbc_lblNewLabel_1.insets = new Insets(5, 5, 0, 5);
         gbc_lblNewLabel_1.gridx = 1;
@@ -109,9 +141,46 @@ public class MappedElementRowViewModelRenderer extends JPanel implements ListCel
         GridBagConstraints gbc_hubElement = new GridBagConstraints();
         gbc_hubElement.insets = new Insets(5, 5, 0, 5);
         gbc_hubElement.fill = GridBagConstraints.BOTH;
-        gbc_hubElement.gridx = 2;
+        gbc_hubElement.gridx = mappingDirection == MappingDirection.FromDstToHub ? 3 : 0;
         gbc_hubElement.gridy = 0;
         this.add(this.hubElement, gbc_hubElement);
+        
+        if(this.mappingDirection == MappingDirection.FromDstToHub)
+        {
+            return;
+        }
+        
+        this.targetArchitecturePanel = new JPanel();
+        targetArchitecturePanel.setBackground(Color.WHITE);
+        GridBagConstraints gbc_panel = new GridBagConstraints();
+        gbc_panel.insets = new Insets(0, 10, 0, 10);
+        gbc_panel.fill = GridBagConstraints.BOTH;
+        gbc_panel.gridx = 2;
+        gbc_panel.gridy = 0;
+        this.add(this.targetArchitecturePanel, gbc_panel);
+        GridBagLayout gbl_panel = new GridBagLayout();
+        gbl_panel.columnWidths = new int[] {0};
+        gbl_panel.rowHeights = new int[] {0, 0};
+        gbl_panel.columnWeights = new double[]{0.0};
+        gbl_panel.rowWeights = new double[]{0.0, 0.0};
+        this.targetArchitecturePanel.setLayout(gbl_panel);
+        
+        this.targetArchitectureLabel = new JLabel("Target Architecture");
+        GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
+        gbc_lblNewLabel.insets = new Insets(0, 0, 10, 5);
+        gbc_lblNewLabel.gridx = 0;
+        gbc_lblNewLabel.gridy = 0;
+        this.targetArchitecturePanel.add(this.targetArchitectureLabel, gbc_lblNewLabel);
+        
+        this.targetArchitectureComboBox = new JComboBox<CapellaArchitecture>();
+        targetArchitectureComboBox.setEditable(true);
+        this.targetArchitectureComboBox.setModel(new DefaultComboBoxModel<CapellaArchitecture>(CapellaArchitecture.values()));
+        this.targetArchitectureComboBox.setSelectedIndex(3);
+        this.targetArchitectureComboBox.setToolTipText("Select the target Architecture");
+        GridBagConstraints gbc_targetArchitecture = new GridBagConstraints();
+        gbc_targetArchitecture.gridx = 0;
+        gbc_targetArchitecture.gridy = 1;
+        this.targetArchitecturePanel.add(this.targetArchitectureComboBox, gbc_targetArchitecture);
     }
     
     /**
@@ -120,7 +189,7 @@ public class MappedElementRowViewModelRenderer extends JPanel implements ListCel
      * this method is called to generate a component on which getPreferredSizecan be invoked.
      * 
      * @param list The JList we're painting.
-     * @param value The value returned by list.getModel().getElementAt(index).
+     * @param rowViewModel The value returned by list.getModel().getElementAt(index).
      * @param index The cells index.
      * @param isSelected True if the specified cell was selected.
      * @param cellHasFocus True if the specified cell has the focus.
@@ -128,16 +197,25 @@ public class MappedElementRowViewModelRenderer extends JPanel implements ListCel
      */
     @Override
     public Component getListCellRendererComponent(JList<? extends MappedElementRowViewModel<? extends Thing, ?>> list,
-            MappedElementRowViewModel<? extends Thing, ?> value, int index, boolean isSelected, boolean cellHasFocus)
+            MappedElementRowViewModel<? extends Thing, ?> rowViewModel, int index, boolean isSelected, boolean cellHasFocus)
     {
-        this.dstElement.setText(value.GetDstElementRepresentation());
-        this.hubElement.setText(value.GetHubElementRepresentation());
+        this.dstElement.setText(rowViewModel.GetDstElementRepresentation());
+        this.hubElement.setText(rowViewModel.GetHubElementRepresentation());
         
-        this.UpdateRowStatus(value);
+        this.UpdateRowStatus(rowViewModel);
         
-        value.GetShouldCreateNewTargetElement().subscribe(x -> this.UpdateLabelsAndStatus(value));
+        rowViewModel.GetShouldCreateNewTargetElement().subscribe(x -> this.UpdateLabelsAndStatus(rowViewModel));
         
-        value.GetIsSelected().subscribe(x -> this.SetIsSelected(list, x));
+        if(this.mappingDirection == MappingDirection.FromHubToDst && rowViewModel instanceof IHaveTargetArchitecture)
+        {
+            var targetArchitectureRowViewModel = (IHaveTargetArchitecture)rowViewModel;
+            this.targetArchitectureComboBox.setSelectedItem(targetArchitectureRowViewModel.GetTargetArchitecture());
+            
+            targetArchitectureRowViewModel.GetTargetArchitectureObservable().subscribe(x -> this.targetArchitectureComboBox.setSelectedItem(x));
+            this.targetArchitectureComboBox.addActionListener(e -> targetArchitectureRowViewModel.SetTargetArchitecture(this.targetArchitectureComboBox.getSelectedItem()));
+        }
+                
+        rowViewModel.GetIsSelectedObservable().subscribe(x -> this.SetIsSelected(list, x));
                 
         this.SetIsSelected(list, isSelected);
  

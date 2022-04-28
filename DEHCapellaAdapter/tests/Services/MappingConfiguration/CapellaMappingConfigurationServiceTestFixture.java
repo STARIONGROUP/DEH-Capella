@@ -48,6 +48,7 @@ import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaSession.CapellaSessionRelatedBaseTestFixture;
 import Services.CapellaSession.ICapellaSessionService;
+import Services.CapellaTransaction.ICapellaTransactionService;
 import Utils.Ref;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import cdp4common.commondata.*;
@@ -62,6 +63,7 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
     private URI sessionUri;
     private ElementDefinition elementDefinition;
     private RequirementsSpecification requirementsSpecification;
+    private ICapellaTransactionService transactionService;
 
     /**
      * @throws java.lang.Exception
@@ -75,7 +77,8 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
         this.requirementsSpecification = new RequirementsSpecification(UUID.randomUUID(), null, null);
         
         this.sessionService = mock(ICapellaSessionService.class);
-        this.service = new CapellaMappingConfigurationService(this.hubController, this.sessionService);
+        this.transactionService = mock(ICapellaTransactionService.class);
+        this.service = new CapellaMappingConfigurationService(this.hubController, this.sessionService, this.transactionService);
     }
 
     @Test
@@ -97,11 +100,11 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
         assertDoesNotThrow(() -> result.Set(this.service.LoadMapping()));
         assertTrue(result.Get().isEmpty());
         
-        var componentExternalId = new ExternalIdentifier();
+        var componentExternalId = new CapellaExternalIdentifier();
         componentExternalId.Identifier = this.LogicalComponentId;
         componentExternalId.MappingDirection = MappingDirection.FromDstToHub;
         
-        var requirementExternalId = new ExternalIdentifier();
+        var requirementExternalId = new CapellaExternalIdentifier();
         requirementExternalId.Identifier = this.UserRequirementId;
         requirementExternalId.MappingDirection = MappingDirection.FromDstToHub;
         

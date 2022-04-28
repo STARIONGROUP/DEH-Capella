@@ -30,6 +30,7 @@ import Annotations.ExludeFromCodeCoverageGeneratedReport;
 import App.AppContainer;
 import ViewModels.Interfaces.ICapellaImpactViewPanelViewModel;
 import Views.ImpactViewPanel;
+import Views.ContextMenu.CapellaImpactViewContextMenu;
 import Views.ContextMenu.ImpactViewContextMenu;
 import Views.ViewParts.BaseViewPart;
 import io.reactivex.Observable;
@@ -57,7 +58,7 @@ public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanel
     public CapellaImpactViewPanel()
     {
         super(ImpactViewPanel.class.getSimpleName());
-        this.capellaContextMenu = new ImpactViewContextMenu();
+        this.capellaContextMenu = new CapellaImpactViewContextMenu();
     }
     
     /**
@@ -71,15 +72,16 @@ public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanel
         this.CreateBasePartControl(parent);
         this.View = new ImpactViewPanel();
         this.capellaObjectBrowser = new CapellaObjectBrowser();
+        this.capellaObjectBrowser.SetContextMenu(this.capellaContextMenu);
         this.View.SetDstImpactViewView(this.capellaObjectBrowser);
         this.SetDataContext(AppContainer.Container.getComponent(ICapellaImpactViewPanelViewModel.class));
         this.Container.add(this.View);
     }
     
     /**
-     * Binds the <code>TViewModel viewModel</code> to the implementing view
+     * Binds the {@linkplain TViewModel} viewModel to the implementing view
      * 
-     * @param <code>viewModel</code> the view model to bind
+     * @param viewModel the view model to bind
      */
     @Override
     public void Bind()

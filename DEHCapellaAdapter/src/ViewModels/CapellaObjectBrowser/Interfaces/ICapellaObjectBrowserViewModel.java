@@ -54,9 +54,9 @@ public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewMo
     void BuildTree(Collection<EObject> elements);
     
     /**
-     * Gets the {@linkplain Observable} of {@linkplain ElementRowViewModel<? extends CapellaElement>} that yields the selected element
+     * Gets the {@linkplain Observable} of {@linkplain ElementRowViewModel} that yields the selected element
      * 
-     * @return an {@linkplain Observable} of {@linkplain ElementRowViewModel<? extends CapellaElement>}
+     * @return an {@linkplain Observable} of {@linkplain ElementRowViewModel}
      */
     Observable<? extends ElementRowViewModel<? extends CapellaElement>> GetSelectedElement();
 }

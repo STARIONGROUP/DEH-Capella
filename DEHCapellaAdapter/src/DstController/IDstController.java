@@ -24,17 +24,27 @@
 package DstController;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.information.Unit;
+import org.polarsys.capella.core.data.information.datatype.DataType;
+import org.polarsys.capella.core.data.information.datatype.PhysicalQuantity;
 
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
 import Services.MappingEngineService.IMappableThingCollection;
 import Utils.Ref;
 import ViewModels.Rows.MappedElementRowViewModel;
+import cdp4common.commondata.DefinedThing;
+import cdp4common.commondata.NamedThing;
+import cdp4common.commondata.ShortNamedThing;
 import cdp4common.commondata.Thing;
+import cdp4common.sitedirectorydata.MeasurementScale;
 import io.reactivex.Observable;
 
 /**
@@ -68,8 +78,6 @@ public interface IDstController extends IDstControllerBase
 
     /**
      * Loads the saved mapping and applies the mapping rule to the loaded things
-     * 
-     * @return the number of mapped things loaded
      */
     void LoadMapping();
 
@@ -128,4 +136,45 @@ public interface IDstController extends IDstControllerBase
      * @return {@linkplain Observable} of {@linkplain Boolean} 
      */
     Observable<Boolean> HasAnyOpenSessionObservable();
+    
+    /**
+     * Tries to get the corresponding element that answer to the provided {@linkplain Predicate}
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param predicate the {@linkplain Predicate} to verify in order to match the element
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    <TElement extends CapellaElement> boolean TryGetElementBy(Predicate<? super CapellaElement> predicate, Ref<TElement> refElement);
+    
+    /**
+     * Tries to get the corresponding element that has the provided Id
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param elementId the {@linkplain String} id of the searched element
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    <TElement extends CapellaElement> boolean TryGetElementById(String elementId, Ref<TElement> refElement);
+    
+    /**
+     * Tries to get the corresponding element based on the provided {@linkplain DefinedThing} name or short name. 
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param thing the {@linkplain DefinedThing} that can potentially match a {@linkplain #TElement} 
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    <TElement extends CapellaElement> boolean TryGetElementByName(DefinedThing thing, Ref<TElement> refElement);
+
+    /**
+     * Tries to get a {@linkplain DataType} that matches the provided {@linkplain MeasurementScale}
+     * 
+     * @param <TThing> the type of {@linkplain Thing} that is {@linkplain NamedThing} and {@linkplain ShortNamedThing}
+     * @param thing the {@linkplain #TThing} of reference
+     * @param referenceElement a {@linkplain CapellaElement} that will point to the right session
+     * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
+     * @return a {@linkplain boolean}
+     */
+    <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, CapellaElement referenceElement, Ref<DataType> refDataType);
 }

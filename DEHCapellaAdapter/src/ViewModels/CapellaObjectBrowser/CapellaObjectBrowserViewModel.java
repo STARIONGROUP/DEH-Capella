@@ -23,7 +23,9 @@
  */
 package ViewModels.CapellaObjectBrowser;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import javax.swing.tree.TreeModel;
 
@@ -36,6 +38,7 @@ import Services.CapellaSession.ICapellaSessionService;
 import ViewModels.ObjectBrowserBaseViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
 
 /**
@@ -54,9 +57,9 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
     private ObservableValue<ElementRowViewModel<?>> selectedElement = new ObservableValue<ElementRowViewModel<?>>();
     
     /**
-     * Gets the {@linkplain Observable} of {@linkplain ClassRowViewModel} that yields the selected element
+     * Gets the {@linkplain Observable} of {@linkplain ElementRowViewModel} that yields the selected element
      * 
-     * @return an {@linkplain Observable} of {@linkplain ClassRowViewModel}
+     * @return an {@linkplain Observable} of {@linkplain ElementRowViewModel}
      */
     @Override
     public Observable<ElementRowViewModel<?>> GetSelectedElement()
@@ -93,11 +96,22 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
     @Override
     public void BuildTree(Collection<EObject> elements)
     {
-        this.BrowserTreeModel.Value(DefaultOutlineModel.createOutlineModel(
-                new CapellaObjectBrowserTreeViewModel(this.SessionService.GetModels()),
+        RootRowViewModel rootRowViewModel;
+        
+        if(elements != null)
+        {
+            rootRowViewModel = new RootRowViewModel("", (List<EObject>)elements);
+        }
+        else
+        {
+            rootRowViewModel = this.SessionService.GetModels();
+        }
+        
+        this.browserTreeModel.Value(DefaultOutlineModel.createOutlineModel(
+                new CapellaObjectBrowserTreeViewModel(rootRowViewModel),
                 new CapellaObjectBrowserTreeRowViewModel(), true));
                 
-        this.IsTheTreeVisible.Value(true);
+        this.isTheTreeVisible.Value(true);
     }
 
     /**

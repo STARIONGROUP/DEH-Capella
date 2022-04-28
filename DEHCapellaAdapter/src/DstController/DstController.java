@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -37,14 +38,27 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.emf.common.util.EList;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.information.datatype.DataType;
+import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.polarsys.capella.core.data.pa.PhysicalComponent;
+import org.polarsys.capella.core.data.requirement.Requirement;
+import org.polarsys.capella.core.data.requirement.RequirementsPkg;
+import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
 
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
+import MappingRules.ComponentToElementMappingRule;
 import Reactive.ObservableCollection;
 import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
+import Services.CapellaTransaction.ICapellaTransactionService;
+import Services.HistoryService.ICapellaLocalExchangeHistoryService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
@@ -55,24 +69,31 @@ import Utils.Stereotypes.CapellaRequirementCollection;
 import Utils.Stereotypes.HubElementCollection;
 import Utils.Stereotypes.HubRequirementCollection;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedHubRequirementRowViewModel;
+import ViewModels.Rows.MappedRequirementBaseRowViewModel;
+import cdp4common.ChangeKind;
 import cdp4common.commondata.ClassKind;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Definition;
+import cdp4common.commondata.NamedThing;
+import cdp4common.commondata.ShortNamedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.BinaryRelationship;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.ElementUsage;
 import cdp4common.engineeringmodeldata.Iteration;
 import cdp4common.engineeringmodeldata.Parameter;
-import cdp4common.engineeringmodeldata.ParameterValueSet;
+import cdp4common.engineeringmodeldata.ParameterOrOverrideBase;
+import cdp4common.engineeringmodeldata.ParameterOverride;
 import cdp4common.engineeringmodeldata.ParameterValueSetBase;
 import cdp4common.engineeringmodeldata.Relationship;
-import cdp4common.engineeringmodeldata.Requirement;
 import cdp4common.engineeringmodeldata.RequirementsGroup;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.engineeringmodeldata.ValueSet;
+import cdp4common.sitedirectorydata.MeasurementScale;
 import cdp4common.types.ContainerList;
 import cdp4dal.exceptions.TransactionException;
 import cdp4dal.operations.ThingTransaction;
@@ -114,9 +135,24 @@ public final class DstController implements IDstController
     private final ICapellaMappingConfigurationService mappingConfigurationService;
     
     /**
-     * the {@linkplain ICapellaSessionService} instance 
+     * The {@linkplain ICapellaSessionService} instance 
      */
     private final ICapellaSessionService capellaSessionService;
+
+    /**
+     * The {@linkplain ICapellaTransactionService} instance
+     */
+    private final ICapellaTransactionService transactionService;
+    
+    /**
+     * The {@linkplain ICapellaLocalExchangeHistoryService} instance
+     */
+    private final ICapellaLocalExchangeHistoryService exchangeHistory;
+
+    /**
+     * A value indicating whether the {@linkplain DstController} should load mapping when the HUB session is refresh or reloaded
+     */
+    private boolean isHubSessionRefreshSilent;
     
     /**
      * Backing field for {@linkplain GetDstMapResult}
@@ -153,12 +189,12 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetSelectedHubMapResultForTransfer}
      */    
-    private ObservableCollection<CapellaElement> selectedHubMapResultForTransfer = new ObservableCollection<>(CapellaElement.class);
+    private ObservableCollection<CapellaElement> selectedHubMapResultForTransfer = new ObservableCollection<>();
     
     /**
      * Gets the {@linkplain ObservableCollection} of that are selected for transfer to the Capella
      * 
-     * @return an {@linkplain ObservableCollection} of {@linkplain CapellaElement}
+     * @return an {@linkplain ObservableCollection} {@linkplain CapellaElement}
      */
     @Override
     public ObservableCollection<CapellaElement> GetSelectedHubMapResultForTransfer()
@@ -243,16 +279,21 @@ public final class DstController implements IDstController
      * @param hubController the {@linkplain IHubController} instance
      * @param logService the {@linkplain ICapellaLogService} instance
      * @param mappingConfigurationService the {@linkplain ICapellaMappingConfigurationService} instance
-     * @param mappingConfigurationService the {@linkplain ICapellaSessionService} instance
+     * @param capellaSessionService the {@linkplain ICapellaSessionService} instance
+     * @param transactionService the {@linkplain ICapellaTransactionService} instance
+     * @param exchangeHistory the {@linkplain ICapellaLocalExchangeHistoryService} instance
      */
     public DstController(IMappingEngineService mappingEngine, IHubController hubController, ICapellaLogService logService, 
-            ICapellaMappingConfigurationService mappingConfigurationService, ICapellaSessionService capellaSessionService)
+            ICapellaMappingConfigurationService mappingConfigurationService, ICapellaSessionService capellaSessionService,
+            ICapellaTransactionService transactionService, ICapellaLocalExchangeHistoryService exchangeHistory)
     {
         this.mappingEngine = mappingEngine;
         this.hubController = hubController;
         this.logService = logService;
         this.mappingConfigurationService = mappingConfigurationService;
         this.capellaSessionService = capellaSessionService;
+        this.transactionService = transactionService;
+        this.exchangeHistory = exchangeHistory;
         
         this.hubController.GetIsSessionOpenObservable().subscribe(isSessionOpen ->
         {
@@ -262,13 +303,24 @@ public final class DstController implements IDstController
                 this.dstMapResult.clear();
                 this.selectedDstMapResultForTransfer.clear();
                 this.selectedHubMapResultForTransfer.clear();
-            }});
+            }
+        });
+        
+        this.capellaSessionService.SessionUpdated()
+            .subscribe(x -> this.LoadMapping());
+        
+        this.hubController.GetSessionEventObservable()
+            .subscribe(x -> 
+            {
+                if(!this.isHubSessionRefreshSilent)
+                {
+                    this.LoadMapping(); 
+                }
+            });
     }
         
     /**
      * Loads the saved mapping and applies the mapping rule to the loaded things
-     * 
-     * @return the number of mapped things loaded
      */
     @Override
     public void LoadMapping()
@@ -299,8 +351,7 @@ public final class DstController implements IDstController
                    & this.Map(allMappedHubRequirements, MappingDirection.FromHubToDst);
     
         timer.stop();
-    
-        
+            
         if(!result)
         {
             this.logService.Append(String.format("Could not load %s saved mapped things for some reason, check the log for details", mappedElements.size()), Level.ERROR);
@@ -315,19 +366,23 @@ public final class DstController implements IDstController
      * Sorts the {@linkplain IMappedElementRowViewModel} and adds it to the relevant collection of one of the two provided
      * 
      * @param allMappedElement the {@linkplain Collection} of {@linkplain MappedElementDefinitionRowViewModel}
-     * @param allMappedRequirements the {@linkplain Collection} of {@linkplain MappedRequirementRowViewModel}
+     * @param allMappedRequirements the {@linkplain Collection} of {@linkplain MappedRequirementBaseRowViewModel}
      * @param mappedRowViewModel the {@linkplain IMappedElementRowViewModel} to sort
      */
     private void SortMappedElementByType(ArrayList<MappedElementDefinitionRowViewModel> allMappedElement,
-            ArrayList<MappedRequirementRowViewModel> allMappedRequirements, IMappedElementRowViewModel mappedRowViewModel)
+            ArrayList<? extends MappedRequirementBaseRowViewModel<?>> allMappedRequirements, IMappedElementRowViewModel mappedRowViewModel)
     {
         if(mappedRowViewModel.GetTThingClass().isAssignableFrom(ElementDefinition.class))
         {
             allMappedElement.add((MappedElementDefinitionRowViewModel) mappedRowViewModel);
         }
+        else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(cdp4common.engineeringmodeldata.Requirement.class))
+        {
+            ((HubRequirementCollection)allMappedRequirements).add((MappedHubRequirementRowViewModel) mappedRowViewModel);
+        }
         else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(RequirementsSpecification.class))
         {
-            allMappedRequirements.add((MappedRequirementRowViewModel) mappedRowViewModel);
+            ((CapellaRequirementCollection)allMappedRequirements).add((MappedDstRequirementRowViewModel) mappedRowViewModel);
         }
     }
     
@@ -381,7 +436,7 @@ public final class DstController implements IDstController
 
                 this.selectedHubMapResultForTransfer.clear();
                 return this.hubMapResult.addAll(resultAsCollection);
-            }            
+            }
         }
         
         return false;
@@ -403,7 +458,7 @@ public final class DstController implements IDstController
                 result = this.TransferToHub();
                 break;
             case FromHubToDst:
-                result = true;
+                result = this.TransferToDst();
                 break;
             default:
                 result = false;
@@ -415,6 +470,258 @@ public final class DstController implements IDstController
     }
     
     /**
+     * Transfers all the {@linkplain CapellaElement} contained in the {@linkplain hubMapResult} to the DST
+     * 
+     * @return a value indicating that all transfer could be completed
+     */
+    private boolean TransferToDst()
+    {
+        try
+        {
+            var result = this.transactionService.Commit(() -> PrepareElementsForTransferToCapella());
+            this.logService.Append(String.format("Transfered %s elements to Capella", this.selectedHubMapResultForTransfer.size()), result);
+            
+            if(!this.mappingConfigurationService.IsTheCurrentIdentifierMapTemporary())
+            {
+                this.logService.Append("Saving the mapping configuration in progress...");
+
+                this.isHubSessionRefreshSilent = true;
+                Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
+    
+                Iteration iterationClone = iterationTransaction.getLeft();
+                ThingTransaction transaction = iterationTransaction.getRight();
+                this.mappingConfigurationService.PersistExternalIdentifierMap(transaction, iterationClone);
+                transaction.createOrUpdate(iterationClone);
+                
+                this.hubController.Write(transaction);
+                result &= this.hubController.Refresh();
+                this.mappingConfigurationService.RefreshExternalIdentifierMap();
+            }
+            
+            this.selectedHubMapResultForTransfer.clear();
+            this.logService.Append("Reloading the mapping configuration in progress...");
+            return result & this.hubController.Refresh();
+        } 
+        catch (Exception exception)
+        {
+            this.logService.Append(exception.toString(), exception);
+            return false;
+        }
+        finally
+        {
+            this.selectedHubMapResultForTransfer.clear();
+            this.isHubSessionRefreshSilent = false;
+        }
+    }
+
+    /**
+     * Prepares and transfers the actual changes selected in {@linkplain #selectedHubMapResultForTransfer}
+     */
+    private void PrepareElementsForTransferToCapella()
+    {
+        for (var element : this.selectedHubMapResultForTransfer)
+        {
+            var targetArchitecture = this.transactionService.GetTargetArchitecture(element);
+            
+            if(element instanceof Requirement)
+            {
+                this.PrepareRequirement((Requirement)element, targetArchitecture);
+            }
+            
+            else if(element instanceof Component)
+            {
+                if(this.transactionService.IsCloned(element))
+                {
+                    this.PrepareComponent((Component)element);
+                }
+                else if(this.transactionService.IsCloned(element.eContainer()))
+                {
+                    this.PrepareComponentContainer((Component)element);
+                }
+            }
+        }
+    }
+
+    /**
+     * Prepares for transfer the provided {@linkplain Requirement}
+     * 
+     * @param element the {@linkplain Requirement} element to transfer
+     * @param targetArchitecture the {@linkplain CapellaArchitecture} where to transfer the {@linkplain Requirement}
+     */
+    private void PrepareRequirement(Requirement element, CapellaArchitecture targetArchitecture)
+    {
+        if(this.transactionService.IsCloned(element))
+        {
+            var clonedReference = this.transactionService.GetClone(element);
+            clonedReference.GetOriginal().setDescription(clonedReference.GetClone().getDescription());
+            clonedReference.GetOriginal().setName(clonedReference.GetClone().getName());
+            clonedReference.GetOriginal().setRequirementId(element.getRequirementId());
+            this.exchangeHistory.Append(element, ChangeKind.UPDATE);
+        }
+        
+        var container = (RequirementsPkg)element.eContainer();
+        Boolean containerIsCloned = null;
+        
+        while(container != null && !(containerIsCloned = this.transactionService.IsCloned(container)) && container.eContainer() instanceof RequirementsPkg)
+        {                    
+            container = (RequirementsPkg)container.eContainer();
+        }
+
+        final RequirementsPkg containerToUpdate = container;
+        
+        if(containerToUpdate == null)
+        {
+            return;
+        }
+        
+        if(containerIsCloned.booleanValue())
+        {
+            this.UpdateRequirementPackage(containerToUpdate);
+            this.exchangeHistory.Append(containerToUpdate, ChangeKind.UPDATE);
+        }
+        else
+        {
+            var architecture = BlockArchitectureExt.getBlockArchitecture(targetArchitecture.GetType(), this.capellaSessionService.GetProject());
+            architecture.getOwnedRequirementPkgs().removeIf(x -> AreTheseEquals(x.getId(), containerToUpdate.getId()));
+            architecture.getOwnedRequirementPkgs().add(containerToUpdate);
+
+            this.exchangeHistory.Append(containerToUpdate, ChangeKind.CREATE);
+            this.exchangeHistory.Append(element, ChangeKind.CREATE);
+        }
+    }
+
+    /**
+     * Updates the provided cloned {@linkplain RequirementsPkg}
+     * 
+     * @param containerToUpdate the {@linkplain RequirementsPkg}
+     */
+    private void UpdateRequirementPackage(RequirementsPkg containerToUpdate)
+    {
+        var requirementPkgCloneReference = this.transactionService.GetClone(containerToUpdate);
+        
+        this.UpdateChildrenOfType(requirementPkgCloneReference.GetOriginal().getOwnedRequirementPkgs(), 
+                requirementPkgCloneReference.GetClone().getOwnedRequirementPkgs());
+        
+        this.UpdateChildrenOfType(requirementPkgCloneReference.GetOriginal().getOwnedRequirements(), 
+                requirementPkgCloneReference.GetClone().getOwnedRequirements());
+    }
+
+    /**
+     * Adds the new {@linkplain #TElement} contained in the cloned collection to the original collection
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} the collections contains
+     * @param originalCollection the original collection
+     * @param clonedCollection the cloned collection
+     */
+    private <TElement extends CapellaElement> void UpdateChildrenOfType(EList<TElement> originalCollection,
+            EList<TElement> clonedCollection)
+    {
+        var childrenPackagesToAdd = clonedCollection.stream()
+                .filter(x -> originalCollection.stream()
+                            .noneMatch(e -> AreTheseEquals(x.getId(), e.getId(), true)))
+                .collect(Collectors.toList());
+
+        originalCollection.addAll(childrenPackagesToAdd);
+    }
+
+
+    /**
+     * Prepares the specified {@linkplain Component} by updating its container only
+     * 
+     * @param element the {@linkplain Component} element to add to its defined container
+     */
+    private void PrepareComponentContainer(Component element)
+    {
+        if(element instanceof PhysicalComponent)
+        {
+            this.PrepareComponentContainer((PhysicalComponent)element.eContainer(), (PhysicalComponent)element, x -> x.getOwnedPhysicalComponents());
+        }
+        else if(element instanceof LogicalComponent)
+        {
+            this.PrepareComponentContainer((LogicalComponent)element.eContainer(), (LogicalComponent)element, x -> x.getOwnedLogicalComponents());
+        }
+    }
+    
+    /**
+     * Prepares for transfer the specified {@linkplain #TElement} by updating its container only
+     * 
+     * @param <TElement> the type of {@linkplain Component} to prepare
+     * @param container the {@linkplain #TElement} element to update
+     * @param element the {@linkplain #TElement} element to transfer
+     * @param childrenSelector a {@linkplain Function} that returns a {@linkplain Collection} of {@linkplain #TElement}, 
+     * used to query the contained {@linkplain #TElement} regardless of whether the input {@linkplain #TElement} is a clone or an original
+     */
+    private <TElement extends Component> void PrepareComponentContainer(TElement container, TElement element, Function<TElement, EList<TElement>> childrenSelector)
+    {
+        var original = this.transactionService.GetClone(container).GetOriginal();
+        childrenSelector.apply(original).removeIf(x -> AreTheseEquals(x.getId(), element.getId()));
+        childrenSelector.apply(original).add(element);
+        this.exchangeHistory.Append(container, ChangeKind.UPDATE);
+        this.exchangeHistory.Append(element, ChangeKind.CREATE);
+    }
+    
+    /**
+     * Prepares for transfer the specified {@linkplain Component}
+     * 
+     * @param element the {@linkplain Component}
+     */
+    private void PrepareComponent(Component element)
+    {
+        if(element instanceof PhysicalComponent)
+        {
+            this.PrepareComponent((PhysicalComponent)element, x -> x.getOwnedPhysicalComponents());
+        }
+        else if(element instanceof LogicalComponent)
+        {
+            this.PrepareComponent((LogicalComponent)element, x -> x.getOwnedLogicalComponents());
+        }
+        
+        this.exchangeHistory.Append(element, ChangeKind.UPDATE);
+    }
+
+    /**
+     * Prepares for transfer the specified {@linkplain element}
+     * 
+     * @param <TElement> the type of {@linkplain Component} to prepare
+     * @param element the {@linkplain #TElement} element to transfer
+     * @param childrenSelector a {@linkplain Function} that returns a {@linkplain Collection} of {@linkplain #TElement}, 
+     * used to query the contained {@linkplain #TElement} regardless of whether the input {@linkplain #TElement} is a clone or an original
+     */
+    private <TElement extends Component> void PrepareComponent(TElement element, Function<TElement, EList<TElement>> childrenSelector)
+    {
+        var clonedReference = this.transactionService.GetClone(element);
+        
+        for (var clonedProperty : clonedReference.GetClone().getContainedProperties().stream().collect(Collectors.toList()))
+        {
+            var optionalProperty = clonedReference.GetOriginal().getContainedProperties().stream()
+                    .filter(x -> AreTheseEquals(x.getId(), clonedProperty.getId()))
+                    .findFirst();
+            
+            if(optionalProperty.isPresent())
+            {
+                optionalProperty.get().setOwnedDefaultValue(clonedProperty.getOwnedDefaultValue());
+
+                this.exchangeHistory.Append(clonedProperty, optionalProperty.get());
+                continue;
+            }
+            
+            clonedReference.GetOriginal().getOwnedFeatures().add(clonedProperty);
+            this.exchangeHistory.Append(clonedProperty, ChangeKind.CREATE);
+        }
+        
+        for (var containedElement : childrenSelector.apply(clonedReference.GetClone()).stream().collect(Collectors.toList()))
+        {
+            if(childrenSelector.apply(clonedReference.GetOriginal()).stream()
+                    .anyMatch(x -> AreTheseEquals(x.getId(), containedElement.getId())))
+            {
+                continue;
+            }
+            
+            childrenSelector.apply(clonedReference.GetOriginal()).add(containedElement);
+        }
+    }
+        
+    /**
      * Transfers all the {@linkplain Thing} contained in the {@linkplain dstMapResult} to the Hub
      * 
      * @return a value indicating that all transfer could be completed
@@ -424,9 +731,16 @@ public final class DstController implements IDstController
     {
         try
         {
+            this.isHubSessionRefreshSilent = true;
             Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
             Iteration iterationClone = iterationTransaction.getLeft();
             ThingTransaction transaction = iterationTransaction.getRight();
+
+            if(!this.hubController.TrySupplyAndCreateLogEntry(transaction))
+            {
+                this.logService.Append("Transfer to the HUB aborted!");
+                return true;
+            }
             
             this.PrepareThingsForTransfer(iterationClone, transaction);
 
@@ -434,9 +748,12 @@ public final class DstController implements IDstController
             transaction.createOrUpdate(iterationClone);
             
             this.hubController.Write(transaction);
-            this.mappingConfigurationService.RefreshExternalIdentifierMap();
             boolean result = this.hubController.Refresh();
+            this.mappingConfigurationService.RefreshExternalIdentifierMap();
+            this.PrepareParameterOverrides();
+            result &= this.hubController.Refresh();
             this.UpdateParameterValueSets();
+            this.isHubSessionRefreshSilent = true;
             return result && this.hubController.Refresh();
         }
         catch (Exception exception)
@@ -447,51 +764,108 @@ public final class DstController implements IDstController
         finally
         {
             this.selectedDstMapResultForTransfer.clear();
+            this.isHubSessionRefreshSilent = true;
         }
     }
-    
+
+    /**
+    * Prepares all the {@linkplain ParameterOverrides}s that are to be updated or created
+    * 
+    * @throws TransactionException can throw {@linkplain TransactionException}
+    */
+   private void PrepareParameterOverrides() throws TransactionException
+    {
+       Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
+       Iteration iterationClone = iterationTransaction.getLeft();
+       ThingTransaction transaction = iterationTransaction.getRight();
+       
+        var elementDefinitions = this.selectedDstMapResultForTransfer.stream()
+                .filter(x -> x instanceof ElementDefinition)
+                .map(x -> (ElementDefinition)x)
+                .filter(x -> !x.getContainedElement().isEmpty())
+                .filter(x -> x.getContainedElement().stream().anyMatch(u -> !u.getParameterOverride().isEmpty()))
+                .collect(Collectors.toList());
+        
+        for (var elementDefinition : elementDefinitions)
+        {
+            var refElementDefinition = new Ref<>(ElementDefinition.class);
+            
+            if(this.hubController.TryGetThingById(elementDefinition.getIid(), refElementDefinition))
+            {
+                var updatedElementDefinition = refElementDefinition.Get().clone(false);
+                this.AddOrUpdateIterationAndTransaction(updatedElementDefinition, iterationClone.getElement(), transaction);
+                this.PrepareElementUsageForTransfer(iterationClone, transaction, updatedElementDefinition, true);
+            }           
+        }
+
+        transaction.createOrUpdate(iterationClone);
+        this.hubController.Write(transaction);
+    }
+
     /**
      * Updates the {@linkplain ValueSet} with the new values
      * 
-     * @return a value indicating whether the operation went OK
-     * @return a {@linkplain Pair} of a value indicating whether the transaction has been committed with success
-     * and a string of the exception if any
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     public void UpdateParameterValueSets() throws TransactionException
     {
         Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
         Iteration iterationClone = iterationTransaction.getLeft();
         ThingTransaction transaction = iterationTransaction.getRight();
-
-        List<Parameter> allParameters = this.dstMapResult.stream()
-                .filter(x -> x.GetHubElement() instanceof ElementDefinition)
-                .flatMap(x -> ((ElementDefinition)x.GetHubElement()).getParameter().stream())
+        
+        var allParameterOverrides = this.selectedDstMapResultForTransfer.stream()
+                .filter(x -> x instanceof ElementDefinition)
+                .flatMap(x -> ((ElementDefinition)x).getContainedElement().stream())
+                .flatMap(x -> x.getParameterOverride().stream())
+                .filter(x -> x.getOriginal() != null)
                 .collect(Collectors.toList());
         
-        for(Parameter parameter : allParameters)
-        {
-            Ref<Parameter> refNewParameter = new Ref<>(Parameter.class);
-            
-            if(this.hubController.TryGetThingById(parameter.getIid(), refNewParameter))
-            {
-                Parameter newParameterCloned = refNewParameter.Get().clone(false);
-    
-                for (int index = 0; index < parameter.getValueSet().size(); index++)
-                {
-                    ParameterValueSet clone = newParameterCloned.getValueSet().get(index).clone(false);
-                    this.UpdateValueSet(clone, parameter.getValueSet().get(index));
-                    transaction.createOrUpdate(clone);
-                }
-    
-                transaction.createOrUpdate(newParameterCloned);
-            }
-        }
+        var allParameters = this.selectedDstMapResultForTransfer.stream()
+                .filter(x -> x instanceof ElementDefinition)
+                .flatMap(x -> ((ElementDefinition)x).getParameter().stream())
+                .filter(x -> x.getOriginal() != null)
+                .collect(Collectors.toList());
+        
+        this.UpdateParameterValueSets(transaction, allParameters, Parameter.class);
+        this.UpdateParameterValueSets(transaction, allParameterOverrides, ParameterOverride.class);
         
         transaction.createOrUpdate(iterationClone);
         this.hubController.Write(transaction);
-    }    
+        
+        this.logService.Append("%s ParameterOverrides and %s Parameter have been updated or created", allParameterOverrides.size(), allParameters.size());
+    }
+    
+    /**
+     * Updates the value sets of the provided {@linkplain Collection} of {@linkplain #TParameter}
+     * 
+     * @param <TParameter> the type of {@linkplain ParameterOrOverrideBase}
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param allParameters the collection of {@linkplain #TParameter} to update
+     * @param clazz the {@linkplain Class} of {@linkplain #TParameter}
+     * @throws TransactionException can throw {@linkplain TransactionException}
+     */
+    private <TParameter extends ParameterOrOverrideBase> void UpdateParameterValueSets(ThingTransaction transaction, List<TParameter> allParameters, Class<TParameter> clazz) throws TransactionException
+    {
+        for(var parameter : allParameters)
+        {
+            var refNewParameter = new Ref<>(Parameter.class);
+            
+            if(this.hubController.TryGetThingById(parameter.getIid(), refNewParameter))
+            {
+                var newParameterCloned = refNewParameter.Get().clone(false);
+    
+                for (int index = 0; index < parameter.getValueSets().size(); index++)
+                {
+                    var clone = newParameterCloned.getValueSet().get(index).clone(false);
+                    this.UpdateValueSet(clone, parameter.getValueSets().get(index));
+                    transaction.createOrUpdate(clone);
+                }
 
+                transaction.createOrUpdate(newParameterCloned);
+            }
+        }
+    }
+    
     /**
      * Updates the specified {@linkplain ParameterValueSetBase}
      * 
@@ -500,6 +874,7 @@ public final class DstController implements IDstController
      */
     private void UpdateValueSet(ParameterValueSetBase clone, ValueSet valueSet)
     {
+        this.exchangeHistory.Append(clone, valueSet);
         clone.setManual(valueSet.getManual());
         clone.setValueSwitch(valueSet.getValueSwitch());
     }
@@ -509,7 +884,7 @@ public final class DstController implements IDstController
      * 
      * @param iterationClone the {@linkplain Iteration} clone
      * @param transaction the {@linkplain ThingTransaction}
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private void PrepareThingsForTransfer(Iteration iterationClone, ThingTransaction transaction) throws TransactionException
     {
@@ -557,22 +932,79 @@ public final class DstController implements IDstController
      * @param iterationClone the {@linkplain Iteration} clone
      * @param transaction the {@linkplain ThingTransaction}
      * @param elementDefinition the {@linkplain ElementDefinition} to prepare
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private void PrepareElementDefinitionForTransfer(Iteration iterationClone, ThingTransaction transaction, 
             ElementDefinition elementDefinition) throws TransactionException
     {
-        for (ElementUsage elementUsage : elementDefinition.getContainedElement())
-        {
-            this.AddOrUpdateIterationAndTransaction(elementUsage.getElementDefinition(), iterationClone.getElement(), transaction);
-            this.AddOrUpdateIterationAndTransaction(elementUsage, elementDefinition.getContainedElement(), transaction);
-        }
+        this.PrepareElementUsageForTransfer(iterationClone, transaction, elementDefinition, false);
 
         this.AddOrUpdateIterationAndTransaction(elementDefinition, iterationClone.getElement(), transaction);
         
-        for(Parameter parameter : elementDefinition.getParameter())
-        {            
+        this.PrepareParameterOrOverrideForTransfer(transaction, elementDefinition.getParameter());
+    }
+
+    /**
+     * Prepares the provided {@linkplain ElementDefinition} contained {@linkplain ElementUsages} for transfer
+     * 
+     * @param iterationClone the {@linkplain Iteration} clone
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param elementDefinition the {@linkplain ElementDefinition} that might contain {@linkplain ElementUsages}
+     * @throws TransactionException can throw {@linkplain TransactionException}
+     */
+    private void PrepareElementUsageForTransfer(Iteration iterationClone, ThingTransaction transaction,
+            ElementDefinition elementDefinition, boolean shouldPrepareParameterOverride) throws TransactionException
+    {
+        for (ElementUsage elementUsage : elementDefinition.getContainedElement())
+        {
+           this.AddOrUpdateIterationAndTransaction(elementUsage.getElementDefinition().clone(false), iterationClone.getElement(), transaction);
+           this.AddOrUpdateIterationAndTransaction(elementUsage, elementDefinition.getContainedElement(), transaction);
+           
+           if(transaction.getAddedThing().stream().anyMatch(x -> AreTheseEquals(x.getIid(), elementUsage.getIid())))
+           {
+               this.PrepareDefinition(transaction, elementUsage);
+           }
+           
+           if(shouldPrepareParameterOverride)
+           {
+               this.PrepareParameterOrOverrideForTransfer(transaction, elementUsage.getParameterOverride());
+           }
+        }
+    }
+
+    /**
+     * Prepare the provided parameters
+     * 
+     * @param <TParameter> the type of {@linkplain ParameterOrOverrideBase} to prepare
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param parameters the {@linkplain ContainerList} of {@linkplain ParameterOrOverrideBase} to prepare
+     * @param clazz the {@linkplain Class} of {@linkplain #TParameter}
+     * @throws TransactionException can throw {@linkplain TransactionException}
+     */
+    private <TParameter extends ParameterOrOverrideBase> void PrepareParameterOrOverrideForTransfer(ThingTransaction transaction, ContainerList<TParameter> parameters) throws TransactionException
+    {
+        for(var parameter : parameters.stream().filter(x -> x.getOriginal() != null).collect(Collectors.toList()))
+        {
             transaction.createOrUpdate(parameter);
+        }
+    }
+    
+    /**
+     * Prepares any transferable {@linkplain Definition} from the provided {@linkplain DefinedThing}
+     * 
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param definedThing the {@linkplain DefinedThing} that can contain a transferable {@linkplain Definition}
+     * @throws TransactionException can throw {@linkplain TransactionException}
+     */
+    private void PrepareDefinition(ThingTransaction transaction, DefinedThing definedThing) throws TransactionException
+    {
+        var definition = definedThing.getDefinition().stream()
+                                                .filter(x -> AreTheseEquals(x.getLanguageCode(), ComponentToElementMappingRule.CIID))
+                                                .findFirst();
+        
+        if(definition.isPresent())
+        {
+            this.AddOrUpdateIterationAndTransaction(definition.get(), definedThing.getDefinition(), transaction);
         }
     }
 
@@ -582,7 +1014,7 @@ public final class DstController implements IDstController
      * @param iterationClone the {@linkplain Iteration} clone
      * @param transaction the {@linkplain ThingTransaction}
      * @param requirementsSpecification the {@linkplain RequirementsSpecification} to prepare
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private void PrepareRequirementForTransfer(Iteration iterationClone, ThingTransaction transaction, 
             RequirementsSpecification requirementsSpecification) throws TransactionException
@@ -593,7 +1025,7 @@ public final class DstController implements IDstController
         
         this.RegisterRequirementsGroups(transaction, groups);
         
-        for(Requirement requirement : requirementsSpecification.getRequirement())
+        for(var requirement : requirementsSpecification.getRequirement())
         {
             transaction.createOrUpdate(requirement);
             
@@ -607,9 +1039,9 @@ public final class DstController implements IDstController
     /**
      * Registers the {@linkplain RequirementsGroup} to be created or updated
      * 
-     * @param transaction
-     * @param groups
-     * @throws TransactionException
+     * @param transaction the {@linkplain ThingTransaction}
+     * @param groups the {@linkplain ContainerList} of {@linkplain RequirementsGroup}
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private void RegisterRequirementsGroups(ThingTransaction transaction, ContainerList<RequirementsGroup> groups) throws TransactionException
     {
@@ -631,7 +1063,7 @@ public final class DstController implements IDstController
      * @param thing the {@linkplain Thing}
      * @param containerList the {@linkplain ContainerList} of {@linkplain Thing} typed as T
      * @param transaction the {@linkplain ThingTransaction}
-     * @throws TransactionException
+     * @throws TransactionException can throw {@linkplain TransactionException}
      */
     private <T extends Thing> void AddOrUpdateIterationAndTransaction(T thing, ContainerList<T> containerList, ThingTransaction transaction) throws TransactionException
     {
@@ -640,6 +1072,11 @@ public final class DstController implements IDstController
             if(thing.getContainer() == null || containerList.stream().noneMatch(x -> x.getIid().equals(thing.getIid())))
             {
                 containerList.add(thing);
+                this.exchangeHistory.Append(thing, ChangeKind.CREATE);   
+            }
+            else
+            {
+                this.exchangeHistory.Append(thing, ChangeKind.UPDATE);
             }
 
             transaction.createOrUpdate(thing);
@@ -704,8 +1141,98 @@ public final class DstController implements IDstController
         if(!shouldRemove)
         {
             this.selectedHubMapResultForTransfer.addAll(this.hubMapResult.stream()
-                    .map(MappedElementRowViewModel::GetDstElement)
+                    .map(x -> x.GetDstElement())
                     .collect(Collectors.toList()));
         }
+    }
+    
+    /**
+     * Tries to get the corresponding element based on the provided {@linkplain DefinedThing} name or short name. 
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param thing the {@linkplain DefinedThing} that can potentially match a {@linkplain #TElement} 
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    public <TElement extends CapellaElement> boolean TryGetElementByName(DefinedThing thing, Ref<TElement> refElement)
+    {
+        return this.TryGetElementBy(x -> x instanceof NamedElement
+                && (AreTheseEquals(thing.getName(), ((NamedElement)x).getName(), true)
+                || AreTheseEquals(thing.getShortName(), ((NamedElement)x).getName(), true)), refElement);
+    }
+        
+    /**
+     * Tries to get the corresponding element that has the provided Id
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param elementId the {@linkplain String} id of the searched element
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    public <TElement extends CapellaElement> boolean TryGetElementById(String elementId, Ref<TElement> refElement)
+    {
+        return this.TryGetElementBy(x -> AreTheseEquals(elementId, x.getId()), refElement);
+    }
+    
+    /**
+     * Tries to get the corresponding element that answer to the provided {@linkplain Predicate}
+     * 
+     * @param <TElement> the type of {@linkplain CapellaElement} to query
+     * @param predicate the {@linkplain Predicate} to verify in order to match the element
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <TElement extends CapellaElement> boolean TryGetElementBy(Predicate<? super CapellaElement> predicate, Ref<TElement> refElement)
+    {
+        var elementsBySession = this.capellaSessionService.GetAllCapellaElementsFromOpenSessions();
+        
+        for (var elements : elementsBySession.values())
+        {
+            var element = elements.stream().filter(predicate).findFirst();
+            
+            if(element.isPresent() && refElement.GetType().isInstance(element.get()))
+            {
+                refElement.Set((TElement) element.get());
+                break;
+            }
+        }
+        
+        return refElement.HasValue();
+    }
+
+    /**
+     * Tries to get a {@linkplain DataType} that matches the provided {@linkplain MeasurementScale}
+     * 
+     * @param <TThing> the type of {@linkplain Thing} that is {@linkplain NamedThing} and {@linkplain ShortNamedThing}
+     * @param thing the {@linkplain #TThing} of reference
+     * @param referenceElement a {@linkplain CapellaElement} that will point to the right session
+     * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
+     * @return a {@linkplain boolean}
+     */
+    @Override
+    public <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, CapellaElement referenceElement, Ref<DataType> refDataType)
+    {
+        var sessionUri = this.capellaSessionService.GetSession(referenceElement).getSessionResource().getURI();
+        
+        var elementsBySession = this.capellaSessionService.GetAllCapellaElementsFromOpenSessions();
+                
+        var dataTypes = elementsBySession.get(sessionUri).stream()
+                .filter(x -> x instanceof DataType)
+                .map(x -> (DataType)x)
+                .collect(Collectors.toList());
+        
+        var optionalScale = dataTypes.stream()
+                .filter(x -> AreTheseEquals(x.getName(), thing.getName(), true) 
+                        || AreTheseEquals(x.getName(), thing.getShortName(), true))
+                .findAny();
+        
+        if(optionalScale.isPresent())
+        {
+            refDataType.Set(optionalScale.get());
+        }
+        
+        return refDataType.HasValue();
     }
 }

@@ -33,7 +33,7 @@ import io.reactivex.Observable;
 public interface ICapellaLogService 
 {
     /**
-     * Appends a format-able string message using {@linkplain String.format(String, args)} with the specified {@linkplain Level}
+     * Appends a format-able string message using {@linkplain #String.format(String, args)} with the specified {@linkplain Level}
      * 
      * @param message the {@linkplain String} message to display
      * @param level the {@linkplain Level}
@@ -61,7 +61,7 @@ public interface ICapellaLogService
     void Append(String message, boolean successStatus);
 
     /**
-    * Appends a format-able string message using {@linkplain String.format(String, args)} with the default severity {@linkplain Level}
+    * Appends a format-able string message using {@linkplain #String.format(String, args)} with the default severity {@linkplain Level}
     * 
     * @param message the {@linkplain String} message to display
     * @param args Arguments referenced by the format specifiers in the format

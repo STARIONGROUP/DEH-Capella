@@ -23,21 +23,16 @@
  */
 package Utils.Stereotypes;
 
-import java.util.Arrays;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.requirement.*;
 
 /**
  * The {@linkplain RequirementType} is an enumerations of all Capella requirements type
  */
-public enum RequirementType
-{
-    /**
-     * Represents an undefined {@linkplain Requirement}
-     */
-    Undefined("", null),
-    
+public enum RequirementType implements ICapellaTypeEnumeration<RequirementType, Requirement>
+{    
     /**
      * Represents a {@linkplain SystemNonFunctionalRequirement}
      */
@@ -71,23 +66,23 @@ public enum RequirementType
     /**
      * The {@linkplain Class} represented by this enum value
      */
-    private final Class<? extends Requirement> clazz;
+    private final Class<? extends Requirement> classType;
     
     /**
      * The display-able label that represent this enum value
      */
-    public final String Label;
+    private final String label;
     
     /**
      * Initializes a new {@linkplain RequirementType}
      * 
      * @param label the label associated to the enumeration value
-     * @param clazz the class associated to the enumeration value
+     * @param classType the class associated to the enumeration value
      */
-    private RequirementType(String label, Class<? extends Requirement> clazz)
+    private RequirementType(String label, Class<? extends Requirement> classType)
     {
-        this.Label = label;
-        this.clazz = clazz;
+        this.label = label;
+        this.classType = classType;
     }
 
     /**
@@ -98,50 +93,28 @@ public enum RequirementType
     @Override
     public String toString()
     {
-        return this.Label;
+        return this.label;
     }
-    
-    /**
-     * Gets an instance of {@linkplain RequirementType} with the {@linkplain clazz} matching the provided {@linkplain Class} 
-     * 
-     * @param requirementClass the {@linkplain class} that could match the {@linkplain clazz} from one of the possible enum value
-     * @return a {@linkplain RequirementType}
-     */
-    public static RequirementType From(Class<? extends Requirement> requirementClass)
-    {
-        return Arrays.asList(RequirementType.values())
-                .stream()
-                .filter(x -> x.clazz == requirementClass)
-                .findFirst()
-                .orElse(RequirementType.Undefined);
-    }
-    
-    /**
-     * Gets an instance of {@linkplain RequirementType} with the value or {@linkplain Label} matching the provided {@linkplain String} 
-     * 
-     * @param valueOrLabel a {@linkplain String} that could potentially match the {@linkplain Label} 
-     * or value of one of the enumeration value from this {@linkplain RequirementType}
-     * @return a {@linkplain RequirementType}
-     */
-    public static RequirementType From(String valueOrLabel)
-    {
-        try
-        {
-            return RequirementType.valueOf(valueOrLabel);
-        }
-        catch(IllegalArgumentException exception)
-        {
-            logger.catching(exception);
-        }
-        
-        for(var value : RequirementType.values())
-        {
-            if(value.Label.equalsIgnoreCase(valueOrLabel)) 
-            {
-                return value;
-            }
-        }
 
-        return RequirementType.Undefined;
+    /**
+     * Gets the {@linkplain Class} of the instance of the enumeration value
+     * 
+     * @return a {@linkplain Class} of {@linkplain CapellaElement}
+     */
+    @Override
+    public Class<? extends Requirement> ClassType()
+    {
+        return this.classType;
+    }
+    
+    /**
+     * Gets the {@linkplain String} display-able label
+     * 
+     * @return a {@linkplain String}
+     */
+    @Override
+    public String Label()
+    {
+        return this.label;
     }
 }

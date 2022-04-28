@@ -47,7 +47,7 @@ import HubController.IHubController;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Utils.Stereotypes.CapellaComponentCollection;
 import Utils.Stereotypes.CapellaRequirementCollection;
-import ViewModels.Rows.MappedRequirementRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.engineeringmodeldata.Iteration;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.DomainOfExpertise;
@@ -168,8 +168,8 @@ class RequirementToRequirementsSpecificationMappingRuleTestFixture
         when(this.capellaRequirementPackage1.eContents()).thenReturn(containedRequirements0);
         when(this.capellaRequirementPackage2.eContents()).thenReturn(containedRequirements1);
         
-        this.elements.add(new MappedRequirementRowViewModel(this.requirementsSpecification0, this.capellaRequirement0, MappingDirection.FromDstToHub));
-        this.elements.add(new MappedRequirementRowViewModel(this.capellaRequirement1, MappingDirection.FromDstToHub));
-        this.elements.add(new MappedRequirementRowViewModel(this.capellaRequirement2, MappingDirection.FromDstToHub));
+        this.elements.add(new MappedDstRequirementRowViewModel(this.requirementsSpecification0, this.capellaRequirement0, MappingDirection.FromDstToHub));
+        this.elements.add(new MappedDstRequirementRowViewModel(this.capellaRequirement1, MappingDirection.FromDstToHub));
+        this.elements.add(new MappedDstRequirementRowViewModel(this.capellaRequirement2, MappingDirection.FromDstToHub));
     }
 }
