@@ -23,8 +23,6 @@
  */
 package Services.CapellaTransaction;
 
-import static Utils.Operators.Operators.AreTheseEquals;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,15 +39,9 @@ import org.polarsys.capella.common.ef.command.AbstractReadWriteCommand;
 import org.polarsys.capella.common.helpers.TransactionHelper;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
-import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.DataPkg;
 import org.polarsys.capella.core.data.information.Unit;
 import org.polarsys.capella.core.data.information.datatype.DataType;
-import org.polarsys.capella.core.data.information.datatype.PhysicalQuantity;
-import org.polarsys.capella.core.data.la.LogicalArchitecture;
-import org.polarsys.capella.core.data.la.LogicalComponent;
-import org.polarsys.capella.core.data.pa.PhysicalArchitecture;
-import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
@@ -247,21 +239,9 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * @param name the name of the newly created {@linkplain CapellaElement}, used to query the {@linkplain #newReferences} collection
      * @return an instance of the provided type
      */
-    @SuppressWarnings("unchecked")
     @Override
     public <TInstance extends NamedElement> TInstance Create(Class<TInstance> clazz, String name)
-    {
-        var optionalExistingNewElement = this.newReferences.values().stream()
-                .filter(x -> x instanceof NamedElement && clazz.isInstance(x))
-                .map(x -> (NamedElement)x)
-                .filter(x -> AreTheseEquals(x.getName(), name, true))
-                .findAny();
-        
-        if(optionalExistingNewElement.isPresent())
-        {
-            return (TInstance) optionalExistingNewElement.get();
-        }
-        
+    {        
         var newElement = this.Create(clazz);
         
         if(newElement != null)

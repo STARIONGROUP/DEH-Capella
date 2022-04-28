@@ -422,7 +422,7 @@ public class MapCommandService implements IMapCommandService
                 }
                 
                 this.logService.Append(String.format("Mapping action is done in %s ms", timer.getTime(TimeUnit.MILLISECONDS)), t.GetResult() == true);
-                
+
             }, t -> this.logger.catching(t));
     }
         

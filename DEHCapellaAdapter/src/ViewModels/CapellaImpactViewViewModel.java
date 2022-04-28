@@ -274,8 +274,12 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
             var rootPhysicalElementRowViewModel = ((IHaveContainedRows<? extends ElementRowViewModel<?>>)refRowViewModel.Get()).GetContainedRows().get(0);
             var rootElement = this.transactionService.Clone((PhysicalComponent)rootPhysicalElementRowViewModel.GetElement());
             rootElement.getOwnedPhysicalComponents().removeIf(x -> AreTheseEquals(x.getId(), parent.getId()));
-            rootElement.getOwnedPhysicalComponents().add((PhysicalComponent)parent);
-            rootPhysicalElementRowViewModel.UpdateElement(rootElement, true);
+
+            if(!AreTheseEquals(rootElement.getId(), parent.getId()))
+            {
+                rootElement.getOwnedPhysicalComponents().add((PhysicalComponent)parent);
+                rootPhysicalElementRowViewModel.UpdateElement(rootElement, true);
+            }
         }
         else if(mappedElementRowViewModel.GetDstElement() instanceof LogicalComponent 
                 && this.TryGetRowViewModelOfType(rootRowViewModel.GetContainedRows(), LogicalComponentPkg.class, refRowViewModel))
@@ -283,8 +287,12 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
             var rootLogicalElementRowViewModel = ((IHaveContainedRows<? extends ElementRowViewModel<?>>)refRowViewModel.Get()).GetContainedRows().get(0);
             var rootElement = this.transactionService.Clone((LogicalComponent)rootLogicalElementRowViewModel.GetElement());
             rootElement.getOwnedLogicalComponents().removeIf(x -> AreTheseEquals(x.getId(), parent.getId()));
-            rootElement.getOwnedLogicalComponents().add((LogicalComponent)parent);
-            rootLogicalElementRowViewModel.UpdateElement(rootElement, true);
+            
+            if(!AreTheseEquals(rootElement.getId(), parent.getId()))
+            {
+                rootElement.getOwnedLogicalComponents().add((LogicalComponent)parent);
+                rootLogicalElementRowViewModel.UpdateElement(rootElement, true);
+            }            
         }
     }
 

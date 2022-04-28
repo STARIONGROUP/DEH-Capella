@@ -70,7 +70,7 @@ public class ComponentRowViewModel extends ElementRowViewModel<Component> implem
      * Computes the contained rows of this row view model
      */
     @Override
-    public void ComputeContainedRows() 
+    public void ComputeContainedRows()
     {
         for (var element : this.GetElement().eContents())
         {
