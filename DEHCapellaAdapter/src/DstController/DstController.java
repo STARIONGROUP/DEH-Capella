@@ -479,20 +479,28 @@ public final class DstController implements IDstController
         try
         {
             var result = this.transactionService.Commit(() -> PrepareElementsForTransferToCapella());
-    
-            this.isHubSessionRefreshSilent = true;
-            Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
-
-            Iteration iterationClone = iterationTransaction.getLeft();
-            ThingTransaction transaction = iterationTransaction.getRight();
-            this.mappingConfigurationService.PersistExternalIdentifierMap(transaction, iterationClone);
-            transaction.createOrUpdate(iterationClone);
+            this.logService.Append(String.format("Transfered %s elements to Capella", this.selectedHubMapResultForTransfer.size()), result);
             
-            this.hubController.Write(transaction);
-            result &= this.hubController.Refresh();
-            this.mappingConfigurationService.RefreshExternalIdentifierMap();
+            if(!this.mappingConfigurationService.IsTheCurrentIdentifierMapTemporary())
+            {
+                this.logService.Append("Saving the mapping configuration in progress...");
+
+                this.isHubSessionRefreshSilent = true;
+                Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
+    
+                Iteration iterationClone = iterationTransaction.getLeft();
+                ThingTransaction transaction = iterationTransaction.getRight();
+                this.mappingConfigurationService.PersistExternalIdentifierMap(transaction, iterationClone);
+                transaction.createOrUpdate(iterationClone);
+                
+                this.hubController.Write(transaction);
+                result &= this.hubController.Refresh();
+                this.mappingConfigurationService.RefreshExternalIdentifierMap();
+            }
+            
             this.selectedHubMapResultForTransfer.clear();
-            return result;
+            this.logService.Append("Reloading the mapping configuration in progress...");
+            return result & this.hubController.Refresh();
         } 
         catch (Exception exception)
         {
@@ -502,7 +510,7 @@ public final class DstController implements IDstController
         finally
         {
             this.selectedHubMapResultForTransfer.clear();
-            this.isHubSessionRefreshSilent = true;
+            this.isHubSessionRefreshSilent = false;
         }
     }
 
@@ -547,6 +555,7 @@ public final class DstController implements IDstController
             var clonedReference = this.transactionService.GetClone(element);
             clonedReference.GetOriginal().setDescription(clonedReference.GetClone().getDescription());
             clonedReference.GetOriginal().setName(clonedReference.GetClone().getName());
+            clonedReference.GetOriginal().setRequirementId(element.getRequirementId());
             this.exchangeHistory.Append(element, ChangeKind.UPDATE);
         }
         

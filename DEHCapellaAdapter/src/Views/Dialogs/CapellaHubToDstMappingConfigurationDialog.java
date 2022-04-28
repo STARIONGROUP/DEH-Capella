@@ -41,5 +41,5 @@ public class CapellaHubToDstMappingConfigurationDialog extends MappingConfigurat
     public CapellaHubToDstMappingConfigurationDialog()
     {
         super(MappingDirection.FromHubToDst, new CapellaMappedElementListView());
-    } 
+    }
 }

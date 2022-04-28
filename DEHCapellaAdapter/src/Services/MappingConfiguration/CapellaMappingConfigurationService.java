@@ -81,6 +81,16 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         super(hubController, CapellaExternalIdentifier.class);
         this.sessionService = sessionService;
         this.transactionService = transactionService;
+        
+        this.HubController.GetIsSessionOpenObservable()
+        .subscribe(x -> 
+        {
+            if(!x)
+            {
+                this.Correspondences.clear();
+                this.SetExternalIdentifierMap(new ExternalIdentifierMap());
+            }
+        });
     }
     
     /**
@@ -189,8 +199,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
                 var mappedElement = new MappedDstRequirementRowViewModel((Requirement)element, mappingDirection);
                 this.GetMappedRequirement(mappedElement, internalId, RequirementsSpecification.class);
                 refMappedElementRowViewModel.Set(mappedElement);
-            }
-            
+            }            
         }
         
         return refMappedElementRowViewModel.HasValue();

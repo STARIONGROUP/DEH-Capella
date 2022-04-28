@@ -45,7 +45,6 @@ import Utils.Stereotypes.CapellaRequirementCollection;
 import Utils.Stereotypes.CapellaTypeEnumerationUtility;
 import Utils.Stereotypes.HubRequirementCollection;
 import Utils.Stereotypes.RequirementType;
-import Utils.Stereotypes.StereotypeUtils;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.commondata.NamedThing;

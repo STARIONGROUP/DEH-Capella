@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import org.eclipse.emf.common.util.EList;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.Property;
@@ -72,8 +73,6 @@ import cdp4common.engineeringmodeldata.ParameterOrOverrideBase;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.BooleanParameterType;
 import cdp4common.sitedirectorydata.Category;
-import cdp4common.sitedirectorydata.DateParameterType;
-import cdp4common.sitedirectorydata.DateTimeParameterType;
 import cdp4common.sitedirectorydata.EnumerationParameterType;
 import cdp4common.sitedirectorydata.MeasurementScale;
 import cdp4common.sitedirectorydata.MeasurementUnit;
@@ -81,7 +80,6 @@ import cdp4common.sitedirectorydata.NumberSetKind;
 import cdp4common.sitedirectorydata.ParameterType;
 import cdp4common.sitedirectorydata.QuantityKind;
 import cdp4common.sitedirectorydata.TextParameterType;
-import cdp4common.sitedirectorydata.TimeOfDayParameterType;
 
 /**
  * The {@linkplain ElementToComponentMappingRule} is the mapping rule implementation for transforming Capella {@linkplain Component} to {@linkplain ElementDefinition}
@@ -201,12 +199,25 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         
         if(parent instanceof PhysicalComponent)
         {
-            ((PhysicalComponent)parent).getOwnedPhysicalComponents().add((PhysicalComponent)component);
+            this.UpdateContainement((PhysicalComponent)component, ((PhysicalComponent)parent).getOwnedPhysicalComponents());
         }
         else if(parent instanceof LogicalComponent)
         {
-            ((LogicalComponent)parent).getOwnedLogicalComponents().add((LogicalComponent)component);
+            this.UpdateContainement((LogicalComponent)component, ((LogicalComponent)parent).getOwnedLogicalComponents());
         }
+    }
+
+    /**
+     * Updates the containment information of the provided children collection for the provided {@linkplain #TComponent}
+     * 
+     * @param <TComponent> the type of {@linkplain Component}
+     * @param component the {@linkplain #TComponent}
+     * @param ownedComponentCollection the {@linkplain EList} of {@linkplain #TComponent}
+     */
+    private <TComponent extends Component> void UpdateContainement(TComponent component, EList<TComponent> ownedComponentCollection)
+    {
+        ownedComponentCollection.removeIf(x -> AreTheseEquals(x.getId(), component.getId()));
+        ownedComponentCollection.add(component);
     }
     
     /**
@@ -583,14 +594,14 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
                         
                         newMappedElement.SetTargetArchitecture(targetArchitecture);
                         this.elements.add(newMappedElement);
-                        this.UpdateContainement(mappedElement.GetDstElement(), newMappedElement.GetDstElement());
                         return newMappedElement;
                     });
             
             this.MapProperties(containedUsage, usageDefinitionMappedElement.GetDstElement());
+            this.UpdateContainement(mappedElement.GetDstElement(), usageDefinitionMappedElement.GetDstElement());
 
             this.MapContainedElement(usageDefinitionMappedElement, targetArchitecture);
-        }        
+        }
     }
 
     /**
