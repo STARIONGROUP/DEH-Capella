@@ -35,7 +35,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.ui.ISelectionService;
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import DstController.IDstController;
 import Enumerations.MappingDirection;
@@ -72,6 +71,7 @@ import io.reactivex.Observable;
  * The {@linkplain MapCommandService} provides a simplest way to prepare and map elements from DST and HUB, also provides an abstraction level 
  * on {@linkplain AbstractHandler}, so the action behind {@linkplain MapToHubCommand} can be properly tested since it has many dependencies
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class MapCommandService implements IMapCommandService
 {
     /**
@@ -361,6 +361,7 @@ public class MapCommandService implements IMapCommandService
      * @param requirementsSpecification the {@linkplain RequirementsSpecification} that contains all the requirements
      * @param filterOnGroup a {@linkplain Predicate} to test if only the requirements contained in a certain group should be selected
      */
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
     private void SortRequirements(ArrayList<Thing> hubRequirements, RequirementsSpecification requirementsSpecification,
             Predicate<cdp4common.engineeringmodeldata.Requirement> filterOnGroup)
     {
@@ -388,8 +389,8 @@ public class MapCommandService implements IMapCommandService
             return;
         }
         
-        Collection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> validMappedElements;        
-        IMappingConfigurationDialogViewModel<?> dialogViewModel;
+        Collection<MappedElementRowViewModel<? extends Thing, ?>> validMappedElements;        
+        IMappingConfigurationDialogViewModel<?, ?, ?> dialogViewModel;
         
         if(mappingDirection == MappingDirection.FromHubToDst)
         {
@@ -433,7 +434,7 @@ public class MapCommandService implements IMapCommandService
      * @param mappingDirection the applicable {@linkplain MappingDirection}
      * @return a value indicating whether the mapping operation succeeded
      */
-    private boolean MapSelectedElements(Collection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> mappableElements, MappingDirection mappingDirection)
+    private boolean MapSelectedElements(Collection<MappedElementRowViewModel<? extends Thing, ?>> mappableElements, MappingDirection mappingDirection)
     {
         if(mappingDirection == MappingDirection.FromDstToHub)
         {
@@ -453,7 +454,8 @@ public class MapCommandService implements IMapCommandService
      * @param mappableElements the {@linkplain Collection} of {@linkplain MappedElementRowViewModel} to be mapped
      * @return a value indicating whether the mapping operation went ok
      */
-    private boolean MapSelectedElementFromHubToDst(Collection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> mappableElements)
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
+    private boolean MapSelectedElementFromHubToDst(Collection<MappedElementRowViewModel<? extends Thing, ?>> mappableElements)
     {
         var result = true;
         
@@ -491,7 +493,7 @@ public class MapCommandService implements IMapCommandService
      * @param mappableElements the {@linkplain Collection} of {@linkplain MappedElementRowViewModel} to be mapped
      * @return a value indicating whether the mapping operation went ok
      */
-    private boolean MapSelectedElementsFromDstToHub(Collection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> mappableElements)
+    private boolean MapSelectedElementsFromDstToHub(Collection<MappedElementRowViewModel<? extends Thing, ?>> mappableElements)
     {
         var result = true;
         var mappedComponents = new CapellaComponentCollection();

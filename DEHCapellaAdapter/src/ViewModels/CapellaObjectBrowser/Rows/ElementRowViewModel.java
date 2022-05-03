@@ -41,6 +41,7 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
  * 
  * @param <TElement> the type of {@linkplain CapellaElement} this row view model represents
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public abstract class ElementRowViewModel<TElement extends CapellaElement> implements IElementRowViewModel<TElement>
 {    
     /**

@@ -178,4 +178,13 @@ public interface ICapellaTransactionService
      * @return an instance of the provided type
      */
     <TInstance extends NamedElement> TInstance Create(Class<TInstance> clazz, String name, CapellaArchitecture targetArchitecture);
+
+    /**
+     *  Verifies that the provided {@linkplain #TElement} is a new element
+     *  
+     * @param <TElement> the type of the element
+     * @param element the {@linkplain #TElement} to check
+     * @return an assert
+     */
+    <TElement extends CapellaElement> boolean IsNew(TElement element);
 }

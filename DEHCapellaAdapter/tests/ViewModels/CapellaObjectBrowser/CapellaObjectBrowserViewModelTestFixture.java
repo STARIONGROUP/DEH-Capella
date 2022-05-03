@@ -35,12 +35,14 @@ import org.polarsys.capella.core.data.pa.impl.PhysicalComponentImpl;
 
 import Services.CapellaSession.ICapellaSessionService;
 
+import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.sirius.business.api.session.Session;
 
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 
 class CapellaObjectBrowserViewModelTestFixture
 {
@@ -73,17 +75,25 @@ class CapellaObjectBrowserViewModelTestFixture
         var isTheTreeVisibleValues = new ArrayList<Boolean>();
         this.viewModel.IsTheTreeVisible().subscribe(x -> isTheTreeVisibleValues.add(x));
         var elements = new ArrayList<EObject>();
-        elements.add(mock(PhysicalComponent.class));
-
+        PhysicalComponent physicalComponent = mock(PhysicalComponent.class);
+        when(physicalComponent.eContents()).thenReturn(new BasicEList());
+        elements.add(physicalComponent);
+        
+        RootRowViewModel rootRowViewModel = new RootRowViewModel("af", elements);
+        
+        when(this.capellaSessionService.GetModels()).thenReturn(rootRowViewModel);
+        
         assertDoesNotThrow(() -> this.viewModel.BuildTree(elements));
+        assertDoesNotThrow(() -> this.viewModel.BuildTree(null));
         var session = mock(Session.class);
         var sessionResource = mock(Resource.class);
         when(sessionResource.getURI()).thenReturn(URI.createURI("ur.i"));
         when(session.getSessionResource()).thenReturn(sessionResource);
         when(this.capellaSessionService.GetSession(any(EObject.class))).thenReturn(session);
         assertDoesNotThrow(() -> this.viewModel.BuildTree(elements));
-        assertEquals(2, isTheTreeVisibleValues.size());
+        assertEquals(3, isTheTreeVisibleValues.size());
         assertTrue(isTheTreeVisibleValues.get(0));
         assertTrue(isTheTreeVisibleValues.get(1));
+        assertTrue(isTheTreeVisibleValues.get(2));
     }    
 }

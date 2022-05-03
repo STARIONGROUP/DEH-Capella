@@ -45,7 +45,7 @@ public enum ComponentType implements ICapellaTypeEnumeration<ComponentType, Comp
     /**
      * Represents a {@linkplain LogicalComponent}
      */
-    Logical("Non-Functional Interface", LogicalComponent.class);
+    Logical("Logical Component", LogicalComponent.class);
     
     /**
      * The current class logger

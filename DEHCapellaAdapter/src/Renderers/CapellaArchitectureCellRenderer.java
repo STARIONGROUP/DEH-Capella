@@ -46,6 +46,7 @@ import ViewModels.Rows.MappedElementRowViewModel;
  * The {@linkplain CapellaArchitectureCellRenderer} is the custom cell renderer for {@linkplain CapellaArchitecture} cells
  */
 @SuppressWarnings("serial")
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class CapellaArchitectureCellRenderer extends JComboBox<CapellaArchitecture> implements TableCellRenderer
 {
     /**

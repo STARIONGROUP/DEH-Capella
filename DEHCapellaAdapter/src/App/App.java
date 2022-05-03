@@ -87,7 +87,9 @@ import ViewModels.Interfaces.IHubBrowserPanelViewModel;
 import ViewModels.Interfaces.IRequirementImpactViewViewModel;
 import ViewModels.Interfaces.ITransferControlViewModel;
 import ViewModels.MappedElementListView.CapellaMappedElementListViewViewModel;
+import ViewModels.MappedElementListView.MappedElementListViewViewModel;
 import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
+import ViewModels.MappedElementListView.Interfaces.IMappedElementListViewViewModel;
 
 /**
  * The {@linkplain App} class is the main entry point for the DEH-Capella adapter
@@ -188,6 +190,7 @@ public class App extends AbstractUIPlugin
         catch (Exception exception) 
         {
             this.logger.error(String.format("DEHCapella register dependencies has thrown an exception with %s %n %s", exception.toString(), exception.getStackTrace()));
+            this.logger.catching(exception);
             throw exception;
         }
     }

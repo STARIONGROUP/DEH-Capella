@@ -32,13 +32,11 @@ import java.util.function.Predicate;
 
 import javax.swing.tree.TreeModel;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.ecore.EObject;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
-import org.polarsys.capella.core.data.ctx.SystemAnalysis;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.la.LogicalComponentPkg;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
@@ -70,7 +68,6 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain CapellaImpactViewViewModel} is the main view model for the requirement impact view in the impact view panel
  */
-@SuppressWarnings("unused")
 public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel implements ICapellaImpactViewViewModel
 {
     /**
@@ -501,7 +498,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
      * @param selectedRow the selected view model {@linkplain ElementRowViewModel}
      */
     @Override
-    public void OnSelectionChanged(ElementRowViewModel<?> selectedRow) 
+    public void OnSelectionChanged(ElementRowViewModel<? extends CapellaElement> selectedRow) 
     {
         this.AddOrRemoveSelectedRowToTransfer(selectedRow);
     }

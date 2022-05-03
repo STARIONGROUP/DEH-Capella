@@ -38,6 +38,7 @@ import io.reactivex.Observable;
 /**
  * The HubBrowserContextMenuViewModel is the implementation of the {@linkplain IHubBrowserContextMenuViewModel} for the Hub browsers context menu
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class HubBrowserContextMenuViewModel implements IHubBrowserContextMenuViewModel
 {
     /**

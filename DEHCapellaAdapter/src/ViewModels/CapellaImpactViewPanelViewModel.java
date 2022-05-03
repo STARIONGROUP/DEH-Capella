@@ -51,6 +51,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain CapellaImpactViewPanelViewModel} is 
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel implements ICapellaImpactViewPanelViewModel
 {
     /**

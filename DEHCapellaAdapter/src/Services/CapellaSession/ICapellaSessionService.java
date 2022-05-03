@@ -31,10 +31,12 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellamodeller.Project;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
+import Enumerations.CapellaArchitecture;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
 
@@ -170,4 +172,20 @@ public interface ICapellaSessionService
      * @return a {@linkplain PhysicalComponent}
      */
     PhysicalComponent GetTopElement();
+
+    /**
+     * Gets the {@linkplain BlockArchitecture} that matches the {@linkplain CapellaArchitecture} provided
+     * 
+     * @param targetArchitecture the {@linkplain CapellaArchitecture}
+     * @return the {@linkplain BlockArchitecture}
+     */
+    BlockArchitecture GetArchitectureInstance(CapellaArchitecture targetArchitecture);
+
+    /**
+     * Gets the top element from the {@linkplain Session} in the provided {@linkplain CapellaArchitecture}
+     * 
+     * @param architecture the {@linkplain CapellaArchitecture} from which to get the top element
+     * @return a {@linkplain CapellaElement}
+     */
+    Component GetTopElement(CapellaArchitecture architecture);
 }

@@ -23,9 +23,15 @@
  */
 package Views.Dialogs;
 
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
+
 import Enumerations.MappingDirection;
+import ViewModels.CapellaObjectBrowser.Rows.ComponentRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.Dialogs.Interfaces.IHubToDstMappingConfigurationDialogViewModel;
 import Views.CapellaMappedElementListView;
+import Views.CapellaObjectBrowser;
+import cdp4common.commondata.Thing;
 
 /**
  * The {@linkplain CapellaDstToHubMappingConfigurationDialog} is the dialog view to allow to configure a mapping 
@@ -33,13 +39,13 @@ import Views.CapellaMappedElementListView;
  */
 @SuppressWarnings("serial")
 @Annotations.ExludeFromCodeCoverageGeneratedReport
-public class CapellaHubToDstMappingConfigurationDialog extends MappingConfigurationDialog<IHubToDstMappingConfigurationDialogViewModel>
+public class CapellaHubToDstMappingConfigurationDialog extends MappingConfigurationDialog<IHubToDstMappingConfigurationDialogViewModel, Thing, CapellaElement, ElementRowViewModel<? extends CapellaElement>>
 {
     /**
      * Initializes a new {@linkplain CapellaDstToHubMappingConfigurationDialog}
      */
     public CapellaHubToDstMappingConfigurationDialog()
     {
-        super(MappingDirection.FromHubToDst, new CapellaMappedElementListView());
+        super(MappingDirection.FromHubToDst, new CapellaObjectBrowser(), new CapellaMappedElementListView());
     }
 }

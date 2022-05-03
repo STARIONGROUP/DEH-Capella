@@ -158,12 +158,15 @@ class ElementDefinitionImpactViewViewModelTestFixture
         this.elementDefinition0 = new ElementDefinition();
         this.elementDefinition0.setIid(UUID.randomUUID());
         this.elementDefinition0.setOwner(owner);
+        this.elementDefinition0.setName("elementDefinition0");
         this.elementDefinition1 = new ElementDefinition();
         this.elementDefinition1.setIid(UUID.randomUUID());
         this.elementDefinition1.setOwner(owner);
+        this.elementDefinition1.setName("elementDefinition1");
         this.elementDefinition2 = new ElementDefinition();
         this.elementDefinition2.setIid(UUID.randomUUID());
         this.elementDefinition2.setOwner(owner);
+        this.elementDefinition2.setName("elementDefinition2");
         
         this.mappedElement0 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement0.GetHubElement()).thenReturn(elementDefinition0.clone(false));

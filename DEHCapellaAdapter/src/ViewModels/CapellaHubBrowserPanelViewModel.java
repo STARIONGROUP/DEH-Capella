@@ -33,7 +33,7 @@ import ViewModels.Interfaces.IRequirementBrowserViewModel;
 import ViewModels.Interfaces.ISessionControlPanelViewModel;
 
 /**
- * The CapellaHubBrowserPanelViewModel is
+ * The CapellaHubBrowserPanelViewModel is the view model for the {@linkplain CapellaHubBrowserPanel}
  */
 public class CapellaHubBrowserPanelViewModel extends HubBrowserPanelViewModel implements ICapellaHubBrowserPanelViewModel
 {
@@ -84,7 +84,7 @@ public class CapellaHubBrowserPanelViewModel extends HubBrowserPanelViewModel im
             IHubBrowserContextMenuViewModel elementDefinitionBrowserContextMenuViewModel, IHubBrowserContextMenuViewModel requirementBrowserContextMenuViewModel)
     {
         super(navigationService, hubController, hubBrowserHeaderViewModel, requirementBrowserViewModel,
-                elementDefinitionBrowserViewModel, sessionControlViewModel);
+                elementDefinitionBrowserViewModel, sessionControlViewModel, requirementBrowserContextMenuViewModel, requirementBrowserContextMenuViewModel);
         
         this.elementDefinitionBrowserContextMenuViewModel = elementDefinitionBrowserContextMenuViewModel;
         this.requirementBrowserContextMenuViewModel = requirementBrowserContextMenuViewModel;

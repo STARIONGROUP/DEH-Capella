@@ -32,6 +32,7 @@ import Utils.Ref;
 /**
  * The {@linkplain CapellaTransaction} class is an implementation of {@linkplain AbstractReadWriteCommand} where any changes to the model should be applied
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class CapellaTransaction extends AbstractReadWriteCommand
 {
     /**

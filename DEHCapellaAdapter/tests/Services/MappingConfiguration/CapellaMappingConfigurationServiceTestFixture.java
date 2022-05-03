@@ -25,6 +25,7 @@ package Services.MappingConfiguration;
 
 import static org.mockito.Mockito.*;
 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,6 +55,7 @@ import ViewModels.Interfaces.IMappedElementRowViewModel;
 import cdp4common.commondata.*;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
+import io.reactivex.Observable;
 
 public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessionRelatedBaseTestFixture
 {
@@ -72,7 +74,7 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
     public void setUp() throws Exception
     {
         this.hubController = mock(IHubController.class);
-        
+        when(this.hubController.GetIsSessionOpenObservable()).thenReturn(Observable.fromArray(true, false));
         this.elementDefinition = new ElementDefinition(UUID.randomUUID(), null, null);
         this.requirementsSpecification = new RequirementsSpecification(UUID.randomUUID(), null, null);
         

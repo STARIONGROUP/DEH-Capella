@@ -27,24 +27,22 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.netbeans.swing.outline.Outline;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Annotations.ExludeFromCodeCoverageGeneratedReport;
 import Renderers.CapellaObjectBrowserRenderDataProvider;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
+import ViewModels.Interfaces.IImpactViewContextMenuViewModel;
 import ViewModels.Interfaces.IViewModel;
-import Views.ContextMenu.CapellaImpactViewContextMenu;
-import Views.ContextMenu.ContextMenu;
-import Views.ObjectBrowser.ObjectBrowser;
+import Views.ObjectBrowser.ObjectBrowserBase;
 
 /**
  * The {@linkplain CapellaObjectBrowser} is view that display the Capella model tree
  */
 @ExludeFromCodeCoverageGeneratedReport
 @SuppressWarnings("serial")
-public class CapellaObjectBrowser extends ObjectBrowser
+public class CapellaObjectBrowser extends ObjectBrowserBase<ICapellaObjectBrowserViewModel, IImpactViewContextMenuViewModel>
 {
     /**
      * This view attached {@linkplain IViewModel}
@@ -67,9 +65,9 @@ public class CapellaObjectBrowser extends ObjectBrowser
      * @param viewModel the {@link IViewModel} to assign
      */
     @Override
-    public void SetDataContext(IViewModel viewModel)
+    public void SetDataContext(ICapellaObjectBrowserViewModel viewModel)
     {
-        this.dataContext = (ICapellaObjectBrowserViewModel)viewModel;
+        this.dataContext = viewModel;
         this.Bind();
     }
     
@@ -105,15 +103,5 @@ public class CapellaObjectBrowser extends ObjectBrowser
         SwingUtilities.invokeLater(() -> {
             objectBrowserTree.tableChanged(new TableModelEvent(objectBrowserTree.getOutlineModel(), row.getLeft()));
         });
-    }
-
-    /**
-     * Sets this {@linkplain Outline} contained component context menu
-     * 
-     * @param contextMenu the {@linkplain ContextMenu}
-     */
-    public void SetContextMenu(ContextMenu<?> contextMenu)
-    {
-        this.objectBrowserTree.setComponentPopupMenu(contextMenu);
     }
 }

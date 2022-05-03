@@ -26,15 +26,9 @@ package DstController;
 import java.util.Collection;
 import java.util.function.Predicate;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.information.Unit;
 import org.polarsys.capella.core.data.information.datatype.DataType;
-import org.polarsys.capella.core.data.information.datatype.PhysicalQuantity;
 
-import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
 import Services.MappingEngineService.IMappableThingCollection;
@@ -50,7 +44,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain IDstController} is the interface definition for the {@linkplain DstController}
  */
-public interface IDstController extends IDstControllerBase
+public interface IDstController extends IDstControllerBase<CapellaElement>
 {
     /**
      * Transfers all the {@linkplain Thing} contained in the {@linkplain dstMapResult} to the Hub
