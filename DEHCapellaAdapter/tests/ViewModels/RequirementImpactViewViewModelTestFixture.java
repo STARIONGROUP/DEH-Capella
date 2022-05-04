@@ -153,12 +153,15 @@ class RequirementImpactViewViewModelTestFixture
         this.requirementsSpecification0 = new RequirementsSpecification();
         this.requirementsSpecification0.setIid(UUID.randomUUID());
         this.requirementsSpecification0.setOwner(owner);
+        this.requirementsSpecification0.setName("requirementsSpecification0");
         this.requirementsSpecification1 = new RequirementsSpecification();
         this.requirementsSpecification1.setIid(UUID.randomUUID());
         this.requirementsSpecification1.setOwner(owner);
+        this.requirementsSpecification1.setName("requirementsSpecification1");
         this.requirementsSpecification2 = new RequirementsSpecification();
         this.requirementsSpecification2.setIid(UUID.randomUUID());
         this.requirementsSpecification2.setOwner(owner);
+        this.requirementsSpecification2.setName("requirementsSpecification2");
         
         this.mappedElement0 = (MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
         when(this.mappedElement0.GetHubElement()).thenReturn(this.requirementsSpecification0);

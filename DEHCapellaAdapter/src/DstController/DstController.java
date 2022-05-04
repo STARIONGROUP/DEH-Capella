@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
@@ -39,9 +40,12 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.Interface;
+import org.polarsys.capella.core.data.cs.InterfacePkg;
 import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
@@ -59,8 +63,7 @@ import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.HistoryService.ICapellaLocalExchangeHistoryService;
-import Services.MappingConfiguration.ICapellaMappingConfigurationService;
-import Services.MappingConfiguration.IMappingConfigurationService;
+import Services.MappingConfiguration.ICapellaMappingConfigurationService;import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
 import Services.MappingEngineService.IMappingEngineService;
 import Utils.Ref;
@@ -474,7 +477,7 @@ public final class DstController implements IDstController
      * 
      * @return a value indicating that all transfer could be completed
      */
-    private boolean TransferToDst()
+    public boolean TransferToDst()
     {
         try
         {
@@ -505,6 +508,7 @@ public final class DstController implements IDstController
         catch (Exception exception)
         {
             this.logService.Append(exception.toString(), exception);
+            this.logger.catching(exception);
             return false;
         }
         finally
@@ -538,7 +542,52 @@ public final class DstController implements IDstController
                 {
                     this.PrepareComponentContainer((Component)element);
                 }
+
+                this.PrepareInterfaces((Component)element);
             }
+        }
+    }
+
+    /**
+     * Prepares all the {@linkplain Interface}s that the provided {@linkplain Component} ports use
+     * 
+     * @param element the {@linkplain Component}
+     */
+    private void PrepareInterfaces(Component element)
+    {
+        var allInterfaces = element.getContainedComponentPorts().stream()
+                .flatMap(x -> Stream.concat(x.getProvidedInterfaces().stream(), x.getRequiredInterfaces().stream()))
+                .filter(x -> this.transactionService.IsNew(x))
+                .collect(Collectors.toList());
+
+        var targetArchitecture = element instanceof PhysicalComponent ? 
+                CapellaArchitecture.PhysicalArchitecture : CapellaArchitecture.LogicalArchitecture;
+        
+        for (Interface interfaceToAdd : allInterfaces)
+        {
+            var interfacePackage = BlockArchitectureExt.getInterfacePkg(
+                    this.capellaSessionService.GetArchitectureInstance(targetArchitecture), true);
+            
+            interfacePackage.getOwnedInterfaces().add(interfaceToAdd);
+            this.exchangeHistory.Append(interfaceToAdd, ChangeKind.CREATE);
+        }
+        
+        this.PrepareInterfacesForChildren(element);
+    }
+
+    /**
+     * Prepares all the {@linkplain Interface}s that the provided {@linkplain Component} children ports use
+     * 
+     * @param element the {@linkplain Component}
+     */
+    private void PrepareInterfacesForChildren(Component element)
+    {
+        for (var childComponent : element.eContents().stream()
+                .filter(x -> x instanceof Component)
+                .map(x -> (Component)x)
+                .collect(Collectors.toList()))
+        {
+            this.PrepareInterfaces(childComponent);
         }
     }
 
@@ -581,7 +630,7 @@ public final class DstController implements IDstController
         }
         else
         {
-            var architecture = BlockArchitectureExt.getBlockArchitecture(targetArchitecture.GetType(), this.capellaSessionService.GetProject());
+            var architecture = this.capellaSessionService.GetArchitectureInstance(targetArchitecture);
             architecture.getOwnedRequirementPkgs().removeIf(x -> AreTheseEquals(x.getId(), containerToUpdate.getId()));
             architecture.getOwnedRequirementPkgs().add(containerToUpdate);
 
@@ -719,6 +768,40 @@ public final class DstController implements IDstController
             
             childrenSelector.apply(clonedReference.GetOriginal()).add(containedElement);
         }
+        
+        for (var clonedPort : clonedReference.GetClone().getContainedComponentPorts())
+        {
+            var optionalPort = clonedReference.GetOriginal().getContainedComponentPorts().stream()
+                    .filter(x -> AreTheseEquals(x.getId(), clonedPort.getId()))
+                    .findFirst();
+            
+            if(optionalPort.isPresent())
+            {
+                this.UpdateInterfaces(clonedPort.getProvidedInterfaces(), optionalPort.get().getProvidedInterfaces());
+                this.UpdateInterfaces(clonedPort.getRequiredInterfaces(), optionalPort.get().getRequiredInterfaces());
+                
+                this.exchangeHistory.Append(optionalPort.get(), ChangeKind.UPDATE);
+                continue;
+            }
+            
+            clonedReference.GetOriginal().getContainedComponentPorts().add(clonedPort);
+            this.exchangeHistory.Append(clonedPort, ChangeKind.CREATE);
+        }
+    }
+
+    /**
+     * Updates the {@linkplain Interface} referenced through the provided {@linkplain Collection} of {@linkplain Interface}
+     * 
+     * @param clonedInterfaces the {@linkplain EList} of cloned {@linkplain Interface}s
+     * @param originalInterfaces the {@linkplain EList} of original {@linkplain Interface}s
+     */
+    private void UpdateInterfaces(EList<Interface> clonedInterfaces, EList<Interface> originalInterfaces)
+    {
+        for (var interfaceToUpdate : clonedInterfaces)
+        {
+            originalInterfaces.removeIf(x -> AreTheseEquals(x.getId(), interfaceToUpdate.getId()));
+            originalInterfaces.add(interfaceToUpdate);
+        }
     }
         
     /**
@@ -773,6 +856,7 @@ public final class DstController implements IDstController
     * 
     * @throws TransactionException can throw {@linkplain TransactionException}
     */
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
    private void PrepareParameterOverrides() throws TransactionException
     {
        Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
@@ -844,6 +928,7 @@ public final class DstController implements IDstController
      * @param clazz the {@linkplain Class} of {@linkplain #TParameter}
      * @throws TransactionException can throw {@linkplain TransactionException}
      */
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
     private <TParameter extends ParameterOrOverrideBase> void UpdateParameterValueSets(ThingTransaction transaction, List<TParameter> allParameters, Class<TParameter> clazz) throws TransactionException
     {
         for(var parameter : allParameters)
@@ -886,6 +971,7 @@ public final class DstController implements IDstController
      * @param transaction the {@linkplain ThingTransaction}
      * @throws TransactionException can throw {@linkplain TransactionException}
      */
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
     private void PrepareThingsForTransfer(Iteration iterationClone, ThingTransaction transaction) throws TransactionException
     {
         ArrayList<Thing> thingsToTransfer = new ArrayList<>(this.selectedDstMapResultForTransfer);
@@ -1065,6 +1151,7 @@ public final class DstController implements IDstController
      * @param transaction the {@linkplain ThingTransaction}
      * @throws TransactionException can throw {@linkplain TransactionException}
      */
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
     private <T extends Thing> void AddOrUpdateIterationAndTransaction(T thing, ContainerList<T> containerList, ThingTransaction transaction) throws TransactionException
     {
         try

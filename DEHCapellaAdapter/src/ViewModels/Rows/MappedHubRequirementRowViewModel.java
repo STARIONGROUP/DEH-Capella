@@ -35,6 +35,7 @@ import io.reactivex.Observable;
  * The {@linkplain MappedHubRequirementRowViewModel} is the row view model that represents a mapping between 
  * a {@linkplain cdp4common.engineeringmodeldata.Requirement} and a {@linkplain Requirement}
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class MappedHubRequirementRowViewModel extends MappedRequirementBaseRowViewModel<cdp4common.engineeringmodeldata.Requirement> implements IHaveTargetArchitecture
 {
     /**

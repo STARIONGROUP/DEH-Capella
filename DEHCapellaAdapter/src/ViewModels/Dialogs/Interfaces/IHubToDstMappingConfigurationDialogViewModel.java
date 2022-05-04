@@ -23,11 +23,14 @@
  */
 package ViewModels.Dialogs.Interfaces;
 
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
+
+import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import cdp4common.commondata.Thing;
 
 /**
  * The IHubToDstMappingConfigurationDialogViewModel is the interface definition for the {@linkplain HubToDstMappingConfigurationDialogViewModel}
  */
-public interface IHubToDstMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<Thing>
+public interface IHubToDstMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<Thing, CapellaElement, ElementRowViewModel<? extends CapellaElement>>
 {
 }

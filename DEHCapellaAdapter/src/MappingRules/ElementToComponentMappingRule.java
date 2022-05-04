@@ -27,11 +27,17 @@ import static Utils.Operators.Operators.AreTheseEquals;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.EList;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.Interface;
+import org.polarsys.capella.core.data.fa.ComponentPort;
+import org.polarsys.capella.core.data.fa.ComponentPortKind;
+import org.polarsys.capella.core.data.fa.OrientationPortKind;
+import org.polarsys.capella.core.data.information.Port;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.Unit;
 import org.polarsys.capella.core.data.information.datatype.BooleanType;
@@ -65,11 +71,13 @@ import Utils.Stereotypes.HubElementCollection;
 import Utils.Stereotypes.RequirementType;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import cdp4common.commondata.DefinedThing;
+import cdp4common.engineeringmodeldata.BinaryRelationship;
 import cdp4common.engineeringmodeldata.ElementBase;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.ElementUsage;
 import cdp4common.engineeringmodeldata.InterfaceEndKind;
 import cdp4common.engineeringmodeldata.ParameterOrOverrideBase;
+import cdp4common.engineeringmodeldata.Relationship;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.BooleanParameterType;
 import cdp4common.sitedirectorydata.Category;
@@ -110,6 +118,16 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * The {@linkplain Collection} of {@linkplain Unit} that were created during this mapping
      */
     private Collection<Unit> temporaryUnits = new ArrayList<>();
+
+    /**
+     * The {@linkplain HashMap} of {@linkplain ComponentPort} to connect
+     */
+    private HashMap<ElementUsage, ComponentPort> portsToConnect = new HashMap<>();
+
+    /**
+     * The {@linkplain HashMap} of {@linkplain Interface} that were created during this mapping
+     */
+    private HashMap<String, Interface> temporaryInterfaces = new HashMap<>();
 
     /**
      * Initializes a new {@linkplain ElementToComponentMappingRule}
@@ -158,6 +176,8 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             this.temporaryUnits.clear();
             this.temporaryComponents.clear();
             this.temporaryDataTypes.clear();
+            this.portsToConnect.clear();
+            this.temporaryInterfaces.clear();
         }
     }
     
@@ -178,6 +198,135 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             
             this.MapContainedElement(mappedElement, mappedElement.GetTargetArchitecture());
             this.MapProperties(mappedElement.GetHubElement(), mappedElement.GetDstElement());
+            this.MapPort(mappedElement);
+        }
+        
+        this.ConnectPorts();
+    }
+    
+    /**
+     * Connects the {@linkplain #portsToConnect} via {@linkplain Interfaces}
+     */
+    private void ConnectPorts()
+    {
+        for (var portElementUsage : this.portsToConnect.keySet())
+        {            
+            var port = this.portsToConnect.get(portElementUsage);
+            
+            for (var relationship : portElementUsage.getRelationships().stream()
+                    .filter(x -> x instanceof BinaryRelationship)
+                    .map(x -> (BinaryRelationship)x)
+                    .collect(Collectors.toList()))
+            {
+                var refInterface = new Ref<>(Interface.class);
+
+                if(!this.GetOrCreateInterface(relationship, refInterface))
+                {
+                    continue;
+                }
+                
+                if(AreTheseEquals(relationship.getSource().getIid(), portElementUsage.getIid()))
+                {
+                    port.getRequiredInterfaces().add(refInterface.Get());
+                }
+                else
+                {
+                    port.getProvidedInterfaces().add(refInterface.Get());
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets or create an {@linkplain Interface} based on the provided {@linkplain Relationship}
+     * 
+     * @param relationship the {@linkplain Relationship}
+     * @param refInterface the {@linkplain Ref} of {@linkplain Interface}
+     * @return an assert
+     */
+    private boolean GetOrCreateInterface(BinaryRelationship relationship, Ref<Interface> refInterface)
+    {
+        refInterface.Set(this.temporaryInterfaces .get(relationship.getName()));
+        
+        if(!this.dstController.TryGetElementBy(
+                x -> x instanceof Interface && AreTheseEquals(relationship.getName(), ((Interface)x).getName(), true), refInterface))
+        {
+            Interface newInterface = this.transactionService.Create(Interface.class, relationship.getName());
+            refInterface.Set(newInterface);
+            this.temporaryInterfaces.put(relationship.getName(), newInterface);
+        }
+        
+        return refInterface.HasValue();
+    }
+
+    /**
+     * Maps the port for the specified {@linkplain MappedElementDefinitionRowViewModel}
+     * 
+     * @param mappedElement the {@linkplain MappedElementDefinitionRowViewModel}
+     */
+    private void MapPort(MappedElementDefinitionRowViewModel mappedElement)
+    {
+        for (ElementUsage containedUsage : mappedElement.GetHubElement().getContainedElement().stream()
+                .filter(x -> x.getInterfaceEnd() != InterfaceEndKind.NONE).collect(Collectors.toList()))
+        {
+            Ref<ComponentPort> refPort = new Ref<>(ComponentPort.class);
+            
+            if(!this.GetOrCreatePort(containedUsage, mappedElement.GetDstElement(), refPort))
+            {
+                continue;
+            }
+
+            this.portsToConnect.put(containedUsage, refPort.Get());
+            mappedElement.GetDstElement().getOwnedFeatures().removeIf(x -> AreTheseEquals(x.getId(), refPort.Get().getId()));
+            mappedElement.GetDstElement().getOwnedFeatures().add(refPort.Get());
+        }
+    }
+    
+    /**
+     * Gets or create the {@linkplain Port} based on the provided {@linkplain port}
+     * 
+     * @param port the {@linkplain ElementUsage} port 
+     * @param parent the {@linkplain Class} parent
+     * @param refPort the {@linkplain Ref} of {@linkplain ComponentPort}
+     * @param refDefinition the {@linkplain Ref} of the definition block
+     * @return a {@linkplain boolean}
+     */
+    private boolean GetOrCreatePort(ElementUsage port, Component parent, Ref<ComponentPort> refPort)
+    {
+        parent.getContainedComponentPorts().stream()
+            .filter(x -> AreTheseEquals(x.getName(), port.getName()))
+            .findFirst()
+            .ifPresent(x -> refPort.Set(x));
+                
+        if(!refPort.HasValue() && !this.dstController.TryGetElementByName(port, refPort))
+        {
+            refPort.Set(this.transactionService.Create(ComponentPort.class, port.getName()));
+        }
+        
+        refPort.Get().setKind(ComponentPortKind.STANDARD);
+        refPort.Get().setOrientation(this.GetInterfaceEndForPort(port));
+        
+        return refPort.HasValue();
+    }
+
+    /**
+     * Gets the {@linkplain ComponentPortKind} based on the specified {@linkplain ElementUsage} port
+     * 
+     * @param port the {@linkplain ElementUsage}
+     * @return the corresponding {@linkplain ComponentPortKind}
+     */
+    private OrientationPortKind GetInterfaceEndForPort(ElementUsage port)
+    {
+        switch (port.getInterfaceEnd())
+        {
+            case INPUT:
+                return OrientationPortKind.IN;
+            case IN_OUT:
+                return OrientationPortKind.INOUT;
+            case OUTPUT:
+                return OrientationPortKind.OUT;
+            default:
+                return OrientationPortKind.UNSET;
         }
     }
     
@@ -459,12 +608,14 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         else if(dataValue instanceof EnumerationLiteral)
         {
             var enumerationValueDefinition = ((EnumerationParameterType)parameter.getParameterType()).getValueDefinition().stream()
-                .filter(x -> AreTheseEquals(x.getShortName(), valueString, true))
+                .filter(x -> AreTheseEquals(x.getShortName(), valueString, true) || AreTheseEquals(x.getName(), valueString, true))
                 .findFirst();
+
+            var enumerationType = refProperty.Get().getAbstractType();
             
-            if(enumerationValueDefinition.isPresent())
+            if(enumerationValueDefinition.isPresent() && enumerationType instanceof Enumeration)
             {
-                ((Enumeration)refProperty.Get().getAbstractType()).getOwnedLiterals().stream()
+                ((Enumeration)enumerationType).getOwnedLiterals().stream()
                     .filter(x -> 
                         AreTheseEquals(x.getName(), enumerationValueDefinition.get().getName(), true))
                     .findFirst()
@@ -585,7 +736,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
                 .filter(x -> x.getInterfaceEnd() == InterfaceEndKind.NONE).collect(Collectors.toList()))
         {
             MappedElementDefinitionRowViewModel usageDefinitionMappedElement = this.elements.stream()
-                    .filter(x -> AreTheseEquals(x.GetDstElement().getName(), containedUsage.getName(), true))
+                    .filter(x -> x.GetDstElement() != null && AreTheseEquals(x.GetDstElement().getName(), containedUsage.getName(), true))
                     .findFirst()
                     .orElseGet(() -> 
                     {
@@ -599,6 +750,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             
             this.MapProperties(containedUsage, usageDefinitionMappedElement.GetDstElement());
             this.UpdateContainement(mappedElement.GetDstElement(), usageDefinitionMappedElement.GetDstElement());
+            this.MapPort(usageDefinitionMappedElement);
 
             this.MapContainedElement(usageDefinitionMappedElement, targetArchitecture);
         }

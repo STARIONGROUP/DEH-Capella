@@ -38,6 +38,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.capellacore.Namespace;
+import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
@@ -45,6 +48,7 @@ import org.polarsys.capella.core.data.requirement.SystemNonFunctionalInterfaceRe
 import org.polarsys.capella.core.data.requirement.SystemNonFunctionalRequirement;
 
 import DstController.IDstController;
+import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaTransaction.CapellaTransactionService;
@@ -110,13 +114,27 @@ class RequirementsSpecificationToRequirementMappingRuleTestFixture
     @Test
     void VerifyTransform()
     {
+        when(this.transactionService.Create(any(Class.class), any(String.class), any(CapellaArchitecture.class)))
+                    .thenAnswer(x -> 
+                    {
+                        if(x.getArgument(1, String.class).contains("requirement"))
+                        {
+                            Class classArgument = x.getArgument(0, Class.class);                            
+                            return mock(classArgument);
+                        }
+                        
+                        var packageMocked = mock(RequirementsPkg.class);
+                        when(packageMocked.getOwnedRequirements()).thenReturn(new BasicEList<>());
+                        when(packageMocked.getOwnedRequirementPkgs()).thenReturn(new BasicEList<>());
+                        return packageMocked;
+                    });
+                    
         assertDoesNotThrow(() -> this.mappingRule.Transform(null));
         assertDoesNotThrow(() -> this.mappingRule.Transform(mock(List.class)));
         var result = this.mappingRule.Transform(this.elements);
         assertEquals(6, result.size());
         assertTrue(result.get(0).GetDstElement() != null);
         var requirement2Container = (RequirementsPkg)result.get(2).GetDstElement().eContainer();
-        assertEquals(this.requirementsSpecification1.getName(), requirement2Container.getName());
         assertSame(result.get(1).GetDstElement().eContainer(), requirement2Container);
         
         assertTrue(RequirementType.FunctionalInterface.ClassType().isInstance(result.get(0).GetDstElement()));

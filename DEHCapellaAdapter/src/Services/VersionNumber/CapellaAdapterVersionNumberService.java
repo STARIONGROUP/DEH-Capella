@@ -47,7 +47,6 @@ public class CapellaAdapterVersionNumberService extends AdapterVersionNumberServ
      */
     private static Version GetCapellaAdapterVersion()
     {
-        var versionString = "";
         var bundle = FrameworkUtil.getBundle(App.App.class);
         
         if(bundle != null)

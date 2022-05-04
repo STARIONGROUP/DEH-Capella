@@ -26,6 +26,7 @@ package ViewModels;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
+import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,6 +44,7 @@ import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
 import Services.CapellaSession.CapellaSessionRelatedBaseTestFixture;
 import Services.CapellaSession.ICapellaSessionService;
+import Services.CapellaTransaction.ICapellaTransactionService;
 import ViewModels.CapellaObjectBrowser.Rows.ComponentRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
@@ -56,22 +58,26 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
     private IDstController dstController;
     private CapellaImpactViewViewModel viewModel;
     private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> hubMapResult;
+    private ICapellaTransactionService transactionService;
 
     @BeforeEach
     public void Setup()
     {
         this.dstController = mock(IDstController.class);
         this.sessionService = mock(ICapellaSessionService.class);
+        this.transactionService = mock(ICapellaTransactionService.class);
+        
         this.hubMapResult = new ObservableCollection<>();
         when(this.dstController.GetHubMapResult()).thenReturn(this.hubMapResult);
         when(this.dstController.HasAnyOpenSessionObservable()).thenReturn(Observable.fromArray(false, true, true));
         when(this.dstController.GetSelectedHubMapResultForTransfer()).thenReturn(new ObservableCollection());
+        when(this.transactionService.IsClonedOrNew(any())).thenAnswer(x -> new Random().nextBoolean());
 
         var session = this.GetSession(URI.createURI("test"));
         
         RootRowViewModel rootRowViewModel = new RootRowViewModel("", CapellaSessionRelatedBaseTestFixture.GetSessionElements(session, Notifier.class));
         when(this.sessionService.GetModels()).thenReturn(rootRowViewModel);
-        this.viewModel = new CapellaImpactViewViewModel(this.dstController, this.sessionService, null);
+        this.viewModel = new CapellaImpactViewViewModel(this.dstController, this.sessionService, this.transactionService);
     }
     
     @Test
@@ -90,7 +96,7 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
         assertTrue(rowViewModel.GetIsSelected());
         assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(rowViewModel));
         assertFalse(rowViewModel.GetIsSelected());
-        verify(this.dstController, times(4)).GetSelectedHubMapResultForTransfer();
+        verify(this.dstController, times(6)).GetSelectedHubMapResultForTransfer();
     }
     
     @Test
@@ -106,6 +112,7 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
         when(this.sessionService.HasAnyOpenSession()).thenReturn(true);
         var newNewHubMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
         when(this.dstController.GetHubMapResult()).thenReturn(newNewHubMapResult);
+        this.viewModel.UpdateBrowserTrees(true);
         newNewHubMapResult.add(new MappedElementDefinitionRowViewModel(this.LogicalComponent, MappingDirection.FromHubToDst));
     }
 }

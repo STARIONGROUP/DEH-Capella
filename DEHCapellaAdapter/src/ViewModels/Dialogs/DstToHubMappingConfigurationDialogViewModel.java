@@ -49,6 +49,7 @@ import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.Dialogs.Interfaces.IDstToHubMappingConfigurationDialogViewModel;
 import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
+import ViewModels.Interfaces.IObjectBrowserBaseViewModel;
 import ViewModels.Interfaces.IRequirementBrowserViewModel;
 import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
 import ViewModels.MappedElementListView.Interfaces.IMappedElementListViewViewModel;
@@ -64,8 +65,24 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain DstToHubMappingConfigurationDialogViewModel} is the main view model for the {@linkplain CapellaDstToHubMappingConfigurationDialog}
  */
-public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<EObject> implements IDstToHubMappingConfigurationDialogViewModel
+public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<EObject, CapellaElement, ElementRowViewModel<? extends CapellaElement>> implements IDstToHubMappingConfigurationDialogViewModel
 {    
+    /**
+     * The {@linkplain IMagicDrawObjectBrowserViewModel}
+     */
+    private final ICapellaObjectBrowserViewModel dstObjectBrowser;
+
+    /**
+     * Gets the DST {@linkplain IObjectBrowserBaseViewModel}
+     * 
+     * @return an {@linkplain IObjectBrowserViewModel}
+     */
+    @Override
+    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> GetDstObjectBrowserViewModel()
+    {
+        return this.dstObjectBrowser;
+    }
+    
     /**
      * Initializes a new {@linkplain DstToHubMappingConfigurationDialogViewModel}
      * 
@@ -78,11 +95,11 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      */
     public DstToHubMappingConfigurationDialogViewModel(IDstController dstController, IHubController hubController, 
             IElementDefinitionBrowserViewModel elementDefinitionBrowserViewModel, IRequirementBrowserViewModel requirementBrowserViewModel,
-            ICapellaObjectBrowserViewModel capellaObjectBrowserViewModel, IMappedElementListViewViewModel mappedElementListViewViewModel)
+            ICapellaObjectBrowserViewModel capellaObjectBrowserViewModel, ICapellaMappedElementListViewViewModel mappedElementListViewViewModel)
     {
         super(dstController, hubController, elementDefinitionBrowserViewModel, requirementBrowserViewModel, 
-                capellaObjectBrowserViewModel, mappedElementListViewViewModel);
-        
+                mappedElementListViewViewModel);
+        this.dstObjectBrowser = capellaObjectBrowserViewModel;
         this.InitializeObservables();
     }
     
@@ -93,7 +110,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
     {
         super.InitializeObservables();
         
-        this.capellaObjectBrowserViewModel.GetSelectedElement()
+        this.dstObjectBrowser.GetSelectedElement()
             .subscribe(x -> this.UpdateMappedElements(x));
     }
     
@@ -137,7 +154,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
     protected void UpdateProperties()
     {
         this.UpdateProperties(this.dstController.GetDstMapResult());
-        this.capellaObjectBrowserViewModel.BuildTree(this.originalSelection);
+        this.dstObjectBrowser.BuildTree(this.originalSelection);
         ((ICapellaMappedElementListViewViewModel)this.mappedElementListViewViewModel).SetShouldDisplayTargetArchitectureColumn(false);
     }
 

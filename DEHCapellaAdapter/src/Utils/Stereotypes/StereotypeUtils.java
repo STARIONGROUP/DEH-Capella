@@ -46,6 +46,7 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.ArchitectureAllocation;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
+import org.polarsys.capella.core.data.cs.CsPackage;
 import org.polarsys.capella.core.data.cs.provider.ArchitectureAllocationItemProvider;
 import org.polarsys.capella.core.data.fa.FaPackage;
 import org.polarsys.capella.core.data.helpers.cs.delegates.ArchitectureAllocationHelper;
@@ -67,6 +68,7 @@ import Utils.Ref;
 /**
  * The {@linkplain StereotypeUtils}  provides useful methods on Capella components
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public final class StereotypeUtils
 { 
     /**
@@ -274,7 +276,7 @@ public final class StereotypeUtils
     private static List<EPackage> GetEPackages()
     {
         return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, 
-                InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE);
+                InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE, CsPackage.eINSTANCE);
     }
 
     /**

@@ -37,11 +37,13 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.business.api.session.Session;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellamodeller.Project;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
+import Enumerations.CapellaArchitecture;
 import Reactive.ObservableValue;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
@@ -49,6 +51,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain CapellaModelService} is the service providing easier access to the capella {@linkplain Sessions}s
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class CapellaSessionService implements ICapellaSessionService
 {
     /**
@@ -277,6 +280,18 @@ public class CapellaSessionService implements ICapellaSessionService
     }
 
     /**
+     * Gets the top element from the {@linkplain Session} in the provided {@linkplain CapellaArchitecture}
+     * 
+     * @param architecture the {@linkplain CapellaArchitecture} from which to get the top element
+     * @return a {@linkplain CapellaElement}
+     */
+    @Override
+    public Component GetTopElement(CapellaArchitecture architecture)
+    {
+        return this.GetTopElement(this.GetProject(), architecture.GetType());
+    }
+
+    /**
      * Gets the top element from the provided {@linkplain Session} in the Physical Architecture package
      * 
      * @param session the {@linkplain Session}
@@ -374,5 +389,17 @@ public class CapellaSessionService implements ICapellaSessionService
         }
         
         return null;
+    }
+
+    /**
+     * Gets the {@linkplain BlockArchitecture} that matches the {@linkplain CapellaArchitecture} provided
+     * 
+     * @param targetArchitecture the {@linkplain CapellaArchitecture}
+     * @return the {@linkplain BlockArchitecture}
+     */
+    @Override
+    public BlockArchitecture GetArchitectureInstance(CapellaArchitecture targetArchitecture)
+    {
+        return BlockArchitectureExt.getBlockArchitecture(targetArchitecture.GetType(), this.GetProject());
     }
 }

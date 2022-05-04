@@ -23,12 +23,14 @@
  */
 package ViewModels.MappedElementListView;
 
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
+
 import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
 
 /**
  * The {@linkplain CapellaMappedElementListViewViewModel} is the main view model for the {@linkplain CapellaMappedElementListView} 
  */
-public class CapellaMappedElementListViewViewModel extends MappedElementListViewViewModel implements ICapellaMappedElementListViewViewModel
+public class CapellaMappedElementListViewViewModel extends MappedElementListViewViewModel<CapellaElement> implements ICapellaMappedElementListViewViewModel
 {
     /**
      * Backing field for {@linkplain #GetShouldDisplayTargetArchitectureColumn()}
