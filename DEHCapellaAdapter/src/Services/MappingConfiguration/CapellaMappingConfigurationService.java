@@ -189,7 +189,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
             if(mappingDirection == MappingDirection.FromHubToDst)
             {
                 var mappedElement = new MappedHubRequirementRowViewModel(this.transactionService.Clone((Requirement)element), mappingDirection);
-                this.GetMappedRequirement(mappedElement, internalId, cdp4common.engineeringmodeldata.Requirement.class);
+                this.GetMappedRequirement(mappedElement, internalId);
                 mappedElement.SetTargetArchitecture(targetArchitecture);
                 
                 refMappedElementRowViewModel.Set(mappedElement);
@@ -197,7 +197,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
             else
             {
                 var mappedElement = new MappedDstRequirementRowViewModel((Requirement)element, mappingDirection);
-                this.GetMappedRequirement(mappedElement, internalId, RequirementsSpecification.class);
+                this.GetMappedRequirement(mappedElement, internalId);
                 refMappedElementRowViewModel.Set(mappedElement);
             }            
         }
@@ -206,21 +206,24 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
     }
 
     /**
-     * Gets the mapped {@linkplain #TThing}
+     * Gets the mapped {@linkplain cdp4common.engineeringmodeldata.Requirement}
      * 
-     * @param <TThing> the type of {@linkplain Thing} to query from the cache
      * @param mappedElement the {@linkplain MappedRequirementBaseRowViewModel}
      * @param internalId the internal id of the queried Thing
      * @param clazz the {@linkplain Class} of the queried Thing
      */
-    @SuppressWarnings("unchecked")
-    private <TThing extends Thing & NamedThing> void GetMappedRequirement(MappedRequirementBaseRowViewModel<TThing> mappedElement, UUID internalId, Class<TThing> clazz)
+    private void GetMappedRequirement(MappedRequirementBaseRowViewModel mappedElement, UUID internalId)
     {
-        var refHubRequirement = new Ref<>(clazz);
+        var refHubRequirement = new Ref<>(cdp4common.engineeringmodeldata.Requirement.class);
         
         if(this.HubController.TryGetThingById(internalId, refHubRequirement))
         {
-            mappedElement.SetHubElement((TThing) refHubRequirement.Get().clone(true));
+            var requirementSpecification = refHubRequirement.Get().getContainerOfType(RequirementsSpecification.class).clone(true);
+            
+            mappedElement.SetHubElement(requirementSpecification.getRequirement().stream()
+                    .filter(x -> AreTheseEquals(x.getIid(), refHubRequirement.Get().getIid()))
+                    .findFirst()
+                    .orElseThrow());
         }
     }
 

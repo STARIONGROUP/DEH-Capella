@@ -159,10 +159,18 @@ public class CapellaSessionService implements ICapellaSessionService
             });
             
         this.sessionListener.SessionAdded()
-            .subscribe(x -> this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession()));
+            .subscribe(x -> 
+            {
+                this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession());
+                this.SetCurrentSession(x);
+            });
         
         this.sessionListener.SessionRemoved()
-            .subscribe(x -> this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession()));
+            .subscribe(x -> 
+            {
+                this.hasAnyOpenSession.Value(this.sessionManager.HasAnyOpenSession());
+                this.SetCurrentSession(null);
+            });
     }
 
     /**

@@ -500,7 +500,7 @@ public class MapCommandService implements IMapCommandService
         var mappedDstRequirements = new CapellaRequirementCollection();
         
         mappedDstRequirements.addAll(mappableElements.stream()
-                .filter(x -> x.GetTThingClass().isAssignableFrom(RequirementsSpecification.class))
+                .filter(x -> x.GetTThingClass().isAssignableFrom(cdp4common.engineeringmodeldata.Requirement.class))
                 .map(x -> (MappedDstRequirementRowViewModel)x)
                 .collect(Collectors.toList()));
 

@@ -36,7 +36,7 @@ import io.reactivex.Observable;
  * a {@linkplain cdp4common.engineeringmodeldata.Requirement} and a {@linkplain Requirement}
  */
 @Annotations.ExludeFromCodeCoverageGeneratedReport
-public class MappedHubRequirementRowViewModel extends MappedRequirementBaseRowViewModel<cdp4common.engineeringmodeldata.Requirement> implements IHaveTargetArchitecture
+public class MappedHubRequirementRowViewModel extends MappedRequirementBaseRowViewModel implements IHaveTargetArchitecture
 {
     /**
      * Backing field for {@linkplain #GetTargetArchitecture()}, {@linkplain #SetTargetArchitecture(Object)} and {@linkplain #GetTargetArchitectureObservable()}
@@ -88,7 +88,7 @@ public class MappedHubRequirementRowViewModel extends MappedRequirementBaseRowVi
      */
     public MappedHubRequirementRowViewModel(cdp4common.engineeringmodeldata.Requirement thing, Requirement dstElement, MappingDirection mappingDirection)
     {
-        super(thing, dstElement, mappingDirection, cdp4common.engineeringmodeldata.Requirement.class);
+        super(thing, dstElement, mappingDirection);
     }
 
     /**
@@ -99,7 +99,7 @@ public class MappedHubRequirementRowViewModel extends MappedRequirementBaseRowVi
      */
     public MappedHubRequirementRowViewModel(Requirement dstElement, MappingDirection mappingDirection)
     {
-        super(dstElement, mappingDirection, cdp4common.engineeringmodeldata.Requirement.class);
+        super(dstElement, mappingDirection);
     }
     
     /**
@@ -110,6 +110,6 @@ public class MappedHubRequirementRowViewModel extends MappedRequirementBaseRowVi
      */
     public MappedHubRequirementRowViewModel(cdp4common.engineeringmodeldata.Requirement hubElement, MappingDirection mappingDirection)
     {
-        super(hubElement, null, mappingDirection, cdp4common.engineeringmodeldata.Requirement.class);
+        super(hubElement, null, mappingDirection);
     }
 }

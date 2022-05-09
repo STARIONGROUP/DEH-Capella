@@ -69,9 +69,9 @@ class RequirementToRequirementsSpecificationMappingRuleTestFixture
     private Requirement capellaRequirement0;
     private RequirementsPkg capellaRequirementPackage1;
     private RequirementsPkg capellaRequirementPackage2;
-    private RequirementsSpecification requirementsSpecification0;
+    private cdp4common.engineeringmodeldata.Requirement requirement0;
     private ComponentPkg capellaPackage;
-    private RequirementsSpecification requirementsSpecification1;
+    private cdp4common.engineeringmodeldata.Requirement requirement1;
 
     /**
      * @throws java.lang.Exception
@@ -96,8 +96,9 @@ class RequirementToRequirementsSpecificationMappingRuleTestFixture
         var result = this.mappingRule.Transform(this.elements);
         assertEquals(3, result.size());
         assertTrue(result.get(0).GetHubElement() != null);
-        assertEquals(1, result.get(2).GetHubElement().getGroup().size());
-        assertEquals(result.get(2).GetHubElement().getGroup().get(0), result.get(1).GetHubElement().getGroup().get(0));
+        assertEquals(1, result.get(2).GetHubElement().getContainerOfType(RequirementsSpecification.class).getGroup().size());
+        assertEquals(result.get(2).GetHubElement().getContainerOfType(RequirementsSpecification.class).getGroup().get(0), 
+                result.get(1).GetHubElement().getContainerOfType(RequirementsSpecification.class).getGroup().get(0));
     }
 
     private void SetupElements()
@@ -107,13 +108,15 @@ class RequirementToRequirementsSpecificationMappingRuleTestFixture
         this.domain = new DomainOfExpertise(UUID.randomUUID(), null, null);
         this.iteration = new Iteration(UUID.randomUUID(), null, null);
         
-        this.requirementsSpecification0 = new RequirementsSpecification();
-        this.requirementsSpecification0.setShortName("REQS0");
-        this.requirementsSpecification1 = new RequirementsSpecification();
-        this.requirementsSpecification1.setShortName("REQS1");
+        this.requirement0 = new cdp4common.engineeringmodeldata.Requirement();
+        this.requirement0.setShortName("REQS0");
+        this.requirement1 = new cdp4common.engineeringmodeldata.Requirement();
+        this.requirement1.setShortName("REQS1");
         
-        this.iteration.getRequirementsSpecification().add(this.requirementsSpecification0);
-        this.iteration.getRequirementsSpecification().add(this.requirementsSpecification1);
+        var requirementsSpecification = new RequirementsSpecification();
+        requirementsSpecification.setShortName("capellaRequirementPackage0");
+        
+        this.iteration.getRequirementsSpecification().add(requirementsSpecification);
         
         this.capellaRequirement0 = mock(Requirement.class);
         when(this.capellaRequirement0.getName()).thenReturn("capellaRequirement0");
@@ -168,7 +171,7 @@ class RequirementToRequirementsSpecificationMappingRuleTestFixture
         when(this.capellaRequirementPackage1.eContents()).thenReturn(containedRequirements0);
         when(this.capellaRequirementPackage2.eContents()).thenReturn(containedRequirements1);
         
-        this.elements.add(new MappedDstRequirementRowViewModel(this.requirementsSpecification0, this.capellaRequirement0, MappingDirection.FromDstToHub));
+        this.elements.add(new MappedDstRequirementRowViewModel(this.requirement0, this.capellaRequirement0, MappingDirection.FromDstToHub));
         this.elements.add(new MappedDstRequirementRowViewModel(this.capellaRequirement1, MappingDirection.FromDstToHub));
         this.elements.add(new MappedDstRequirementRowViewModel(this.capellaRequirement2, MappingDirection.FromDstToHub));
     }
