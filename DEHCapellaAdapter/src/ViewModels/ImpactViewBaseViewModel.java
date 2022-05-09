@@ -27,7 +27,6 @@ import static Utils.Operators.Operators.AreTheseEquals;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.stream.Collectors;
 
 import javax.swing.tree.TreeModel;
@@ -312,9 +311,12 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
     }
 
     /**
+     * Gets all the select-able rows recursively from the children of the provided {@linkplain IThingRowViewModel}, 
+     * and adds them to the specified {@linkplain Collection} of {@linkplain IThingRowViewModel}
      * 
-     * 
-     * @param selectedRow
+     * @param selectedRow the {@linkplain IThingRowViewModel}
+     * @param selectableRows {@linkplain Collection} of {@linkplain IThingRowViewModel}
+     * @return the {@linkplain Collection} of select-able {@linkplain IThingRowViewModel}
      */
     @SuppressWarnings("unchecked")
     private Collection<IThingRowViewModel<?>> GetAllSelectableRows(IThingRowViewModel<?> selectedRow, Collection<IThingRowViewModel<?>> selectableRows)

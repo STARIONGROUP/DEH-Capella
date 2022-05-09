@@ -357,11 +357,6 @@ public final class DstController implements IDstController
         
         this.GetDstMapResult().ItemsAdded().subscribe(x -> this.MapTraces(MappingDirection.FromDstToHub));
         this.GetHubMapResult().ItemsAdded().subscribe(x -> this.MapTraces(MappingDirection.FromHubToDst));
-//        
-//        this.selectedHubMapResultForTransfer.ItemAdded().filter(x -> !(x instanceof Trace)).subscribe(x -> this.AddOrRemoveTracesForTransfer());
-//        this.selectedHubMapResultForTransfer.ItemsAdded().filter(x -> !(x instanceof Trace)).subscribe(x -> this.AddOrRemoveTracesForTransfer());
-//        this.selectedDstMapResultForTransfer.ItemAdded().filter(x -> !(x instanceof BinaryRelationship)).subscribe(x -> this.AddOrRemoveBinaryRelationshipForTransfer());
-//        this.selectedDstMapResultForTransfer.ItemsAdded().filter(x -> !(x instanceof BinaryRelationship)).subscribe(x -> this.AddOrRemoveBinaryRelationshipForTransfer());
     }
 
     /**
