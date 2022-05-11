@@ -38,6 +38,8 @@ import org.picocontainer.Characteristics;
 import DstController.DstController;
 import DstController.IDstController;
 import HubController.IHubController;
+import MappingRules.BinaryRelationshipToCapellaTraces;
+import MappingRules.CapellaTracesToBinaryRelationship;
 import MappingRules.ComponentToElementMappingRule;
 import MappingRules.ElementToComponentMappingRule;
 import MappingRules.RequirementToRequirementsSpecificationMappingRule;
@@ -64,6 +66,7 @@ import Services.MappingEngineService.IMappingEngineService;
 import Services.MappingEngineService.MappingEngineService;
 import Services.VersionNumber.CapellaAdapterVersionNumberService;
 import Services.VersionNumber.IAdapterVersionNumberService;
+import Utils.Stereotypes.CapellaTracedElementCollection;
 import ViewModels.CapellaHubBrowserPanelViewModel;
 import ViewModels.CapellaImpactViewPanelViewModel;
 import ViewModels.CapellaImpactViewViewModel;
@@ -173,6 +176,8 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.addComponent(ElementToComponentMappingRule.class.getName(), ElementToComponentMappingRule.class);
             AppContainer.Container.addComponent(RequirementToRequirementsSpecificationMappingRule.class.getName(), RequirementToRequirementsSpecificationMappingRule.class);
             AppContainer.Container.addComponent(RequirementsSpecificationToRequirementMappingRule.class.getName(), RequirementsSpecificationToRequirementMappingRule.class);
+            AppContainer.Container.addComponent(CapellaTracesToBinaryRelationship.class.getName(), CapellaTracesToBinaryRelationship.class);
+            AppContainer.Container.addComponent(BinaryRelationshipToCapellaTraces.class.getName(), BinaryRelationshipToCapellaTraces.class);
             
             AppContainer.Container.addComponent(IElementDefinitionImpactViewViewModel.class, ElementDefinitionImpactViewViewModel.class);
             AppContainer.Container.addComponent(IRequirementImpactViewViewModel.class, RequirementImpactViewViewModel.class);

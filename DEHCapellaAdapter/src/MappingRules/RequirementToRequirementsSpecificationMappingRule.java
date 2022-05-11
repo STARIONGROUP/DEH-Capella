@@ -120,14 +120,14 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
     {
         for (MappedDstRequirementRowViewModel mappedRequirement : mappedRequirements)
         {            
-            Ref<RequirementsSpecification> refRequirementsSpecification = new Ref<>(RequirementsSpecification.class);
+            var refRequirementsSpecification = new Ref<>(RequirementsSpecification.class);
             
             var refParent = new Ref<>(RequirementsPkg.class);
             StereotypeUtils.TryGetPossibleRequirementsSpecificationElement(mappedRequirement.GetDstElement(), refParent);
             
             if(!mappedRequirement.GetShouldCreateNewTargetElementValue() && mappedRequirement.GetHubElement() != null)
             {
-                refRequirementsSpecification.Set(mappedRequirement.GetHubElement());
+                refRequirementsSpecification.Set(mappedRequirement.GetHubElement().getContainerOfType(RequirementsSpecification.class));
             }
             else
             {
@@ -142,8 +142,6 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
                 
                 continue;
             }
-
-            mappedRequirement.SetHubElement(refRequirementsSpecification.Get());
             
             var refRequirementsGroup = new Ref<>(RequirementsGroup.class);
             var refRequirement = new Ref<>(cdp4common.engineeringmodeldata.Requirement.class);
@@ -157,6 +155,8 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             {
                 this.UpdateProperties(mappedRequirement.GetDstElement(), refRequirementsSpecification, refRequirement);
             }
+
+            mappedRequirement.SetHubElement(refRequirement.Get());
         }
     }
     
@@ -351,7 +351,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
         
         if(this.TryToFindGroup(currentParent, refRequirementsSpecification, refCurrentRequirementsGroup))
         {
-            refRequirementsGroup.Set(refCurrentRequirementsGroup.Get());
+            refRequirementsGroup.Set(refCurrentRequirementsGroup.Get().clone(true));
         }
         else
         {

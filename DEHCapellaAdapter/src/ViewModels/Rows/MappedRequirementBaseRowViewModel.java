@@ -31,11 +31,8 @@ import cdp4common.commondata.Thing;
 
 /**
  * The MappedRequirementBaseRowViewModel is the base {@linkplain MappedRequirement}
- * 
- * @param <TThing> the type of {@linkplain Thing}
- * @param <TDstElement> the type of DST element
  */
-public abstract class MappedRequirementBaseRowViewModel<TThing extends Thing & NamedThing> extends MappedElementRowViewModel<TThing, Requirement>
+public abstract class MappedRequirementBaseRowViewModel extends MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, Requirement>
 {
     /**
      * Initializes a new {@linkplain MappedRequirementBaseRowViewModel}
@@ -45,9 +42,9 @@ public abstract class MappedRequirementBaseRowViewModel<TThing extends Thing & N
      * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
      * @param thingClass the {@linkplain Class} of {@linkplain #TThing}
      */
-    public MappedRequirementBaseRowViewModel(TThing thing, Requirement dstElement, MappingDirection mappingDirection, Class<TThing> thingClass)
+    public MappedRequirementBaseRowViewModel(cdp4common.engineeringmodeldata.Requirement thing, Requirement dstElement, MappingDirection mappingDirection)
     {
-        super(thing, thingClass, dstElement, mappingDirection);
+        super(thing, cdp4common.engineeringmodeldata.Requirement.class, dstElement, mappingDirection);
     }
 
     /**
@@ -57,9 +54,9 @@ public abstract class MappedRequirementBaseRowViewModel<TThing extends Thing & N
      * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
      * @param thingClass the {@linkplain Class} of {@linkplain #TThing}
      */
-    public MappedRequirementBaseRowViewModel(Requirement dstElement, MappingDirection mappingDirection, Class<TThing> thingClass)
+    public MappedRequirementBaseRowViewModel(Requirement dstElement, MappingDirection mappingDirection)
     {
-        super(thingClass, dstElement, mappingDirection);
+        super(cdp4common.engineeringmodeldata.Requirement.class, dstElement, mappingDirection);
     }
 
     /**

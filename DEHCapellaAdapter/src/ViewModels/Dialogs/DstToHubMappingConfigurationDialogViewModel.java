@@ -207,12 +207,12 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
         }
         else if(capellaElement instanceof Requirement)
         {
-            Ref<RequirementsSpecification> refRequirementSpecification = new Ref<>(RequirementsSpecification.class);
+            var refRequirement = new Ref<>(cdp4common.engineeringmodeldata.Requirement.class);
             
-            if(this.TryGetRequirementSpecification((Requirement)capellaElement, refRequirementSpecification, refShouldCreateNewTargetElement))
+            if(this.TryGetRequirement((Requirement)capellaElement, refRequirement, refShouldCreateNewTargetElement))
             {
                 mappedElementRowViewModel = 
-                        new MappedDstRequirementRowViewModel(refRequirementSpecification.Get(), (Requirement)capellaElement, MappingDirection.FromDstToHub);
+                        new MappedDstRequirementRowViewModel(refRequirement.Get(), (Requirement)capellaElement, MappingDirection.FromDstToHub);
             }
         }
         
@@ -264,34 +264,35 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
     }
 
     /**
-     * Gets or create an {@linkplain RequirementsSpecification} that can contained a {@linkplain Requirement} that will represent the provided {@linkplain Class},
-     * In the case the provided {@linkplain Class} is already represented in the {@linkplain mappedElements} returns false
+     * Gets or create an {@linkplain cdp4common.engineeringmodeldata.Requirement} that can be mapped from the specified {@linkplain Requirement},
+     * In the case the provided {@linkplain Requirement} is already represented in the {@linkplain mappedElements} returns false
      * 
-     * @param requirement the {@linkplain Class} element
-     * @param refRequirementSpecification the {@linkplain Ref} of {@linkplain RequirementsSecification}
+     * @param requirement the {@linkplain Requirement} element
+     * @param refRequirement the {@linkplain Ref} of {@linkplain cdp4common.engineeringmodeldata.Requirement}
      * @param refShouldCreateNewTargetElement the {@linkplain Ref} of {@linkplain Boolean} indicating whether the target Hub element will be created
      * @return a value indicating whether the method execution was successful in getting a {@linkplain RequirementSpecification}
      */
-    private boolean TryGetRequirementSpecification(Requirement requirement, Ref<RequirementsSpecification> refRequirementSpecification, Ref<Boolean> refShouldCreateNewTargetElement)
+    private boolean TryGetRequirement(Requirement requirement, Ref<cdp4common.engineeringmodeldata.Requirement> refRequirement, Ref<Boolean> refShouldCreateNewTargetElement)
     {
-        Optional<RequirementsSpecification> optionalRequirementsSpecification = 
+        Optional<cdp4common.engineeringmodeldata.Requirement> optionalRequirement = 
               this.hubController.GetOpenIteration().getRequirementsSpecification().stream()
               .flatMap(x -> x.getRequirement().stream())
               .filter(x -> AreTheseEquals(x.getName(), requirement.getName()))
-              .map(x -> x.getContainerOfType(RequirementsSpecification.class))
               .findFirst();
 
-        if(optionalRequirementsSpecification.isPresent())
+        if(optionalRequirement.isPresent())
         {
-            UUID optionalRequirementsSpecificationIid = optionalRequirementsSpecification.get().getIid();
-            
-            if(this.mappedElements.stream().anyMatch(x -> AreTheseEquals(x.GetHubElement().getIid(), optionalRequirementsSpecificationIid)
+            if(this.mappedElements.stream().anyMatch(x -> AreTheseEquals(x.GetHubElement().getIid(), optionalRequirement.get().getIid())
                     && AreTheseEquals(x.GetDstElement().getId(), requirement.getId())))
             {
                 return false;
             }
             
-            refRequirementSpecification.Set(optionalRequirementsSpecification.get().clone(true));
+            var requirementSpecification = optionalRequirement.get().getContainerOfType(RequirementsSpecification.class).clone(true);            
+            refRequirement.Set(requirementSpecification.getRequirement().stream()
+                    .filter(x -> AreTheseEquals(x.getIid(), optionalRequirement.get().getIid()))
+                    .findFirst()
+                    .orElseThrow());
         }
         else
         {
@@ -301,26 +302,29 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
             
             if(StereotypeUtils.TryGetPossibleRequirementsSpecificationElement(requirement, possibleParent))
             {
-                optionalRequirementsSpecification = this.hubController.GetOpenIteration().getRequirementsSpecification().stream()
+                var requirementSpecification = this.hubController.GetOpenIteration().getRequirementsSpecification().stream()
                     .filter(x -> AreTheseEquals(possibleParent, x.getName()))
-                    .findFirst();
-                
-                if(optionalRequirementsSpecification.isPresent())
+                    .map(x -> x.clone(true))
+                    .findFirst()
+                    .orElseGet(() ->
                 {
-                    refRequirementSpecification.Set(optionalRequirementsSpecification.get().clone(true));
-                    return true;
-                }
+                    var newRequirementsSpecification = new RequirementsSpecification();
+                    newRequirementsSpecification.setName(possibleParent.HasValue() ? possibleParent.Get().getName() : "new RequirementsSpecification");
+                    newRequirementsSpecification.setShortName(GetShortName(possibleParent.HasValue() ? possibleParent.Get().getName() : newRequirementsSpecification.getName()));
+                    newRequirementsSpecification.setIid(UUID.randomUUID());
+                    newRequirementsSpecification.setOwner(this.hubController.GetCurrentDomainOfExpertise());
+                    return newRequirementsSpecification;
+                });
+                
+                var newRequirement = new cdp4common.engineeringmodeldata.Requirement();
+                newRequirement.setName(requirement.getName());
+                requirementSpecification.getRequirement().add(newRequirement);
+                
+                refRequirement.Set(newRequirement);
             }
-            
-            RequirementsSpecification requirementsSpecification = new RequirementsSpecification();
-            requirementsSpecification.setName(possibleParent.HasValue() ? possibleParent.Get().getName() : "new RequirementsSpecification");
-            requirementsSpecification.setShortName(GetShortName(possibleParent.HasValue() ? possibleParent.Get().getName() : requirementsSpecification.getName()));
-            requirementsSpecification.setIid(UUID.randomUUID());
-            requirementsSpecification.setOwner(this.hubController.GetCurrentDomainOfExpertise());
-            refRequirementSpecification.Set(requirementsSpecification);            
         }
 
-        return refRequirementSpecification.HasValue();
+        return refRequirement.HasValue();
     }
 
     /**

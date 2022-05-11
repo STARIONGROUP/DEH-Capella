@@ -48,6 +48,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.Feature;
+import org.polarsys.capella.core.data.capellacore.Trace;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.Interface;
@@ -139,11 +140,11 @@ public class DstControllerTestFixture
         var mappedThings0 = mock(MappedElementRowViewModel.class);
         var mappedThings1 = mock(MappedElementRowViewModel.class);
         
-        ElementDefinition elementDefinition = new ElementDefinition();
+        var elementDefinition = new ElementDefinition();
         when(mappedThings0.GetHubElement()).thenReturn(elementDefinition);
         
-        RequirementsSpecification requirementsSpecification = new RequirementsSpecification();
-        when(mappedThings1.GetHubElement()).thenReturn(requirementsSpecification);
+        var requirement = new cdp4common.engineeringmodeldata.Requirement();
+        when(mappedThings1.GetHubElement()).thenReturn(requirement);
         
         this.controller = new DstController(this.mappingEngine, this.hubController, this.logService, 
                 this.mappingConfigurationService, this.capellaSessionService, this.transactionService, this.transferHistory);
@@ -166,7 +167,7 @@ public class DstControllerTestFixture
                     (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
                     new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromHubToDst),
                     (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                    new MappedDstRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
+                    new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
                     (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
                     new MappedHubRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
                     ));
@@ -191,24 +192,25 @@ public class DstControllerTestFixture
                 (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
                 new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromHubToDst),
                 (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                new MappedDstRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
+                new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
                 (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                new MappedDstRequirementRowViewModel(new RequirementsSpecification(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
+                new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
                 ));
         
         when(this.mappingEngine.Map(any())).thenReturn(mapResult);
         assertTrue(this.controller.Map(mock(IMappableThingCollection.class), MappingDirection.FromDstToHub));
         assertTrue(this.controller.Map(mock(IMappableThingCollection.class), MappingDirection.FromHubToDst));
-        assertTrue(this.controller.Map(mock(IMappableThingCollection.class), null));
+        assertFalse(this.controller.Map(mock(IMappableThingCollection.class), null));
     }
     
     @Test
     public void VerifyTransfer() throws TransactionException
     {
-        var requirementSpecification = new RequirementsSpecification();
-        requirementSpecification.getGroup().add(new RequirementsGroup());
-        requirementSpecification.getRequirement().add(new cdp4common.engineeringmodeldata.Requirement());
-        requirementSpecification.setIid(UUID.randomUUID());
+        var requirementsSpecification = new RequirementsSpecification();
+        requirementsSpecification.getGroup().add(new RequirementsGroup());
+        var requirement = new cdp4common.engineeringmodeldata.Requirement();
+        requirementsSpecification.getRequirement().add(requirement);
+        requirementsSpecification.setIid(UUID.randomUUID());
         
         var elementDefinition = new ElementDefinition();
         elementDefinition.setIid(UUID.randomUUID());
@@ -262,7 +264,7 @@ public class DstControllerTestFixture
                     }
                 });
         
-        this.controller.GetSelectedDstMapResultForTransfer().add(requirementSpecification);
+        this.controller.GetSelectedDstMapResultForTransfer().add(requirement);
         this.controller.GetSelectedDstMapResultForTransfer().add(elementDefinition);
         var transaction = mock(ThingTransaction.class);
         when(transaction.getAddedThing()).thenReturn(ImmutableList.of((Thing)new ElementDefinition()));
@@ -280,7 +282,7 @@ public class DstControllerTestFixture
         this.controller.ChangeMappingDirection();
         assertTrue(this.controller.Transfer());
         when(this.hubController.Refresh()).thenReturn(true);
-        this.controller.GetSelectedDstMapResultForTransfer().add(requirementSpecification);
+        this.controller.GetSelectedDstMapResultForTransfer().add(requirement);
         this.controller.GetSelectedDstMapResultForTransfer().add(elementDefinition);
         assertTrue(this.controller.Transfer());
         verify(this.hubController, times(8)).Refresh();
@@ -300,9 +302,9 @@ public class DstControllerTestFixture
         assertEquals(0, this.controller.GetSelectedDstMapResultForTransfer().size());
         assertDoesNotThrow(() -> this.controller.AddOrRemoveAllFromSelectedThingsToTransfer(ClassKind.ElementDefinition, false));
         assertEquals(1, this.controller.GetSelectedDstMapResultForTransfer().size());
-        assertDoesNotThrow(() -> this.controller.AddOrRemoveAllFromSelectedThingsToTransfer(ClassKind.RequirementsSpecification, false));
+        assertDoesNotThrow(() -> this.controller.AddOrRemoveAllFromSelectedThingsToTransfer(ClassKind.Requirement, false));
         assertEquals(2, this.controller.GetSelectedDstMapResultForTransfer().size());
-        assertDoesNotThrow(() -> this.controller.AddOrRemoveAllFromSelectedThingsToTransfer(ClassKind.RequirementsSpecification, true));
+        assertDoesNotThrow(() -> this.controller.AddOrRemoveAllFromSelectedThingsToTransfer(ClassKind.Requirement, true));
         assertEquals(1, this.controller.GetSelectedDstMapResultForTransfer().size());
         assertDoesNotThrow(() -> this.controller.AddOrRemoveAllFromSelectedThingsToTransfer(ClassKind.ElementDefinition, true));
         assertEquals(0, this.controller.GetSelectedDstMapResultForTransfer().size());
@@ -413,6 +415,7 @@ public class DstControllerTestFixture
         when(component0.getOwnedPhysicalComponents()).thenReturn(new BasicEList<PhysicalComponent>());
         when(component0.eContents()).thenReturn(new BasicEList<EObject>());
         when(component0.getContainedComponentPorts()).thenReturn(new BasicEList<ComponentPort>(Arrays.asList(port0)));
+        when(component0.getOwnedTraces()).thenReturn(new BasicEList<Trace>());
         
         var component1 = mock(PhysicalComponent.class);
         when(component1.getName()).thenReturn("component1");
@@ -422,6 +425,7 @@ public class DstControllerTestFixture
         when(component1.getOwnedPhysicalComponents()).thenReturn(new BasicEList<PhysicalComponent>(Arrays.asList(component0)));
         when(component1.eContents()).thenReturn(new BasicEList<EObject>());
         when(component1.getContainedComponentPorts()).thenReturn(new BasicEList<ComponentPort>(Arrays.asList(port1)));
+        when(component1.getOwnedTraces()).thenReturn(new BasicEList<Trace>());
         
         var component2 = mock(LogicalComponent.class);
         when(component2.getName()).thenReturn("component2");
@@ -431,15 +435,19 @@ public class DstControllerTestFixture
         when(component2.getOwnedLogicalComponents()).thenReturn(new BasicEList<LogicalComponent>());
         when(component2.eContents()).thenReturn(new BasicEList<EObject>());
         when(component2.getContainedComponentPorts()).thenReturn(new BasicEList<ComponentPort>());
+        when(component2.getOwnedTraces()).thenReturn(new BasicEList<Trace>());
+        
         
         var systemRequirement = mock(SystemFunctionalRequirement.class);
         when(systemRequirement.getName()).thenReturn("component2");
         when(systemRequirement.getId()).thenReturn(UUID.randomUUID().toString());
+        when(systemRequirement.getOwnedTraces()).thenReturn(new BasicEList<Trace>());
         
         var requirementPackage = mock(RequirementsPkg.class);
         when(requirementPackage.eContents()).thenReturn(new BasicEList<EObject>(Arrays.asList(systemRequirement)));
         when(requirementPackage.getOwnedRequirementPkgs()).thenReturn(new BasicEList<RequirementsPkg>());
         when(requirementPackage.getOwnedRequirements()).thenReturn(new BasicEList<Requirement>());
+        when(requirementPackage.getOwnedTraces()).thenReturn(new BasicEList<Trace>());
         
         when(systemRequirement.eContainer()).thenReturn(requirementPackage);
         

@@ -42,7 +42,9 @@ import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.polarsys.capella.core.data.capellacommon.CapellacommonPackage;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.CapellacorePackage;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.ArchitectureAllocation;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
@@ -276,7 +278,7 @@ public final class StereotypeUtils
     private static List<EPackage> GetEPackages()
     {
         return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, 
-                InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE, CsPackage.eINSTANCE);
+                InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE, CapellacommonPackage.eINSTANCE, CsPackage.eINSTANCE);
     }
 
     /**

@@ -36,7 +36,7 @@ import ViewModels.ObjectBrowser.Interfaces.IThingRowViewModel;
 import ViewModels.ObjectBrowser.RequirementTree.RequirementBrowserTreeRowViewModel;
 import ViewModels.ObjectBrowser.RequirementTree.RequirementBrowserTreeViewModel;
 import ViewModels.ObjectBrowser.RequirementTree.Rows.IterationRequirementRowViewModel;
-import ViewModels.ObjectBrowser.RequirementTree.Rows.RequirementSpecificationRowViewModel;
+import ViewModels.ObjectBrowser.RequirementTree.Rows.RequirementRowViewModel;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.Iteration;
@@ -45,7 +45,7 @@ import cdp4common.engineeringmodeldata.RequirementsSpecification;
 /**
  * The {@linkplain RequirementImpactViewViewModel} is the main view model for the requirement impact view in the impact view panel
  */
-public class RequirementImpactViewViewModel extends ImpactViewBaseViewModel<RequirementsSpecification> implements IRequirementImpactViewViewModel
+public class RequirementImpactViewViewModel extends ImpactViewBaseViewModel<cdp4common.engineeringmodeldata.Requirement> implements IRequirementImpactViewViewModel
 {
     /**
      * Initializes a new {@linkplain RequirementImpactViewViewModel}
@@ -55,7 +55,7 @@ public class RequirementImpactViewViewModel extends ImpactViewBaseViewModel<Requ
      */
     public RequirementImpactViewViewModel(IHubController hubController, IDstController dstController)
     {
-        super(hubController, dstController, RequirementsSpecification.class);
+        super(hubController, dstController, cdp4common.engineeringmodeldata.Requirement.class);
     }
 
     /**
@@ -65,13 +65,13 @@ public class RequirementImpactViewViewModel extends ImpactViewBaseViewModel<Requ
      * @param thing the current {@linkplain Thing} thing
      */
     @Override
-    protected void ComputeDifferences(Iteration iteration, RequirementsSpecification thing)
+    protected void ComputeDifferences(Iteration iteration, cdp4common.engineeringmodeldata.Requirement thing)
     {
         try
         {
-            if(iteration.getRequirementsSpecification().stream().noneMatch(x -> this.DoTheseThingsRepresentTheSameThing(x, thing)))
+            if(iteration.getRequirementsSpecification().stream().noneMatch(x -> this.DoTheseThingsRepresentTheSameThing(x, thing.getContainerOfType(RequirementsSpecification.class))))
             {
-                iteration.getRequirementsSpecification().add(thing);
+                iteration.getRequirementsSpecification().add(thing.getContainerOfType(RequirementsSpecification.class));
             }
             else
             {
@@ -79,13 +79,13 @@ public class RequirementImpactViewViewModel extends ImpactViewBaseViewModel<Requ
                 
                 iteration.getRequirementsSpecification()
                         .stream()
-                        .filter(x -> this.DoTheseThingsRepresentTheSameThing(x, thing))
+                        .filter(x -> this.DoTheseThingsRepresentTheSameThing(x, thing.getContainerOfType(RequirementsSpecification.class)))
                         .findFirst()
                         .ifPresent(x -> index.Set(iteration.getRequirementsSpecification().indexOf(x)));
                 
-                if(index.HasValue() && iteration.getRequirementsSpecification().removeIf(x -> this.DoTheseThingsRepresentTheSameThing(thing, x)))
+                if(index.HasValue() && iteration.getRequirementsSpecification().remove(index.Get().intValue()) != null)
                 {
-                    iteration.getRequirementsSpecification().add(index.Get(), thing);
+                    iteration.getRequirementsSpecification().add(index.Get(), thing.getContainerOfType(RequirementsSpecification.class));
                 }
             }
         }
@@ -115,13 +115,14 @@ public class RequirementImpactViewViewModel extends ImpactViewBaseViewModel<Requ
      * @return the {@linkplain IThingRowViewModel} of {@linkplain ElementDefinition}
      */
     @Override
-    protected IThingRowViewModel<RequirementsSpecification> GetRowViewModelFromThing(RequirementsSpecification thing)
+    protected IThingRowViewModel<cdp4common.engineeringmodeldata.Requirement> GetRowViewModelFromThing(cdp4common.engineeringmodeldata.Requirement thing)
     {
         IterationRequirementRowViewModel iterationRowViewModel = (IterationRequirementRowViewModel) this.browserTreeModel.Value().getRoot();
         
-        Optional<RequirementSpecificationRowViewModel> optionalDefinition = iterationRowViewModel.GetContainedRows().stream()
-            .filter(x -> x.GetThing().getIid().equals(thing.getIid()))
-            .findFirst();
+        Optional<RequirementRowViewModel> optionalDefinition = iterationRowViewModel.GetContainedRows().stream()
+                .flatMap(x -> x.GetAllContainedRowsOfType(RequirementRowViewModel.class).stream())
+                .filter(x -> x.GetThing().getIid().equals(thing.getIid()))
+                .findFirst();
         
         if(optionalDefinition.isPresent())
         {

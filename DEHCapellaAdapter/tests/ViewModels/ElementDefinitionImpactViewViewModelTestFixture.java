@@ -42,6 +42,8 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import Reactive.ObservableCollection;
 import Utils.Ref;
 import ViewModels.ObjectBrowser.ElementDefinitionTree.Rows.ElementDefinitionRowViewModel;
+import ViewModels.ObjectBrowser.ElementDefinitionTree.Rows.IterationElementDefinitionRowViewModel;
+import ViewModels.ObjectBrowser.RequirementTree.Rows.IterationRequirementRowViewModel;
 import ViewModels.ObjectBrowser.Rows.IterationRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
@@ -138,7 +140,17 @@ class ElementDefinitionImpactViewViewModelTestFixture
     public void VerifyOnSelectionChanged()
     {
         this.SetupModelElements();
-        var elementDefinitionRow = new ElementDefinitionRowViewModel(this.elementDefinition0, null);
+
+        this.viewModel = new ElementDefinitionImpactViewViewModel(this.hubController, this.dstController);
+        this.iteration.getElement().add(this.elementDefinition0);
+        this.iteration.getElement().add(this.elementDefinition1);
+        this.iteration.getElement().add(this.elementDefinition2);
+        when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
+        this.viewModel.ComputeDifferences();
+        var rootRowViewModel = (IterationElementDefinitionRowViewModel)this.viewModel.GetBrowserTreeModel().getRoot();
+        rootRowViewModel.GetContainedRows().forEach(x -> x.SetIsHighlighted(true));
+                
+        var elementDefinitionRow = rootRowViewModel.GetContainedRows().get(0);
         assertFalse(elementDefinitionRow.GetIsSelected());
         assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(elementDefinitionRow));
         assertFalse(elementDefinitionRow.GetIsSelected());
@@ -147,7 +159,7 @@ class ElementDefinitionImpactViewViewModelTestFixture
         assertTrue(elementDefinitionRow.GetIsSelected());
         assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(elementDefinitionRow));
         assertFalse(elementDefinitionRow.GetIsSelected());
-        verify(this.dstController, times(4)).GetSelectedDstMapResultForTransfer();
+        verify(this.dstController, times(9)).GetSelectedDstMapResultForTransfer();
     }
     
     private void SetupModelElements()

@@ -179,9 +179,9 @@ class DstMappingConfigurationDialogViewModelTestFixture
         mappedElementDefinition.SetShouldCreateNewTargetElement(false);
         assertDoesNotThrow(() -> this.viewModel.WhenMapToNewElementCheckBoxChanged(false));
         
-        var requirementsSpecification = new RequirementsSpecification();
+        var requirement = new cdp4common.engineeringmodeldata.Requirement();
         
-        mappedRequirement.SetHubElement(requirementsSpecification);
+        mappedRequirement.SetHubElement(requirement);
         mappedRequirement.SetShouldCreateNewTargetElement(false);
         this.dstMapResult.add(mappedRequirement);
         this.viewModel.SetSelectedMappedElement(mappedRequirement);

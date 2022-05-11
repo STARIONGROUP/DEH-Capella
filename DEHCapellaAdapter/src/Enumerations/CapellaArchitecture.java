@@ -24,6 +24,7 @@
 
 package Enumerations;
 
+import org.polarsys.capella.common.data.modellingcore.TraceableElement;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
@@ -99,12 +100,12 @@ public enum CapellaArchitecture
     }
     
     /**
-     * Gets the {@linkplain CapellaArchitecture} that corresponds to {@linkplain BlockArchitecture} of the provided {@linkplain CapellaElement}
+     * Gets the {@linkplain CapellaArchitecture} that corresponds to {@linkplain BlockArchitecture} of the provided {@linkplain TraceableElement}
      * 
-     * @param element the {@linkplain CapellaElement} instance
+     * @param element the {@linkplain TraceableElement} instance
      * @return the {@linkplain CapellaArchitecture}
      */
-    public static CapellaArchitecture From(CapellaElement element)
+    public static CapellaArchitecture From(TraceableElement element)
     {
         var architectureInstance = BlockArchitectureExt.getRootBlockArchitecture(element);
         

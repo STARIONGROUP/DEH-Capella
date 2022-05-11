@@ -136,7 +136,7 @@ class MapCommandServiceTestFixture
         dialogResult.Set(true);
         assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult, MappingDirection.FromDstToHub));
         var mappedElement0 = new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(PhysicalComponent.class), MappingDirection.FromDstToHub);
-        var mappedElement1 = new MappedDstRequirementRowViewModel(new RequirementsSpecification(), mock(Requirement.class), MappingDirection.FromDstToHub);
+        var mappedElement1 = new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(Requirement.class), MappingDirection.FromDstToHub);
         mappedElementResultFromTheMappingDialog.add(mappedElement0);
         mappedElementResultFromTheMappingDialog.add(mappedElement1);
                 
