@@ -1,9 +1,9 @@
 /*
- * ComponentToElementMappingRuleTestFixture.java
+ * CapellaTracesToBinaryRelationshipTestFixture.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
- * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski, Antoine Théate
+ * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski 
  *
  * This file is part of DEH-Capella
  *
@@ -26,6 +26,7 @@ package MappingRules;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -39,6 +40,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.polarsys.capella.core.data.capellacommon.GenericTrace;
+import org.polarsys.capella.core.data.capellacore.Trace;
 import org.polarsys.capella.core.data.cs.Interface;
 import org.polarsys.capella.core.data.fa.ComponentPort;
 import org.polarsys.capella.core.data.fa.OrientationPortKind;
@@ -48,6 +51,10 @@ import org.polarsys.capella.core.data.information.datatype.BooleanType;
 import org.polarsys.capella.core.data.information.datatype.NumericType;
 import org.polarsys.capella.core.data.information.datatype.StringType;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
+import org.polarsys.capella.core.data.requirement.SystemUserRequirement;
+
+import DstController.IDstController;
+
 import org.polarsys.capella.core.data.information.datavalue.DataValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
@@ -56,15 +63,26 @@ import org.polarsys.capella.core.data.information.datavalue.NumericValue;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
+import Reactive.ObservableCollection;
+import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Utils.Ref;
 import Utils.Stereotypes.CapellaComponentCollection;
+import Utils.Stereotypes.CapellaTracedElementCollection;
+import Utils.Stereotypes.HubRelationshipElementsCollection;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
+import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import cdp4common.commondata.Thing;
+import cdp4common.engineeringmodeldata.ActualFiniteState;
+import cdp4common.engineeringmodeldata.ActualFiniteStateList;
+import cdp4common.engineeringmodeldata.BinaryRelationship;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.EngineeringModel;
 import cdp4common.engineeringmodeldata.Iteration;
+import cdp4common.engineeringmodeldata.PossibleFiniteState;
+import cdp4common.engineeringmodeldata.PossibleFiniteStateList;
+import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.Category;
 import cdp4common.sitedirectorydata.DomainOfExpertise;
 import cdp4common.sitedirectorydata.EngineeringModelSetup;
@@ -78,12 +96,13 @@ import cdp4common.sitedirectorydata.SiteDirectory;
 import cdp4common.sitedirectorydata.SiteReferenceDataLibrary;
 import cdp4common.sitedirectorydata.TextParameterType;
 
-public class ComponentToElementMappingRuleTestFixture
+public class CapellaTracesToBinaryRelationshipTestFixture
 {
+    private static final String relationship0Name = "element → component0";
     private ICapellaMappingConfigurationService mappingConfigurationService;
     private IHubController hubController;
-    private ComponentToElementMappingRule mappingRule;
-    private CapellaComponentCollection elements;
+    private CapellaTracesToBinaryRelationship mappingRule;
+    private CapellaTracedElementCollection elements;
     private ElementDefinition elementDefinition0;
     private ElementDefinition elementDefinition1;
     private DomainOfExpertise domain;
@@ -92,6 +111,12 @@ public class ComponentToElementMappingRuleTestFixture
     private PhysicalComponent component1;
     private PhysicalComponent component2;
     private ElementDefinition elementDefinition2;
+    private IDstController dstController;
+    private cdp4common.engineeringmodeldata.Requirement requirement0;
+    private BinaryRelationship relationship0;
+    private SystemUserRequirement capellaRequirement;
+    private GenericTrace trace0;
+    private GenericTrace trace1;
 
     /**
      * @throws java.lang.Exception
@@ -101,9 +126,10 @@ public class ComponentToElementMappingRuleTestFixture
     {
         this.hubController = mock(IHubController.class);
         this.mappingConfigurationService = mock(ICapellaMappingConfigurationService.class);
+        this.dstController = mock(IDstController.class);
         
         this.SetupElements();
-        
+        when(this.dstController.GetMappedTracesToBinaryRelationships()).thenReturn(new ObservableCollection<BinaryRelationship>());        
         when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
         var modelReferenceDataLibrary = new ModelReferenceDataLibrary();
         var siteReferenceDataLibrary = new SiteReferenceDataLibrary();
@@ -120,55 +146,85 @@ public class ComponentToElementMappingRuleTestFixture
         engineeringModel.setEngineeringModelSetup(engineeringModelSetup);
         engineeringModel.getIteration().add(this.iteration);
         
-        when(this.hubController.GetDehpOrModelReferenceDataLibrary()).thenReturn(modelReferenceDataLibrary);
-        when(this.hubController.TryGetThingFromChainOfRdlBy(any(Predicate.class), any(Ref.class))).thenReturn(false);
-
-        this.mappingRule = new ComponentToElementMappingRule(this.hubController, this.mappingConfigurationService);
+        this.mappingRule = new CapellaTracesToBinaryRelationship(this.hubController, this.mappingConfigurationService);
+        this.dstController = mock(IDstController.class);
+        when(this.dstController.GetMappedTracesToBinaryRelationships()).thenReturn(new ObservableCollection<BinaryRelationship>());
+        this.mappingRule.dstController = this.dstController;
     }
 
     private void SetupElements()
     {
-        this.domain = new DomainOfExpertise(UUID.randomUUID(), null, null);
-        
+        this.domain = new DomainOfExpertise(UUID.randomUUID(), null, null);        
         this.iteration = new Iteration(UUID.randomUUID(), null, null);
+
+        this.relationship0 = new BinaryRelationship();
+        this.relationship0.setName(relationship0Name);
         
-        this.elementDefinition0 = new ElementDefinition(UUID.randomUUID(), null, null);
-        this.elementDefinition0.setOwner(this.domain);
-        this.elementDefinition0.setName("elementDefinition0");
-        this.elementDefinition0.setShortName("elementDefinition0");
+        this.elementDefinition0 = mock(ElementDefinition.class);
+        when(this.elementDefinition0.getIid()).thenReturn(UUID.randomUUID());
+        when(this.elementDefinition0.getOwner()).thenReturn(this.domain);
+        when(this.elementDefinition0.getName()).thenReturn("elementDefinition0");
+        when(this.elementDefinition0.getShortName()).thenReturn("elementDefinition0");
+        when(this.elementDefinition0.getRelationships()).thenReturn(Arrays.asList(this.relationship0));
         
-        this.elementDefinition1 = new ElementDefinition(UUID.randomUUID(), null, null);
-        this.elementDefinition1.setOwner(this.domain);
-        this.elementDefinition1.setName("elementDefinition1");
-        this.elementDefinition1.setShortName("elementDefinition1");
+        this.requirement0 = mock(cdp4common.engineeringmodeldata.Requirement.class);
+        when(this.requirement0.getOwner()).thenReturn(this.domain);
+        when(this.requirement0.getIid()).thenReturn(UUID.randomUUID());
+        when(this.requirement0.getName()).thenReturn("requirement0");
+        when(this.requirement0.getShortName()).thenReturn("requirement0");
+        when(this.requirement0.getRelationships()).thenReturn(Arrays.asList(this.relationship0));
         
-        this.elementDefinition2 = new ElementDefinition(UUID.randomUUID(), null, null);
-        this.elementDefinition2.setOwner(this.domain);
-        this.elementDefinition2.setName("element");
-        this.elementDefinition2.setShortName("element");
+        var requirementsSpecification = new RequirementsSpecification();
+        requirementsSpecification.getRequirement().add(this.requirement0);
+        
+        this.elementDefinition1 = mock(ElementDefinition.class);
+        when(this.elementDefinition1.getOwner()).thenReturn(this.domain);
+        when(this.elementDefinition1.getIid()).thenReturn(UUID.randomUUID());
+        when(this.elementDefinition1.getName()).thenReturn("elementDefinition1");
+        when(this.elementDefinition1.getShortName()).thenReturn("elementDefinition1");
+        
+        this.elementDefinition2 = mock(ElementDefinition.class);
+        when(this.elementDefinition2.getOwner()).thenReturn(this.domain);
+        when(this.elementDefinition2.getIid()).thenReturn(UUID.randomUUID());
+        when(this.elementDefinition2.getName()).thenReturn("elementDefinition2");
+        when(this.elementDefinition2.getShortName()).thenReturn("elementDefinition2");
         
         this.iteration.getElement().add(this.elementDefinition0);
         this.iteration.getElement().add(this.elementDefinition1);
         this.iteration.getElement().add(this.elementDefinition2);
         
-        this.elements = new CapellaComponentCollection();
+        this.relationship0.setSource(this.elementDefinition0);
+        this.relationship0.setTarget(this.requirement0);
+        
+        this.iteration.getRelationship().add(this.relationship0);
+        
+        this.elements = new CapellaTracedElementCollection();
+        
+        this.trace0 = mock(GenericTrace.class);
+        when(this.trace0.getSummary()).thenReturn(this.relationship0Name);        
+        this.trace1 = mock(GenericTrace.class);
         
         this.component0 = mock(PhysicalComponent.class);
         when(this.component0.getName()).thenReturn("component0");
         when(this.component0.isActor()).thenReturn(true);
+        when(this.component0.getOutgoingTraces()).thenReturn(new BasicEList(Arrays.asList(this.trace0)));
+        when(this.component0.getIncomingTraces()).thenReturn(new BasicEList(Arrays.asList(this.trace1)));
         this.component1 = mock(PhysicalComponent.class);
         when(this.component1.getName()).thenReturn("component1");
         when(this.component1.isAbstract()).thenReturn(true);
         when(this.component1.isHuman()).thenReturn(true);
         when(this.component1.eContents()).thenReturn(new BasicEList());
+        when(this.component1.getOutgoingTraces()).thenReturn(new BasicEList());
+        when(this.component1.getIncomingTraces()).thenReturn(new BasicEList());
         this.component2 = mock(PhysicalComponent.class);
         when(this.component2.getName()).thenReturn("element");
+        when(this.component2.getOutgoingTraces()).thenReturn(new BasicEList(Arrays.asList(this.trace1)));
+        when(this.component2.getIncomingTraces()).thenReturn(new BasicEList());
         var component3 = mock(PhysicalComponent.class);
         when(component3.getName()).thenReturn("component3");
         when(component3.eContents()).thenReturn(new BasicEList());
         when(component3.getContainedProperties()).thenReturn(new BasicEList());
         when(this.component2.eContents()).thenReturn(new BasicEList(Arrays.asList(component3)));
-        
         when(this.component0.eContents()).thenReturn(new BasicEList(Arrays.asList(this.component1, this.component2)));
         
         var properties = new BasicEList<Property>();
@@ -205,6 +261,16 @@ public class ComponentToElementMappingRuleTestFixture
         when(this.component1.getContainedProperties()).thenReturn(properties);
         when(this.component2.getContainedProperties()).thenReturn(properties);
         
+        this.capellaRequirement = mock(SystemUserRequirement.class);
+        when(this.capellaRequirement.getId()).thenReturn(UUID.randomUUID().toString());
+        when(this.capellaRequirement.getOutgoingTraces()).thenReturn(new BasicEList());
+        when(this.capellaRequirement.getIncomingTraces()).thenReturn(new BasicEList(Arrays.asList(this.trace0)));
+        
+        when(this.trace0.getTargetElement()).thenReturn(this.capellaRequirement);
+        when(this.trace0.getSourceElement()).thenReturn(this.component0);
+        when(this.trace1.getTargetElement()).thenReturn(this.component0);
+        when(this.trace1.getSourceElement()).thenReturn(this.component2);
+        
         var interface0 = mock(Interface.class);
         when(interface0.getName()).thenReturn("interface0");
         var port0 = mock(ComponentPort.class);
@@ -230,9 +296,9 @@ public class ComponentToElementMappingRuleTestFixture
         when(this.component1.getContainedComponentPorts()).thenReturn(new BasicEList<ComponentPort>(Arrays.asList(port1)));
         when(this.component2.getContainedComponentPorts()).thenReturn(new BasicEList<ComponentPort>(Arrays.asList(port2, port3)));
         
-        this.elements.add(new MappedElementDefinitionRowViewModel(this.elementDefinition0, this.component0, MappingDirection.FromDstToHub));
-        this.elements.add(new MappedElementDefinitionRowViewModel(this.elementDefinition1, this.component1, MappingDirection.FromDstToHub));
-        this.elements.add(new MappedElementDefinitionRowViewModel(this.component2, MappingDirection.FromDstToHub));
+        this.elements.add(new MappedElementDefinitionRowViewModel(this.elementDefinition0, this.component0, MappingDirection.FromHubToDst));
+        this.elements.add(new MappedHubRequirementRowViewModel(this.requirement0, this.capellaRequirement, MappingDirection.FromHubToDst));
+        this.elements.add(new MappedElementDefinitionRowViewModel(this.elementDefinition2, this.component2, MappingDirection.FromHubToDst));
     }
 
     @Test
@@ -240,41 +306,9 @@ public class ComponentToElementMappingRuleTestFixture
     {
         assertDoesNotThrow(() -> this.mappingRule.Transform(null));
         assertDoesNotThrow(() -> this.mappingRule.Transform(mock(List.class)));
-        assertDoesNotThrow(() -> this.mappingRule.Transform(this.elements));
         
-        when(this.hubController.TryGetThingFromChainOfRdlBy(any(Predicate.class), any(Ref.class)))
-        .thenAnswer(new Answer<Boolean>() 
-        {
-            @Override
-            public Boolean answer(InvocationOnMock invocation) throws Throwable 
-            {
-                var arguments = invocation.getArguments();
-                
-                var ref = ((Ref<?>)arguments[1]);
-                
-                if(ref.GetType().isAssignableFrom(MeasurementScale.class))
-                {
-                    ((Ref<MeasurementScale>)ref).Set(new RatioScale());
-                }
-                if(ref.GetType().isAssignableFrom(Category.class))
-                {
-                    ((Ref<Category>)ref).Set(new Category());
-                }
-                else if(ref.GetType().isAssignableFrom(MeasurementUnit.class))
-                {
-                    ((Ref<MeasurementUnit>)ref).Set(new SimpleUnit());
-                }
-                else if(ref.GetType().isAssignableFrom(ScalarParameterType.class))
-                {
-                    TextParameterType parameterType = new TextParameterType();
-                    parameterType.setShortName("Property0");
-                    ((Ref<ScalarParameterType>)ref).Set(parameterType);
-                }
-                
-                return true;
-            }
-        });
-        
-        assertDoesNotThrow(() -> this.mappingRule.Transform(this.elements));
+        var mapResult = this.mappingRule.Transform(this.elements);
+        assertEquals(1, mapResult.size());
+        assertEquals(this.relationship0Name, mapResult.get(0).getName());
     }
 }

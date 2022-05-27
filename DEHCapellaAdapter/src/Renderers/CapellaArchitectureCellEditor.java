@@ -42,6 +42,7 @@ import cdp4common.engineeringmodeldata.ElementDefinition;
  * {@linkplain TableCellEditor} to enable editing
  */
 @SuppressWarnings("serial")
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class CapellaArchitectureCellEditor extends DefaultCellEditor
 {
     /**

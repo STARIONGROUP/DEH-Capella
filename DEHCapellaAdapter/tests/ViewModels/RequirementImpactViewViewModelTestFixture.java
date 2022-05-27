@@ -30,6 +30,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -43,8 +45,11 @@ import HubController.IHubController;
 import Reactive.ObservableCollection;
 import Utils.Ref;
 import ViewModels.ObjectBrowser.ElementDefinitionTree.Rows.ElementDefinitionRowViewModel;
+import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
+import ViewModels.ObjectBrowser.RequirementTree.Rows.IterationRequirementRowViewModel;
 import ViewModels.ObjectBrowser.RequirementTree.Rows.RequirementSpecificationRowViewModel;
 import ViewModels.ObjectBrowser.Rows.IterationRowViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
@@ -61,12 +66,13 @@ class RequirementImpactViewViewModelTestFixture
     private Iteration iteration;
     private ObservableCollection<Thing> selectedDstMapResultForTransfer;
     private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> dstMapResult;
-    private RequirementsSpecification requirementsSpecification0;
-    private RequirementsSpecification requirementsSpecification1;
-    private RequirementsSpecification requirementsSpecification2;
-    private MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement> mappedElement2;
-    private MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement> mappedElement1;
-    private MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement> mappedElement0;
+    private cdp4common.engineeringmodeldata.Requirement requirement0;
+    private cdp4common.engineeringmodeldata.Requirement requirement1;
+    private cdp4common.engineeringmodeldata.Requirement requirement2;
+    private MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement> mappedElement2;
+    private MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement> mappedElement1;
+    private MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement> mappedElement0;
+    private RequirementsSpecification requirementsSpecification;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -107,22 +113,22 @@ class RequirementImpactViewViewModelTestFixture
         
         assertEquals(1, this.viewModel.GetBrowserTreeModel().getRowCount());
                 
-        var elements = new ArrayList<MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement>>();
+        var elements = new ArrayList<MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement>>();
         elements.add(mappedElement0);
         elements.add(mappedElement1);
         elements.add(mappedElement2);
         
         this.dstMapResult.addAll(elements);
-        Callable<Integer> treeRows = () -> ((IterationRowViewModel)(this.viewModel.GetBrowserTreeModel().getRoot()))
-                                            .GetContainedRows().size();
+        Callable<Integer> treeRows = () -> ((IHaveContainedRows<?>)((IterationRowViewModel)(this.viewModel.GetBrowserTreeModel().getRoot()))
+                                            .GetContainedRows().get(0)).GetContainedRows().size();
         assertEquals(3, treeRows.call());
 
-        this.iteration.getRequirementsSpecification().add(this.requirementsSpecification0);
+        this.iteration.getRequirementsSpecification().add(this.requirementsSpecification);
         when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
         this.dstMapResult.addAll(elements);
         assertEquals(3, treeRows.call());
         this.dstMapResult.clear();
-        assertEquals(1, treeRows.call());
+        assertEquals(3, treeRows.call());
         
         assertEquals(3, timesTheBrowserTreeModelHasBeenUpdated.Get());
     }
@@ -131,17 +137,26 @@ class RequirementImpactViewViewModelTestFixture
     public void VerifyOnSelectionChanged()
     {
         this.SetupModelElements();
-        
-        var requirementSpecificationRow = new RequirementSpecificationRowViewModel(this.requirementsSpecification0, null);
+
+        this.viewModel = new RequirementImpactViewViewModel(this.hubController, this.dstController);
+        this.iteration.getRequirementsSpecification().add(this.requirementsSpecification);
+        when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
+        this.viewModel.ComputeDifferences();
+        var requirementSpecificationRow = ((IterationRequirementRowViewModel)this.viewModel.GetBrowserTreeModel().getRoot()).GetContainedRows().get(0);
+        requirementSpecificationRow.GetContainedRows().forEach(x -> x.SetIsHighlighted(true));
+        requirementSpecificationRow.SetIsHighlighted(true);
         assertFalse(requirementSpecificationRow.GetIsSelected());
         assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(requirementSpecificationRow));
         assertFalse(requirementSpecificationRow.GetIsSelected());
         this.dstMapResult.add(this.mappedElement0);
+        this.dstMapResult.add(this.mappedElement1);
+        this.dstMapResult.add(this.mappedElement2);
+        when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
         assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(requirementSpecificationRow));
-        assertTrue(requirementSpecificationRow.GetIsSelected());
-        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(requirementSpecificationRow));
-        assertFalse(requirementSpecificationRow.GetIsSelected());
-        verify(this.dstController, times(4)).GetSelectedDstMapResultForTransfer();
+        assertTrue(requirementSpecificationRow.GetContainedRows().stream().allMatch(x -> x.GetIsSelected()));
+        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(requirementSpecificationRow.GetContainedRows().get(0)));
+        assertTrue(requirementSpecificationRow.GetContainedRows().stream().anyMatch(x -> !x.GetIsSelected()));
+        verify(this.dstController, times(13)).GetSelectedDstMapResultForTransfer();
     }
     
     private void SetupModelElements()
@@ -150,21 +165,32 @@ class RequirementImpactViewViewModelTestFixture
         owner.setName("Owner");
         owner.setShortName("o");
         
-        this.requirementsSpecification0 = new RequirementsSpecification();
-        this.requirementsSpecification0.setIid(UUID.randomUUID());
-        this.requirementsSpecification0.setOwner(owner);
-        this.requirementsSpecification1 = new RequirementsSpecification();
-        this.requirementsSpecification1.setIid(UUID.randomUUID());
-        this.requirementsSpecification1.setOwner(owner);
-        this.requirementsSpecification2 = new RequirementsSpecification();
-        this.requirementsSpecification2.setIid(UUID.randomUUID());
-        this.requirementsSpecification2.setOwner(owner);
+        this.requirement0 = new cdp4common.engineeringmodeldata.Requirement();
+        this.requirement0.setIid(UUID.randomUUID());
+        this.requirement0.setOwner(owner);
+        this.requirement0.setName("requirement0");
+        this.requirement1 = new cdp4common.engineeringmodeldata.Requirement();
+        this.requirement1.setIid(UUID.randomUUID());
+        this.requirement1.setOwner(owner);
+        this.requirement1.setName("requirement1");
+        this.requirement2 = new cdp4common.engineeringmodeldata.Requirement();
+        this.requirement2.setIid(UUID.randomUUID());
+        this.requirement2.setOwner(owner);
+        this.requirement2.setName("requirement2");
         
-        this.mappedElement0 = (MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
-        when(this.mappedElement0.GetHubElement()).thenReturn(this.requirementsSpecification0);
-        this.mappedElement1 = (MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
-        when(this.mappedElement1.GetHubElement()).thenReturn(this.requirementsSpecification1);
-        this.mappedElement2 = (MappedElementRowViewModel<RequirementsSpecification, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
-        when(this.mappedElement2.GetHubElement()).thenReturn(this.requirementsSpecification2);
+        this.requirementsSpecification = new RequirementsSpecification();
+        this.requirementsSpecification.setOwner(owner);
+        this.requirementsSpecification.setName("requirementsSpecification");
+        this.requirementsSpecification.setShortName("requirementsSpecification");
+        this.requirementsSpecification.getRequirement().add(this.requirement0);
+        this.requirementsSpecification.getRequirement().add(this.requirement1);
+        this.requirementsSpecification.getRequirement().add(this.requirement2);
+        
+        this.mappedElement0 = (MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        when(this.mappedElement0.GetHubElement()).thenReturn(this.requirement0);
+        this.mappedElement1 = (MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        when(this.mappedElement1.GetHubElement()).thenReturn(this.requirement1);
+        this.mappedElement2 = (MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        when(this.mappedElement2.GetHubElement()).thenReturn(this.requirement2);
     }    
 }

@@ -36,7 +36,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain IMagicDrawObjectBrowserViewModel} is the interface definition for the {@linkplain CapellaObjectBrowserViewModel}
  */
-public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewModel
+public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>>
 {
     /**
      * Compute eligible rows where the represented {@linkplain Class} can be transfered,
@@ -52,11 +52,4 @@ public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewMo
      * @param elements the {@linkplain Collection} of {@linkplain EObject}
      */
     void BuildTree(Collection<EObject> elements);
-    
-    /**
-     * Gets the {@linkplain Observable} of {@linkplain ElementRowViewModel} that yields the selected element
-     * 
-     * @return an {@linkplain Observable} of {@linkplain ElementRowViewModel}
-     */
-    Observable<? extends ElementRowViewModel<? extends CapellaElement>> GetSelectedElement();
 }

@@ -31,6 +31,7 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
  * 
  * @param <TElement> the type of the cloned {@linkplain CapellaElement}
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class ClonedReferenceElement<TElement extends CapellaElement>
 {
     /**
@@ -68,7 +69,7 @@ public class ClonedReferenceElement<TElement extends CapellaElement>
      * 
      * @param original the {@linkplain #TElement} original reference
      */
-    ClonedReferenceElement(TElement original) 
+    public ClonedReferenceElement(TElement original) 
     {
         this.clone = EcoreUtil.copy(original);
         this.original = original;

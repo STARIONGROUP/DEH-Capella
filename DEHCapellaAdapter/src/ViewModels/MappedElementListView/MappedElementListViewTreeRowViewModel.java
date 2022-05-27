@@ -41,6 +41,7 @@ import Views.CapellaObjectBrowser;
 /**
  * The {@linkplain MappedElementListViewTreeRowViewModel} is the {@linkplain RowModel} implementation for the {@linkplain CapellaObjectBrowser}
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class MappedElementListViewTreeRowViewModel implements RowModel
 {    
     /**

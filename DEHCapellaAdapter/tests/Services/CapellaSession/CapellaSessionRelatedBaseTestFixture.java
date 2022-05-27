@@ -190,7 +190,9 @@ public abstract class CapellaSessionRelatedBaseTestFixture
         
         when(requirementPackage.eContents()).thenReturn(
                 new BasicEList<EObject>(
-                        Arrays.asList(systemNonFunctionalRequirement, systemNonFunctionalInterfaceRequirement, systemFunctionalRequirement, systemFunctionalInterfaceRequirement, systemUserRequirement)));
+                        Arrays.asList(systemNonFunctionalRequirement, systemNonFunctionalInterfaceRequirement, 
+                                systemFunctionalRequirement, systemFunctionalInterfaceRequirement, systemUserRequirement)));
+        
         return requirementPackage;
     }
 

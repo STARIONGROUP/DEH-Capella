@@ -63,7 +63,7 @@ public class MappedElementRowViewModelTestFixture
         var requirement = mock(SystemUserRequirement.class);
         when(requirement.getName()).thenReturn("user requirement");
         this.dstRequirementRowViewModel = new MappedDstRequirementRowViewModel(requirement, MappingDirection.FromDstToHub);
-        this.hubRequirementRowViewModel = new MappedDstRequirementRowViewModel(new RequirementsSpecification(), requirement, MappingDirection.FromHubToDst);
+        this.hubRequirementRowViewModel = new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), requirement, MappingDirection.FromHubToDst);
         
         var logicalComponent = mock(LogicalComponent.class);
         when(logicalComponent.getName()).thenReturn("la component");

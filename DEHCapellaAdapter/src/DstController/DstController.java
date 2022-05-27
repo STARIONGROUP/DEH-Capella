@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
@@ -41,7 +42,10 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.capellacore.Namespace;
+import org.polarsys.capella.core.data.capellacore.Trace;
 import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.Interface;
 import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
@@ -59,14 +63,15 @@ import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.HistoryService.ICapellaLocalExchangeHistoryService;
-import Services.MappingConfiguration.ICapellaMappingConfigurationService;
-import Services.MappingConfiguration.IMappingConfigurationService;
+import Services.MappingConfiguration.ICapellaMappingConfigurationService;import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
 import Services.MappingEngineService.IMappingEngineService;
 import Utils.Ref;
 import Utils.Stereotypes.CapellaComponentCollection;
 import Utils.Stereotypes.CapellaRequirementCollection;
+import Utils.Stereotypes.CapellaTracedElementCollection;
 import Utils.Stereotypes.HubElementCollection;
+import Utils.Stereotypes.HubRelationshipElementsCollection;
 import Utils.Stereotypes.HubRequirementCollection;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
@@ -153,6 +158,38 @@ public final class DstController implements IDstController
      * A value indicating whether the {@linkplain DstController} should load mapping when the HUB session is refresh or reloaded
      */
     private boolean isHubSessionRefreshSilent;
+
+    /**
+     * The private collection of mapped {@linkplain BinaryRelationship} to {@linkplain Traces}
+     */
+    private ObservableCollection<Trace> mappedBinaryRelationshipsToTraces = new ObservableCollection<>();
+    
+    /**
+     * Gets the {@linkplain ObservableCollection} of mapped {@linkplain Trace}s
+     * 
+     * @return a {@linkplain ObservableCollection} of mapped {@linkplain Trace}s
+     */
+    @Override
+    public ObservableCollection<Trace> GetMappedBinaryRelationshipsToTraces()
+    {
+        return this.mappedBinaryRelationshipsToTraces;
+    }
+    
+    /**
+     * The private collection of mapped {@linkplain Traces} to  {@linkplain BinaryRelationship}
+     */
+    private ObservableCollection<BinaryRelationship> mappedTracesToBinaryRelationships = new ObservableCollection<>();
+
+    /**
+     * Gets the {@linkplain ObservableCollection} of mapped {@linkplain BinaryRelationship}s
+     * 
+     * @return a {@linkplain ObservableCollection} of mapped {@linkplain BinaryRelationship}s
+     */
+    @Override
+    public ObservableCollection<BinaryRelationship> GetMappedTracesToBinaryRelationships()
+    {
+        return this.mappedTracesToBinaryRelationships;
+    }
     
     /**
      * Backing field for {@linkplain GetDstMapResult}
@@ -168,7 +205,7 @@ public final class DstController implements IDstController
     public ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetHubMapResult()
     {
         return this.hubMapResult;
-    }    
+    }
     
     /**
      * Backing field for {@linkplain GetDstMapResult}
@@ -317,8 +354,42 @@ public final class DstController implements IDstController
                     this.LoadMapping(); 
                 }
             });
-    }
         
+        this.GetDstMapResult().ItemsAdded().subscribe(x -> this.MapTraces(MappingDirection.FromDstToHub));
+        this.GetHubMapResult().ItemsAdded().subscribe(x -> this.MapTraces(MappingDirection.FromHubToDst));
+    }
+
+    /**
+     * Adds or removes available traces for transfer to Capella
+     */
+    private void AddOrRemoveTracesForTransfer()
+    {
+        this.selectedHubMapResultForTransfer.removeIf(x -> x instanceof Trace);
+        
+        var transferableTraces = this.mappedBinaryRelationshipsToTraces.stream()
+                .filter(x -> this.selectedHubMapResultForTransfer.stream().anyMatch(m -> AreTheseEquals(m.getId(), x.getTargetElement().getId()))
+                        && this.selectedHubMapResultForTransfer.stream().anyMatch(m -> AreTheseEquals(m.getId(), x.getSourceElement().getId())))
+                .collect(Collectors.toList());
+        
+        this.selectedHubMapResultForTransfer.addAll(transferableTraces);
+    }
+
+    /**
+     * Adds or removes available BinaryRelationship for transfer to the Hub
+     */
+    private void AddOrRemoveBinaryRelationshipForTransfer()
+    {
+        this.selectedHubMapResultForTransfer.removeIf(x -> x instanceof BinaryRelationship);
+
+        var transferableBinaryRelationship = this.mappedTracesToBinaryRelationships.stream()
+                .filter(x -> this.selectedDstMapResultForTransfer.stream().anyMatch(m -> AreTheseEquals(m.getIid(), x.getTarget().getIid()))
+                        && this.selectedDstMapResultForTransfer.stream().anyMatch(m -> AreTheseEquals(m.getIid(), x.getSource().getIid())))
+                .collect(Collectors.toList());
+        
+        this.selectedDstMapResultForTransfer.addAll(transferableBinaryRelationship);
+        
+    }
+
     /**
      * Loads the saved mapping and applies the mapping rule to the loaded things
      */
@@ -370,20 +441,45 @@ public final class DstController implements IDstController
      * @param mappedRowViewModel the {@linkplain IMappedElementRowViewModel} to sort
      */
     private void SortMappedElementByType(ArrayList<MappedElementDefinitionRowViewModel> allMappedElement,
-            ArrayList<? extends MappedRequirementBaseRowViewModel<?>> allMappedRequirements, IMappedElementRowViewModel mappedRowViewModel)
+            ArrayList<? extends MappedRequirementBaseRowViewModel> allMappedRequirements, IMappedElementRowViewModel mappedRowViewModel)
     {
         if(mappedRowViewModel.GetTThingClass().isAssignableFrom(ElementDefinition.class))
         {
             allMappedElement.add((MappedElementDefinitionRowViewModel) mappedRowViewModel);
         }
-        else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(cdp4common.engineeringmodeldata.Requirement.class))
-        {
-            ((HubRequirementCollection)allMappedRequirements).add((MappedHubRequirementRowViewModel) mappedRowViewModel);
-        }
-        else if(mappedRowViewModel.GetTThingClass().isAssignableFrom(RequirementsSpecification.class))
+        else if(mappedRowViewModel instanceof MappedDstRequirementRowViewModel)
         {
             ((CapellaRequirementCollection)allMappedRequirements).add((MappedDstRequirementRowViewModel) mappedRowViewModel);
         }
+        else if(mappedRowViewModel instanceof MappedHubRequirementRowViewModel)
+        {
+            ((HubRequirementCollection)allMappedRequirements).add((MappedHubRequirementRowViewModel) mappedRowViewModel);
+        }
+    }
+
+    /**
+     * Maps the traces/BinaryRelationship from either the {@linkplain #dstMapResult} or the {@linkplain #hubMapResult} depending on the provided {@linkplain MappingDirection}
+     * 
+     * @param mappingDirection the {@linkplain MappingDirection}
+     * @return a {@linkplain boolean} indicating whether the mapping operation went well
+     */
+    @SuppressWarnings("unchecked")
+    private boolean MapTraces(MappingDirection mappingDirection)
+    {
+        IMappableThingCollection input = null;
+        
+        if(mappingDirection == MappingDirection.FromDstToHub)
+        {
+            input = new CapellaTracedElementCollection();
+            ((ArrayList<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>) input).addAll(this.dstMapResult);
+        }
+        else if(mappingDirection == MappingDirection.FromHubToDst)
+        {
+            input = new HubRelationshipElementsCollection();
+            ((ArrayList<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>) input).addAll(this.hubMapResult);
+        }
+
+        return this.MapTraces(input, mappingDirection);
     }
     
     /**
@@ -394,52 +490,102 @@ public final class DstController implements IDstController
      * @param mappingDirection the {@linkplain MappingDirection} towards the {@linkplain IMappableThingCollection} maps to
      * @return a {@linkplain boolean} indicating whether the mapping operation went well
      */
+    @SuppressWarnings("unchecked")
+    private boolean MapTraces(IMappableThingCollection input, MappingDirection mappingDirection)
+    {
+        this.logService.Append("Mapping of Traces/BinaryRelationships in progress");
+        var output = new Ref<ArrayList<?>>(null);
+        var result = new Ref<Boolean>(Boolean.class, false);
+        
+        if(this.TryMap(input, output, result));
+        {
+            if(mappingDirection == MappingDirection.FromDstToHub)
+            {
+                var mappedBinaryRelationship = (ArrayList<BinaryRelationship>)output.Get();
+                this.mappedTracesToBinaryRelationships.removeIf(x -> mappedBinaryRelationship.stream().anyMatch(r -> AreTheseEquals(x.getIid(), r.getIid())));
+                this.mappedTracesToBinaryRelationships.addAll(mappedBinaryRelationship);
+                this.logService.Append("%s Binary Relationships were mapped from Capella Traces", output.Get().size());
+            }
+            else if(mappingDirection == MappingDirection.FromHubToDst)
+            {
+                var mappedTraces = (ArrayList<Trace>)output.Get();
+                this.mappedBinaryRelationshipsToTraces.removeIf(x -> mappedTraces.stream().anyMatch(t -> AreTheseEquals(t.getSummary(), x.getSummary())));
+                this.mappedBinaryRelationshipsToTraces.addAll(mappedTraces);
+                this.logService.Append("%s Capella Traces were mapped from Binary Relationships", output.Get().size());
+            }
+        }
+        
+        return result.Get();
+    }
+
+    /**
+     * Maps the {@linkplain input} by calling the {@linkplain IMappingEngine}
+     * and assign the map result to the dstMapResult or the hubMapResult
+     * 
+     * @param input the {@linkplain IMappableThingCollection} in other words the  {@linkplain Collection} of {@linkplain Object} to map
+     * @param mappingDirection the {@linkplain MappingDirection} towards the {@linkplain IMappableThingCollection} maps to
+     * @return a {@linkplain boolean} indicating whether the mapping operation went well
+     */
     @Override
+    @SuppressWarnings("unchecked")
     public boolean Map(IMappableThingCollection input, MappingDirection mappingDirection)
+    {
+        var output = new Ref<ArrayList<?>>(null);
+        var result = new Ref<Boolean>(Boolean.class, false);
+        
+        if(this.TryMap(input, output, result));
+        {
+            var resultAsCollection = (ArrayList<MappedElementRowViewModel<? extends Thing, CapellaElement>>) output.Get();
+            
+            if(resultAsCollection != null && !resultAsCollection.isEmpty())
+            {
+                if (mappingDirection == MappingDirection.FromDstToHub
+                        && resultAsCollection.stream().allMatch(x -> x.GetHubElement() instanceof Thing))
+                {
+                    this.dstMapResult.removeIf(x -> resultAsCollection.stream()
+                            .anyMatch(d -> AreTheseEquals(((Thing) d.GetHubElement()).getIid(), x.GetHubElement().getIid())));
+        
+                    this.selectedDstMapResultForTransfer.clear();                
+                    return this.dstMapResult.addAll(resultAsCollection);
+                }
+                else if (mappingDirection == MappingDirection.FromHubToDst
+                        && resultAsCollection.stream().allMatch(x -> x.GetDstElement() instanceof CapellaElement))
+                {
+                    this.hubMapResult.removeIf(x -> resultAsCollection.stream()
+                            .anyMatch(d -> AreTheseEquals(d.GetDstElement().getId(), x.GetDstElement().getId())));
+    
+                    this.selectedHubMapResultForTransfer.clear();
+                    return this.hubMapResult.addAll(resultAsCollection);
+                }
+            }
+        }
+
+        return result.Get();
+    }
+
+    /**
+     * Tries to map the provided {@linkplain IMappableThingCollection}
+     * 
+     * @param input the {@linkplain IMappableThingCollection}
+     * @param output the {@linkplain ArrayList} output of whatever mapping rule returns
+     * @param result the result to return {@linkplain #Map(IMappableThingCollection, MappingDirection)} from in case the mapping fails
+     * @return a value that is true when the {@linkplain IMappableThingCollection} mapping succeed
+     */
+    private boolean TryMap(IMappableThingCollection input, Ref<ArrayList<?>> output, Ref<Boolean> result)
     {
         if(input.isEmpty())
         {
-            return true;
+            result.Set(true);
         }
         
-        if(mappingDirection == null)
-        {
-            mappingDirection = this.CurrentMappingDirection();
-        }
-        
-        Object resultAsObject = this.mappingEngine.Map(input);
+        Object outputAsObject = this.mappingEngine.Map(input);
 
-        if(!(resultAsObject instanceof ArrayList<?>))
+        if(outputAsObject instanceof ArrayList<?>)
         {
-            return false;
-        }
-
-        @SuppressWarnings("unchecked")
-        var resultAsCollection = (ArrayList<MappedElementRowViewModel<? extends Thing, CapellaElement>>) resultAsObject;
-        
-        if(!resultAsCollection.isEmpty())
-        {
-            if (mappingDirection == MappingDirection.FromDstToHub
-                    && resultAsCollection.stream().allMatch(x -> x.GetHubElement() instanceof Thing))
-            {
-                this.dstMapResult.removeIf(x -> resultAsCollection.stream()
-                        .anyMatch(d -> AreTheseEquals(((Thing) d.GetHubElement()).getIid(), x.GetHubElement().getIid())));
-    
-                this.selectedDstMapResultForTransfer.clear();                
-                return this.dstMapResult.addAll(resultAsCollection);
-            }
-            else if (mappingDirection == MappingDirection.FromHubToDst
-                    && resultAsCollection.stream().allMatch(x -> x.GetDstElement() instanceof CapellaElement))
-            {
-                this.hubMapResult.removeIf(x -> resultAsCollection.stream()
-                        .anyMatch(d -> AreTheseEquals(d.GetDstElement().getId(), x.GetDstElement().getId())));
-
-                this.selectedHubMapResultForTransfer.clear();
-                return this.hubMapResult.addAll(resultAsCollection);
-            }
+            output.Set((ArrayList<?>)outputAsObject);
         }
         
-        return false;
+        return output.HasValue();
     }
     
     /**
@@ -474,7 +620,7 @@ public final class DstController implements IDstController
      * 
      * @return a value indicating that all transfer could be completed
      */
-    private boolean TransferToDst()
+    public boolean TransferToDst()
     {
         try
         {
@@ -505,6 +651,7 @@ public final class DstController implements IDstController
         catch (Exception exception)
         {
             this.logService.Append(exception.toString(), exception);
+            this.logger.catching(exception);
             return false;
         }
         finally
@@ -519,6 +666,8 @@ public final class DstController implements IDstController
      */
     private void PrepareElementsForTransferToCapella()
     {
+        this.AddOrRemoveTracesForTransfer();
+        
         for (var element : this.selectedHubMapResultForTransfer)
         {
             var targetArchitecture = this.transactionService.GetTargetArchitecture(element);
@@ -527,7 +676,6 @@ public final class DstController implements IDstController
             {
                 this.PrepareRequirement((Requirement)element, targetArchitecture);
             }
-            
             else if(element instanceof Component)
             {
                 if(this.transactionService.IsCloned(element))
@@ -538,7 +686,77 @@ public final class DstController implements IDstController
                 {
                     this.PrepareComponentContainer((Component)element);
                 }
+
+                this.PrepareInterfaces((Component)element);
             }
+            
+            if(element instanceof Namespace)
+            {
+                this.PrepareTraces((Namespace) element);
+            }
+        }
+    }
+
+    /**
+     * Prepares all the {@linkplain Traces} that can be added to the model where the specified {@linkplain Component} is the source element
+     * 
+     * @param element the {@linkplain Component} source element
+     */
+    private void PrepareTraces(Namespace element)
+    {
+        var original = element;
+        
+        if(this.transactionService.IsCloned(element))
+        {
+           original = this.transactionService.GetClone(element).GetOriginal();
+        }
+        
+        original.getOwnedTraces().addAll(this.selectedHubMapResultForTransfer.stream().filter(x -> x instanceof Trace)
+            .map(x -> (Trace)x)
+            .filter(x -> AreTheseEquals(x.getSourceElement().getId(), element.getId()))
+            .collect(Collectors.toList()));
+    }
+
+    /**
+     * Prepares all the {@linkplain Interface}s that the provided {@linkplain Component} ports use
+     * 
+     * @param element the {@linkplain Component}
+     */
+    private void PrepareInterfaces(Component element)
+    {
+        var allInterfaces = element.getContainedComponentPorts().stream()
+                .flatMap(x -> Stream.concat(x.getProvidedInterfaces().stream(), x.getRequiredInterfaces().stream()))
+                .filter(x -> this.transactionService.IsNew(x))
+                .collect(Collectors.toList());
+
+        var targetArchitecture = element instanceof PhysicalComponent ? 
+                CapellaArchitecture.PhysicalArchitecture : CapellaArchitecture.LogicalArchitecture;
+        
+        for (Interface interfaceToAdd : allInterfaces)
+        {
+            var interfacePackage = BlockArchitectureExt.getInterfacePkg(
+                    this.capellaSessionService.GetArchitectureInstance(targetArchitecture), true);
+            
+            interfacePackage.getOwnedInterfaces().add(interfaceToAdd);
+            this.exchangeHistory.Append(interfaceToAdd, ChangeKind.CREATE);
+        }
+        
+        this.PrepareInterfacesForChildren(element);
+    }
+
+    /**
+     * Prepares all the {@linkplain Interface}s that the provided {@linkplain Component} children ports use
+     * 
+     * @param element the {@linkplain Component}
+     */
+    private void PrepareInterfacesForChildren(Component element)
+    {
+        for (var childComponent : element.eContents().stream()
+                .filter(x -> x instanceof Component)
+                .map(x -> (Component)x)
+                .collect(Collectors.toList()))
+        {
+            this.PrepareInterfaces(childComponent);
         }
     }
 
@@ -581,7 +799,7 @@ public final class DstController implements IDstController
         }
         else
         {
-            var architecture = BlockArchitectureExt.getBlockArchitecture(targetArchitecture.GetType(), this.capellaSessionService.GetProject());
+            var architecture = this.capellaSessionService.GetArchitectureInstance(targetArchitecture);
             architecture.getOwnedRequirementPkgs().removeIf(x -> AreTheseEquals(x.getId(), containerToUpdate.getId()));
             architecture.getOwnedRequirementPkgs().add(containerToUpdate);
 
@@ -719,6 +937,40 @@ public final class DstController implements IDstController
             
             childrenSelector.apply(clonedReference.GetOriginal()).add(containedElement);
         }
+        
+        for (var clonedPort : clonedReference.GetClone().getContainedComponentPorts())
+        {
+            var optionalPort = clonedReference.GetOriginal().getContainedComponentPorts().stream()
+                    .filter(x -> AreTheseEquals(x.getId(), clonedPort.getId()))
+                    .findFirst();
+            
+            if(optionalPort.isPresent())
+            {
+                this.UpdateInterfaces(clonedPort.getProvidedInterfaces(), optionalPort.get().getProvidedInterfaces());
+                this.UpdateInterfaces(clonedPort.getRequiredInterfaces(), optionalPort.get().getRequiredInterfaces());
+                
+                this.exchangeHistory.Append(optionalPort.get(), ChangeKind.UPDATE);
+                continue;
+            }
+            
+            clonedReference.GetOriginal().getContainedComponentPorts().add(clonedPort);
+            this.exchangeHistory.Append(clonedPort, ChangeKind.CREATE);
+        }
+    }
+
+    /**
+     * Updates the {@linkplain Interface} referenced through the provided {@linkplain Collection} of {@linkplain Interface}
+     * 
+     * @param clonedInterfaces the {@linkplain EList} of cloned {@linkplain Interface}s
+     * @param originalInterfaces the {@linkplain EList} of original {@linkplain Interface}s
+     */
+    private void UpdateInterfaces(EList<Interface> clonedInterfaces, EList<Interface> originalInterfaces)
+    {
+        for (var interfaceToUpdate : clonedInterfaces)
+        {
+            originalInterfaces.removeIf(x -> AreTheseEquals(x.getId(), interfaceToUpdate.getId()));
+            originalInterfaces.add(interfaceToUpdate);
+        }
     }
         
     /**
@@ -773,6 +1025,7 @@ public final class DstController implements IDstController
     * 
     * @throws TransactionException can throw {@linkplain TransactionException}
     */
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
    private void PrepareParameterOverrides() throws TransactionException
     {
        Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
@@ -844,6 +1097,7 @@ public final class DstController implements IDstController
      * @param clazz the {@linkplain Class} of {@linkplain #TParameter}
      * @throws TransactionException can throw {@linkplain TransactionException}
      */
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
     private <TParameter extends ParameterOrOverrideBase> void UpdateParameterValueSets(ThingTransaction transaction, List<TParameter> allParameters, Class<TParameter> clazz) throws TransactionException
     {
         for(var parameter : allParameters)
@@ -886,19 +1140,21 @@ public final class DstController implements IDstController
      * @param transaction the {@linkplain ThingTransaction}
      * @throws TransactionException can throw {@linkplain TransactionException}
      */
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
     private void PrepareThingsForTransfer(Iteration iterationClone, ThingTransaction transaction) throws TransactionException
     {
+        this.AddOrRemoveBinaryRelationshipForTransfer();
         ArrayList<Thing> thingsToTransfer = new ArrayList<>(this.selectedDstMapResultForTransfer);
         
         Predicate<? super MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> selectedMappedElement = 
-                x -> this.selectedDstMapResultForTransfer.stream().anyMatch(t -> t.getIid().equals(x.GetHubElement().getIid()));
+                x -> this.selectedDstMapResultForTransfer.stream().anyMatch(t -> AreTheseEquals(t.getIid(), x.GetHubElement().getIid()));
                 
         Collection<Relationship> relationships = this.dstMapResult.stream()
                 .filter(selectedMappedElement)
                 .flatMap(x -> x.GetRelationships().stream())
                 .collect(Collectors.toList());
         
-        this.logService.Append("Processing %s relationship(s)", relationships.size());
+        this.logService.Append("Processing %s relationship(s)", relationships.size() + this.selectedDstMapResultForTransfer.stream().filter(x -> x instanceof BinaryRelationship).count());
         
         thingsToTransfer.addAll(relationships);
                 
@@ -908,6 +1164,9 @@ public final class DstController implements IDstController
             {
                 case ElementDefinition:
                     this.PrepareElementDefinitionForTransfer(iterationClone, transaction, (ElementDefinition)thing);
+                    break;
+                case Requirement:
+                    this.PrepareRequirementForTransfer(iterationClone, transaction, thing.getContainerOfType(RequirementsSpecification.class));
                     break;
                 case RequirementsSpecification:
                     this.PrepareRequirementForTransfer(iterationClone, transaction, (RequirementsSpecification)thing);
@@ -983,7 +1242,7 @@ public final class DstController implements IDstController
      */
     private <TParameter extends ParameterOrOverrideBase> void PrepareParameterOrOverrideForTransfer(ThingTransaction transaction, ContainerList<TParameter> parameters) throws TransactionException
     {
-        for(var parameter : parameters.stream().filter(x -> x.getOriginal() != null).collect(Collectors.toList()))
+        for(var parameter : parameters)
         {
             transaction.createOrUpdate(parameter);
         }
@@ -1018,7 +1277,7 @@ public final class DstController implements IDstController
      */
     private void PrepareRequirementForTransfer(Iteration iterationClone, ThingTransaction transaction, 
             RequirementsSpecification requirementsSpecification) throws TransactionException
-    {        
+    {
         this.AddOrUpdateIterationAndTransaction(requirementsSpecification, iterationClone.getRequirementsSpecification(), transaction);
         
         ContainerList<RequirementsGroup> groups = requirementsSpecification.getGroup();
@@ -1065,6 +1324,7 @@ public final class DstController implements IDstController
      * @param transaction the {@linkplain ThingTransaction}
      * @throws TransactionException can throw {@linkplain TransactionException}
      */
+    @Annotations.ExludeFromCodeCoverageGeneratedReport
     private <T extends Thing> void AddOrUpdateIterationAndTransaction(T thing, ContainerList<T> containerList, ThingTransaction transaction) throws TransactionException
     {
         try
@@ -1115,7 +1375,7 @@ public final class DstController implements IDstController
      */
     private void AddOrRemoveAllFromSelectedDstMapResultForTransfer(ClassKind classKind, boolean shouldRemove)
     {
-        Predicate<? super Thing> predicateClassKind = x -> x.getClassKind() == classKind;
+        Predicate<? super Thing> predicateClassKind = x -> classKind == ClassKind.RequirementsSpecification ? x.getClassKind() == ClassKind.Requirement : x.getClassKind() == classKind;
         
         this.selectedDstMapResultForTransfer.removeIf(predicateClassKind);
         

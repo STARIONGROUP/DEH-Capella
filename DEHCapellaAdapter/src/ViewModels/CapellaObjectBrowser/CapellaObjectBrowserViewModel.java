@@ -23,7 +23,6 @@
  */
 package ViewModels.CapellaObjectBrowser;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -32,6 +31,7 @@ import javax.swing.tree.TreeModel;
 import org.eclipse.emf.ecore.EObject;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
 import Reactive.ObservableValue;
 import Services.CapellaSession.ICapellaSessionService;
@@ -44,7 +44,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain CapellaObjectBrowserViewModel} is the view model for the Capella object browser {@linkplain CapellaObjectBrowser}
  */
-public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel implements ICapellaObjectBrowserViewModel
+public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> implements ICapellaObjectBrowserViewModel
 {
     /**
      * The {@linkplain ICapellaSessionService} instance
@@ -54,7 +54,7 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
     /**
      * Backing field for {@linkplain GetSelectedElement}
      */
-    private ObservableValue<ElementRowViewModel<?>> selectedElement = new ObservableValue<ElementRowViewModel<?>>();
+    private ObservableValue<ElementRowViewModel<? extends CapellaElement>> selectedElement = new ObservableValue<>();
     
     /**
      * Gets the {@linkplain Observable} of {@linkplain ElementRowViewModel} that yields the selected element
@@ -62,7 +62,7 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
      * @return an {@linkplain Observable} of {@linkplain ElementRowViewModel}
      */
     @Override
-    public Observable<ElementRowViewModel<?>> GetSelectedElement()
+    public Observable<ElementRowViewModel<? extends CapellaElement>> GetSelectedElement()
     {
         return this.selectedElement.Observable();
     }
@@ -83,7 +83,7 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel im
      * @param selectedRow the selected {@linkplain ClassRowViewModel}
      */
     @Override
-    public void OnSelectionChanged(ElementRowViewModel<?> selectedRow)
+    public void OnSelectionChanged(ElementRowViewModel<? extends CapellaElement> selectedRow)
     {
         this.selectedElement.Value(selectedRow);            
     }

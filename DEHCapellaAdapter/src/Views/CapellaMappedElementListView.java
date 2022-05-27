@@ -25,17 +25,18 @@ package Views;
 
 import javax.swing.SwingUtilities;
 
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
+
 import Enumerations.CapellaArchitecture;
 import Renderers.CapellaArchitectureCellEditor;
 import Renderers.CapellaArchitectureCellRenderer;
-import Renderers.MappedElementListViewCellRenderer;
 import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
 
 /**
  * The CapellaMappedElementListView is the {@linkplain MappedElementListView}
  */
 @SuppressWarnings("serial")
-public class CapellaMappedElementListView extends MappedElementListView
+public class CapellaMappedElementListView extends MappedElementListView<CapellaElement>
 {    
     /**
      * Initializes a new {@linkplain CapellaMappedElementListView}
@@ -44,7 +45,6 @@ public class CapellaMappedElementListView extends MappedElementListView
     {
         super();
         this.objectBrowserTree.setDefaultRenderer(CapellaArchitecture.class, new CapellaArchitectureCellRenderer());
-        this.objectBrowserTree.setDefaultRenderer(String.class, new MappedElementListViewCellRenderer());
         this.objectBrowserTree.setDefaultEditor(CapellaArchitecture.class, new CapellaArchitectureCellEditor());
     }
 
@@ -58,7 +58,6 @@ public class CapellaMappedElementListView extends MappedElementListView
     {
         super.Bind();
         this.HideTargetArchitectureColumn();
-        this.GetDataContext().IsTheTreeVisible().subscribe(x -> this.HideTargetArchitectureColumn());
     }
 
     /**

@@ -32,7 +32,7 @@ import cdp4common.engineeringmodeldata.RequirementsSpecification;
  * The {@linkplain MappedDstRequirementRowViewModel} is the row view model that represents a mapping between 
  * a {@linkplain RequirementsSpecification} and a {@linkplain Requirement}
  */
-public class MappedDstRequirementRowViewModel extends MappedRequirementBaseRowViewModel<RequirementsSpecification>
+public class MappedDstRequirementRowViewModel extends MappedRequirementBaseRowViewModel
 {
     /**
      * Initializes a new {@linkplain MappedRequirementsSpecificationRowViewModel}
@@ -41,9 +41,9 @@ public class MappedDstRequirementRowViewModel extends MappedRequirementBaseRowVi
      * @param dstElement the {@linkplain TDstElement} that is at the other end
      * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
      */
-    public MappedDstRequirementRowViewModel(RequirementsSpecification thing, Requirement dstElement, MappingDirection mappingDirection)
+    public MappedDstRequirementRowViewModel(cdp4common.engineeringmodeldata.Requirement thing, Requirement dstElement, MappingDirection mappingDirection)
     {
-        super(thing, dstElement, mappingDirection, RequirementsSpecification.class);
+        super(thing, dstElement, mappingDirection);
     }
 
     /**
@@ -54,6 +54,6 @@ public class MappedDstRequirementRowViewModel extends MappedRequirementBaseRowVi
      */
     public MappedDstRequirementRowViewModel(Requirement dstElement, MappingDirection mappingDirection)
     {
-        super(dstElement, mappingDirection, RequirementsSpecification.class);
+        super(dstElement, mappingDirection);
     }
 }

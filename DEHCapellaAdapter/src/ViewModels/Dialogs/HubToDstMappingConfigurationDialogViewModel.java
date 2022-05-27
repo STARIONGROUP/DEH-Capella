@@ -49,6 +49,8 @@ import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.Dialogs.Interfaces.IHubToDstMappingConfigurationDialogViewModel;
 import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
+import ViewModels.Interfaces.IHaveTargetArchitecture;
+import ViewModels.Interfaces.IObjectBrowserBaseViewModel;
 import ViewModels.Interfaces.IRequirementBrowserViewModel;
 import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
@@ -65,12 +67,33 @@ import io.reactivex.disposables.Disposable;
 /**
  * The {@linkplain HubToDstMappingConfigurationDialogViewModel} is the main view model for the {@linkplain CapellaHubToDstMappingConfigurationDialog}
  */
-public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<Thing> implements IHubToDstMappingConfigurationDialogViewModel
+public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<Thing, CapellaElement, ElementRowViewModel<? extends CapellaElement>> implements IHubToDstMappingConfigurationDialogViewModel
 {
+    /**
+     * The {@linkplain IDstController}
+     */
+    private final IDstController dstController;
+
     /**
      * The {@linkplain ICapellaTransactionService}
      */
     private final ICapellaTransactionService transactionService;
+    
+    /**
+     * The {@linkplain IMagicDrawObjectBrowserViewModel}
+     */
+    private final ICapellaObjectBrowserViewModel dstObjectBrowser;
+
+    /**
+     * Gets the DST {@linkplain IObjectBrowserBaseViewModel}
+     * 
+     * @return an {@linkplain IObjectBrowserViewModel}
+     */
+    @Override
+    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> GetDstObjectBrowserViewModel()
+    {
+        return this.dstObjectBrowser;
+    }
     
     /**
      * The collection of {@linkplain Disposable}
@@ -94,9 +117,11 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
             ICapellaMappedElementListViewViewModel mappedElementListViewViewModel)
     {
         super(dstController, hubController, elementDefinitionBrowserViewModel, requirementBrowserViewModel, 
-                capellaObjectBrowserViewModel, mappedElementListViewViewModel);
+                mappedElementListViewViewModel);
         
+        this.dstController = dstController;
         this.transactionService = transactionService;
+        this.dstObjectBrowser = capellaObjectBrowserViewModel;
         this.InitializeObservables();
     }
     
@@ -107,7 +132,7 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
     {
         super.InitializeObservables();
         
-        this.capellaObjectBrowserViewModel.GetSelectedElement()
+        this.dstObjectBrowser.GetSelectedElement()
             .subscribe(x -> this.UpdateMappedElements(x));
     }
     
@@ -118,30 +143,41 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      */
     private void UpdateMappedElements(ElementRowViewModel<? extends CapellaElement> rowViewModel)
     {
-        var optionalMappedElement = this.mappedElements.stream()
-            .filter(x -> AreTheseEquals(x.GetDstElement().getId(), rowViewModel.GetElement().getId()))
-            .findFirst();
+        if(this.selectedMappedElement.Value() == null)
+        {
+            return;
+        }
         
-        if(!optionalMappedElement.isPresent())
+        if(AreTheseEquals(this.selectedMappedElement.Value().GetDstElement().getId(), rowViewModel.GetElement().getId()))
         {
-            MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElement;
-            
-            if(rowViewModel.GetElement() instanceof Component)
-            {
-                mappedElement = new MappedElementDefinitionRowViewModel((Component) rowViewModel.GetElement(), MappingDirection.FromHubToDst);
-            }
-            else
-            {
-                mappedElement = new MappedDstRequirementRowViewModel((Requirement) rowViewModel.GetElement(), MappingDirection.FromHubToDst);
-            }
+            return;
+        }
+        
+        if(rowViewModel.GetElement() instanceof Component)
+        {
+            ((MappedElementDefinitionRowViewModel)this.selectedMappedElement.Value()).SetDstElement((Component)rowViewModel.GetElement());
+        }
+        else if(rowViewModel.GetElement() instanceof Requirement)
+        {
+            ((MappedHubRequirementRowViewModel)this.selectedMappedElement.Value()).SetDstElement((Requirement)rowViewModel.GetElement());
+        }
+        
+        this.UpdateTargetArchitecture(rowViewModel.GetElement());
+    }
 
-            this.mappedElements.add(mappedElement);
-            this.SetSelectedMappedElement(mappedElement);
-        }
-        else
+    /**
+     * Updates the target architecture {@linkplain CapellaArchitecture} for the currently selected {@linkplain MappedElementRowViewModel}
+     * 
+     * @param capellaElement
+     */
+    private void UpdateTargetArchitecture(CapellaElement capellaElement)
+    {
+        if(!(this.selectedMappedElement.Value() instanceof IHaveTargetArchitecture))
         {
-            this.SetSelectedMappedElement(optionalMappedElement.get());
+            return;
         }
+        
+        ((IHaveTargetArchitecture)this.selectedMappedElement.Value()).SetTargetArchitecture(CapellaArchitecture.From(capellaElement));
     }
 
     /**
@@ -151,7 +187,7 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
     protected void UpdateProperties()
     {
         this.UpdateProperties(this.dstController.GetHubMapResult());
-        this.capellaObjectBrowserViewModel.BuildTree(null);
+        this.dstObjectBrowser.BuildTree(null);
         ((ICapellaMappedElementListViewViewModel)this.mappedElementListViewViewModel).SetShouldDisplayTargetArchitectureColumn(true);
     }
 
@@ -163,7 +199,6 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
     @Override
     protected void PreMap(Collection<Thing> selectedElements)
     {
-        this.disposables = new ArrayList<>();
         this.disposables.forEach(x -> x.dispose());
         this.disposables.clear();
         

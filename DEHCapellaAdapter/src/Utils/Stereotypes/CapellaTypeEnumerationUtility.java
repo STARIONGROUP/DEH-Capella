@@ -34,6 +34,7 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 /**
  * The {@linkplain CapellaTypeEnumerationUtility} is a utility class to help deal with java enumerators {@linkplain RequirementType} and {@linkplain ComponentType}
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public final class CapellaTypeEnumerationUtility
 {
     /**

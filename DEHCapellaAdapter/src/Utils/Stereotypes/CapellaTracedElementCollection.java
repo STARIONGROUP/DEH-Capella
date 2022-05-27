@@ -1,5 +1,5 @@
 /*
- * HubRequirementCollection.java
+ * CapellaTracedElementCollection.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
@@ -25,18 +25,21 @@ package Utils.Stereotypes;
 
 import java.util.ArrayList;
 
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
+
 import Services.MappingEngineService.IMappableThingCollection;
-import ViewModels.Rows.MappedHubRequirementRowViewModel;
-import ViewModels.Rows.MappedDstRequirementRowViewModel;
+import ViewModels.Rows.MappedElementRowViewModel;
+import cdp4common.commondata.Thing;
 
 /**
- * The {@linkplain HubRequirementCollection} class represents a collection of {@linkplain MappedHubRequirementRowViewModel}.
- * The {@linkplain HubRequirementCollection} is usable by the {@linkplain MappingEngine} and 
- * each item of the collection represents a mapping in the {@linkplain MappingDirection.FromHubToDst}
+ * The {@linkplain CapellaTracedElementCollection} class represents a collection of{@linkplain MappedElementRowViewModel}.
  * 
- * Wrapping MappedRequirementRowViewModel this way solves the following problem,
+ * The {@linkplain CapellaTracedElementCollection} is usable by the {@linkplain MappingEngine} and 
+ * each item of the collection represents a mapping in the {@linkplain MappingDirection.FromDstToHub}
+ * 
+ * Wrapping CapellaTracesCollection this way solves the following problem,
  * The {@linkplain IMappingEngine} having to know the type of things to transform at runtime to be able to invoke the right rule; 
  * Meaning that defining a rule that takes as input a {@linkplain ArrayList} of any type isn't supported because of the java generic implementation.
  */
 @SuppressWarnings("serial")
-public class HubRequirementCollection extends ArrayList<MappedHubRequirementRowViewModel> implements IMappableThingCollection { }
+public class CapellaTracedElementCollection extends ArrayList<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> implements IMappableThingCollection { }

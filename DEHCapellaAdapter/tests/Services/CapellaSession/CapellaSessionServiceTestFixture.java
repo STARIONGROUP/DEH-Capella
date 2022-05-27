@@ -139,14 +139,12 @@ public class CapellaSessionServiceTestFixture extends CapellaSessionRelatedBaseT
         assertDoesNotThrow(() -> result.Set(this.service.GetModels()));
         assertNotNull(result.Get());
         
-        RequirementType requirementType = ((RequirementRowViewModel)((IHaveContainedRows<?>)((IHaveContainedRows<?>)
+        RequirementType requirementType = ((RequirementRowViewModel)
                 ((IHaveContainedRows<?>)((IHaveContainedRows<?>)((IHaveContainedRows<?>)
                         result.Get().GetContainedRows().get(0)).GetContainedRows().get(0))
-                            .GetContainedRows().get(0)).GetContainedRows().get(0))
                             .GetContainedRows().get(1)).GetContainedRows().get(4)).GetRequirementType();
         
         assertEquals(null, requirementType);
-        assertEquals(StringUtils.EMPTY, requirementType.toString());
     }
 
     @Test

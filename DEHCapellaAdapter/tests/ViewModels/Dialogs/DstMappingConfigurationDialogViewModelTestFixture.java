@@ -53,6 +53,7 @@ import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RequirementRowViewModel;
 import ViewModels.Interfaces.IElementDefinitionBrowserViewModel;
 import ViewModels.Interfaces.IRequirementBrowserViewModel;
+import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
 import ViewModels.MappedElementListView.Interfaces.IMappedElementListViewViewModel;
 import ViewModels.ObjectBrowser.ElementDefinitionTree.Rows.ElementDefinitionRowViewModel;
 import ViewModels.ObjectBrowser.RequirementTree.Rows.RequirementSpecificationRowViewModel;
@@ -65,6 +66,7 @@ import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.Iteration;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.DomainOfExpertise;
+import io.reactivex.Observable;
 
 class DstMappingConfigurationDialogViewModelTestFixture
 {
@@ -79,7 +81,7 @@ class DstMappingConfigurationDialogViewModelTestFixture
     private ObservableValue<ThingRowViewModel<? extends Thing>> selectedElementDefinitionObservable;
     private ObservableValue<ThingRowViewModel<? extends Thing>> selectedRequirementObservable;
     private ObservableValue<ElementRowViewModel<? extends CapellaElement>> selectedCapellaElementObservable;
-    private IMappedElementListViewViewModel mappedElementListViewViewModel;
+    private ICapellaMappedElementListViewViewModel mappedElementListViewViewModel;
 
     /**
      * @throws java.lang.Exception
@@ -92,7 +94,8 @@ class DstMappingConfigurationDialogViewModelTestFixture
         this.elementDefinitionBrowser = mock(IElementDefinitionBrowserViewModel.class);
         this.requirementBrowserViewModel = mock(IRequirementBrowserViewModel.class);
         this.capellaObjectBrowser = mock(ICapellaObjectBrowserViewModel.class);
-        this.mappedElementListViewViewModel = mock(IMappedElementListViewViewModel.class);
+        this.mappedElementListViewViewModel = mock(ICapellaMappedElementListViewViewModel.class);
+        when(this.mappedElementListViewViewModel.GetSelectedElement()).thenReturn(Observable.empty());
         
         this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
         when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
@@ -118,7 +121,7 @@ class DstMappingConfigurationDialogViewModelTestFixture
     {
         assertNotNull(this.viewModel.GetElementDefinitionBrowserViewModel());
         assertNotNull(this.viewModel.GetRequirementBrowserViewModel());
-        assertNotNull(this.viewModel.GetCapellaObjectBrowserViewModel());
+        assertNotNull(this.viewModel.GetDstObjectBrowserViewModel());
         assertNotNull(this.viewModel.GetMappedElementCollection());
         assertNotNull(this.viewModel.GetSelectedMappedElement());
         assertDoesNotThrow(() -> this.viewModel.SetSelectedMappedElement(mock(MappedElementRowViewModel.class)));
@@ -151,6 +154,7 @@ class DstMappingConfigurationDialogViewModelTestFixture
 
         var mappedRequirement = new MappedDstRequirementRowViewModel(mock(Requirement.class), MappingDirection.FromDstToHub);
         mappedElementDefinition.SetShouldCreateNewTargetElement(false);
+        this.viewModel.SetSelectedMappedElement(mappedElementDefinition);
         
         assertDoesNotThrow(() -> this.viewModel.WhenMapToNewElementCheckBoxChanged(true));
         
@@ -175,9 +179,9 @@ class DstMappingConfigurationDialogViewModelTestFixture
         mappedElementDefinition.SetShouldCreateNewTargetElement(false);
         assertDoesNotThrow(() -> this.viewModel.WhenMapToNewElementCheckBoxChanged(false));
         
-        var requirementsSpecification = new RequirementsSpecification();
+        var requirement = new cdp4common.engineeringmodeldata.Requirement();
         
-        mappedRequirement.SetHubElement(requirementsSpecification);
+        mappedRequirement.SetHubElement(requirement);
         mappedRequirement.SetShouldCreateNewTargetElement(false);
         this.dstMapResult.add(mappedRequirement);
         this.viewModel.SetSelectedMappedElement(mappedRequirement);

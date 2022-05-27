@@ -23,10 +23,19 @@
  */
 package Views.Dialogs;
 
+import org.eclipse.emf.ecore.EObject;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.kitalpha.emde.model.Element;
+
 import Annotations.ExludeFromCodeCoverageGeneratedReport;
 import Enumerations.MappingDirection;
+import ViewModels.CapellaObjectBrowser.Rows.ComponentRowViewModel;
+import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.Dialogs.Interfaces.IDstToHubMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.Interfaces.IHubToDstMappingConfigurationDialogViewModel;
 import Views.CapellaMappedElementListView;
+import Views.CapellaObjectBrowser;
+import cdp4common.commondata.Thing;
 
 /**
  * The {@linkplain CapellaDstToHubMappingConfigurationDialog} is the dialog view to allow to configure a mapping 
@@ -34,13 +43,13 @@ import Views.CapellaMappedElementListView;
  */
 @SuppressWarnings("serial")
 @ExludeFromCodeCoverageGeneratedReport
-public class CapellaDstToHubMappingConfigurationDialog extends MappingConfigurationDialog<IDstToHubMappingConfigurationDialogViewModel>
+public class CapellaDstToHubMappingConfigurationDialog extends MappingConfigurationDialog<IDstToHubMappingConfigurationDialogViewModel, EObject, CapellaElement, ElementRowViewModel<? extends CapellaElement>>
 {
     /**
      * Initializes a new {@linkplain CapellaDstToHubMappingConfigurationDialog}
      */
     public CapellaDstToHubMappingConfigurationDialog()
     {
-        super(MappingDirection.FromDstToHub, new CapellaMappedElementListView());
+        super(MappingDirection.FromDstToHub, new CapellaObjectBrowser(), new CapellaMappedElementListView());
     }
 }

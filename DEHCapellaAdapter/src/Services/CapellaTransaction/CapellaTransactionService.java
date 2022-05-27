@@ -53,6 +53,7 @@ import Utils.Stereotypes.StereotypeUtils;
 /**
  * The CapellaTransactionService is a service that takes care of clones and transactions in Capella
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class CapellaTransactionService implements ICapellaTransactionService
 {
     /**
@@ -210,6 +211,19 @@ public class CapellaTransactionService implements ICapellaTransactionService
             return true;
         }
 
+        return this.IsNew((CapellaElement)element);
+    }
+
+    /**
+     *  Verifies that the provided {@linkplain #TElement} is a new element
+     *  
+     * @param <TElement> the type of the element
+     * @param element the {@linkplain #TElement} to check
+     * @return an assert
+     */
+    @Override
+    public <TElement extends CapellaElement> boolean IsNew(TElement element)
+    {
         return this.newReferences.containsKey(((CapellaElement)element).getId())
                 && this.newReferences.get(((CapellaElement)element).getId()) == element;
     }
