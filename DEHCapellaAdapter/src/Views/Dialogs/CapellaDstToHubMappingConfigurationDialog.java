@@ -25,6 +25,7 @@ package Views.Dialogs;
 
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.kitalpha.emde.model.Element;
 
 import Annotations.ExludeFromCodeCoverageGeneratedReport;
@@ -43,7 +44,7 @@ import cdp4common.commondata.Thing;
  */
 @SuppressWarnings("serial")
 @ExludeFromCodeCoverageGeneratedReport
-public class CapellaDstToHubMappingConfigurationDialog extends MappingConfigurationDialog<IDstToHubMappingConfigurationDialogViewModel, EObject, CapellaElement, ElementRowViewModel<? extends CapellaElement>>
+public class CapellaDstToHubMappingConfigurationDialog extends MappingConfigurationDialog<IDstToHubMappingConfigurationDialogViewModel, EObject, NamedElement, ElementRowViewModel<? extends NamedElement>>
 {
     /**
      * Initializes a new {@linkplain CapellaDstToHubMappingConfigurationDialog}

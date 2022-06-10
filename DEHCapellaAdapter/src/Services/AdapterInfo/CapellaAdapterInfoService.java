@@ -1,5 +1,5 @@
 /*
- * CapellaAdapterVersionNumberServiceTestFixture.java
+ * CapellaAdapterInfoService.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
@@ -21,20 +21,40 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package Services.VersionNumber;
+package Services.AdapterInfo;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.Test;
+import org.osgi.framework.FrameworkUtil;
 
 import cdp4common.Version;
 
-class CapellaAdapterVersionNumberServiceTestFixture
+/**
+ * The {@linkplain CapellaAdapterInfoService} is the capella adapter implementation of {@linkplain IAdapterVersionNumberService}
+ */
+public class CapellaAdapterInfoService extends AdapterInfoService implements IAdapterInfoService
 {
-    @Test
-    void VerifyVersion()
+    /**
+     * Initializes a new {@linkplain AdapterVersionNumberService}
+     */
+    public CapellaAdapterInfoService()
     {
-        assertNotEquals(Version.emptyVersion, new CapellaAdapterVersionNumberService());
-        assertTrue(new CapellaAdapterVersionNumberService().GetVersion().getMajor() == 0);
+        super(GetCapellaAdapterVersion(), "CapellaAdapter");
+    }
+
+    /**
+     * Gets the current version of the Capella adapter
+     * 
+     * @return the {@linkplain Version}
+     */
+    private static Version GetCapellaAdapterVersion()
+    {
+        var bundle = FrameworkUtil.getBundle(App.App.class);
+        
+        if(bundle != null)
+        {
+            return new Version(bundle.getVersion().toString());
+        }
+        
+        return Version.emptyVersion;
     }
 }
+

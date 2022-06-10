@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.data.requirement.Requirement;
 
@@ -54,6 +55,7 @@ import ViewModels.Interfaces.IRequirementBrowserViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
@@ -128,7 +130,7 @@ class MapCommandServiceTestFixture
         assertDoesNotThrow(() -> this.service.MapSelection(MappingDirection.FromDstToHub));
         var dialogResult = new Ref<Boolean>(Boolean.class, null);
         
-        var mappedElementResultFromTheMappingDialog = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
+        var mappedElementResultFromTheMappingDialog = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
         when(this.dstMappingDialog.GetMappedElementCollection()).thenReturn(mappedElementResultFromTheMappingDialog);
         assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult, MappingDirection.FromDstToHub));
         dialogResult.Set(false);

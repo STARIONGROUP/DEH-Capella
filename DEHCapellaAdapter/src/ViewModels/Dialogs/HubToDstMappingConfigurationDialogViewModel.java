@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
@@ -67,7 +68,7 @@ import io.reactivex.disposables.Disposable;
 /**
  * The {@linkplain HubToDstMappingConfigurationDialogViewModel} is the main view model for the {@linkplain CapellaHubToDstMappingConfigurationDialog}
  */
-public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<Thing, CapellaElement, ElementRowViewModel<? extends CapellaElement>> implements IHubToDstMappingConfigurationDialogViewModel
+public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends NamedElement>> implements IHubToDstMappingConfigurationDialogViewModel
 {
     /**
      * The {@linkplain IDstController}
@@ -90,7 +91,7 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      * @return an {@linkplain IObjectBrowserViewModel}
      */
     @Override
-    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> GetDstObjectBrowserViewModel()
+    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends NamedElement>> GetDstObjectBrowserViewModel()
     {
         return this.dstObjectBrowser;
     }
@@ -230,10 +231,10 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      * @param thing the {@linkplain Class} element
      * @return a {@linkplain MappedElementRowViewModel}
      */
-    protected MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> GetMappedElementRowViewModel(Thing thing)
+    protected MappedElementRowViewModel<? extends Thing, ? extends NamedElement> GetMappedElementRowViewModel(Thing thing)
     {
         Ref<Boolean> refShouldCreateNewTargetElement = new Ref<>(Boolean.class, false);
-        MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElementRowViewModel = null;
+        MappedElementRowViewModel<? extends Thing, ? extends NamedElement> mappedElementRowViewModel = null;
         
         if(thing instanceof ElementDefinition)
         {

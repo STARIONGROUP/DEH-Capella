@@ -1,5 +1,5 @@
 /*
- * IHubToDstMappingConfigurationDialogViewModel.java
+ * CapellaMappingListView.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
@@ -21,17 +21,28 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package ViewModels.Dialogs.Interfaces;
+package Views;
 
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 
-import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
-import cdp4common.commondata.Thing;
+import ViewModels.MappingListView.Renderers.MappingListViewCapellaElementCellEditor;
+import ViewModels.MappingListView.Renderers.MappingListViewCapellaElementCellRenderer;
+import Views.MappingList.MappingListView;
 
 /**
- * The IHubToDstMappingConfigurationDialogViewModel is the interface definition for the {@linkplain HubToDstMappingConfigurationDialogViewModel}
+ * The {@linkplain CappelaMappingListView} is the {@linkplain MappingListView} implementation for the Capella adapter 
  */
-public interface IHubToDstMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends NamedElement>>
+@SuppressWarnings("serial")
+@Annotations.ExludeFromCodeCoverageGeneratedReport
+public class CapellaMappingListView extends MappingListView
 {
+    /**
+     * Initializes a new {@linkplain CapellaMappingListView}
+     */
+    public CapellaMappingListView()
+    {
+        super();
+        this.objectBrowserTree.setDefaultRenderer(NamedElement.class, new MappingListViewCapellaElementCellRenderer());
+        this.objectBrowserTree.setDefaultEditor(NamedElement.class, new MappingListViewCapellaElementCellEditor());
+    }
 }

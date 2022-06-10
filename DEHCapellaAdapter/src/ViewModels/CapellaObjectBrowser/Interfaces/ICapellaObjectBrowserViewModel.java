@@ -28,6 +28,7 @@ import java.util.Collection;
 import org.eclipse.emf.ecore.EObject;
 import org.netbeans.swing.outline.OutlineModel;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.Interfaces.IObjectBrowserBaseViewModel;
@@ -36,7 +37,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain IMagicDrawObjectBrowserViewModel} is the interface definition for the {@linkplain CapellaObjectBrowserViewModel}
  */
-public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>>
+public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewModel<ElementRowViewModel<? extends NamedElement>>
 {
     /**
      * Compute eligible rows where the represented {@linkplain Class} can be transfered,
@@ -44,7 +45,7 @@ public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewMo
      * 
      * @param selectedRow the collection of selected view model {@linkplain ClassRowViewModel}
      */
-    void OnSelectionChanged(ElementRowViewModel<? extends CapellaElement> selectedRow);
+    void OnSelectionChanged(ElementRowViewModel<? extends NamedElement> selectedRow);
 
     /**
      * Creates the {@linkplain OutlineModel} tree from the provided {@linkplain Collection} of {@linkplain EObject}

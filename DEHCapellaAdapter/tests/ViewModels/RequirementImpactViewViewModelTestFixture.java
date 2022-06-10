@@ -39,6 +39,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 
 import DstController.IDstController;
 import HubController.IHubController;
@@ -51,6 +52,7 @@ import ViewModels.ObjectBrowser.RequirementTree.Rows.RequirementSpecificationRow
 import ViewModels.ObjectBrowser.Rows.IterationRowViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.DomainOfExpertise;
@@ -62,16 +64,16 @@ class RequirementImpactViewViewModelTestFixture
     private IDstController dstController;
     private IHubController hubController;
     private RequirementImpactViewViewModel viewModel;
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> elements;
+    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> elements;
     private Iteration iteration;
     private ObservableCollection<Thing> selectedDstMapResultForTransfer;
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> dstMapResult;
+    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> dstMapResult;
     private cdp4common.engineeringmodeldata.Requirement requirement0;
     private cdp4common.engineeringmodeldata.Requirement requirement1;
     private cdp4common.engineeringmodeldata.Requirement requirement2;
-    private MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement> mappedElement2;
-    private MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement> mappedElement1;
-    private MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement> mappedElement0;
+    private MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends NamedElement> mappedElement2;
+    private MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends NamedElement> mappedElement1;
+    private MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends NamedElement> mappedElement0;
     private RequirementsSpecification requirementsSpecification;
 
     @BeforeEach
@@ -87,7 +89,7 @@ class RequirementImpactViewViewModelTestFixture
         when(this.hubController.GetIsSessionOpen()).thenReturn(true);
         when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
         
-        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
+        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
         when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
         
         this.selectedDstMapResultForTransfer = new ObservableCollection<Thing>();
@@ -113,7 +115,7 @@ class RequirementImpactViewViewModelTestFixture
         
         assertEquals(1, this.viewModel.GetBrowserTreeModel().getRowCount());
                 
-        var elements = new ArrayList<MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement>>();
+        var elements = new ArrayList<MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends NamedElement>>();
         elements.add(mappedElement0);
         elements.add(mappedElement1);
         elements.add(mappedElement2);
@@ -186,11 +188,11 @@ class RequirementImpactViewViewModelTestFixture
         this.requirementsSpecification.getRequirement().add(this.requirement1);
         this.requirementsSpecification.getRequirement().add(this.requirement2);
         
-        this.mappedElement0 = (MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement0 = (MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends NamedElement>)mock(MappedElementRowViewModel.class);
         when(this.mappedElement0.GetHubElement()).thenReturn(this.requirement0);
-        this.mappedElement1 = (MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement1 = (MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends NamedElement>)mock(MappedElementRowViewModel.class);
         when(this.mappedElement1.GetHubElement()).thenReturn(this.requirement1);
-        this.mappedElement2 = (MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement2 = (MappedElementRowViewModel<cdp4common.engineeringmodeldata.Requirement, ? extends NamedElement>)mock(MappedElementRowViewModel.class);
         when(this.mappedElement2.GetHubElement()).thenReturn(this.requirement2);
     }    
 }

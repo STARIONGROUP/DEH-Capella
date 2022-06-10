@@ -194,7 +194,7 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetDstMapResult}
      */
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> hubMapResult = new ObservableCollection<>();
+    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> hubMapResult = new ObservableCollection<>();
     
     /**
      * Gets The {@linkplain ObservableCollection} of Hub map result
@@ -202,7 +202,7 @@ public final class DstController implements IDstController
      * @return an {@linkplain ObservableCollection} of {@linkplain Class}
      */
     @Override
-    public ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetHubMapResult()
+    public ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> GetHubMapResult()
     {
         return this.hubMapResult;
     }
@@ -210,7 +210,7 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetDstMapResult}
      */
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> dstMapResult = new ObservableCollection<>();
+    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> dstMapResult = new ObservableCollection<>();
 
     /**
      * Gets The {@linkplain ObservableCollection} of DST map result
@@ -218,7 +218,7 @@ public final class DstController implements IDstController
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
     @Override
-    public ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetDstMapResult()
+    public ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> GetDstMapResult()
     {
         return this.dstMapResult;
     }
@@ -535,7 +535,7 @@ public final class DstController implements IDstController
         
         if(this.TryMap(input, output, result));
         {
-            var resultAsCollection = (ArrayList<MappedElementRowViewModel<? extends Thing, CapellaElement>>) output.Get();
+            var resultAsCollection = (ArrayList<MappedElementRowViewModel<? extends DefinedThing, NamedElement>>) output.Get();
             
             if(resultAsCollection != null && !resultAsCollection.isEmpty())
             {

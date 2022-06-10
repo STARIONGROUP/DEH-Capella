@@ -24,6 +24,7 @@
 package ViewModels.CapellaObjectBrowser.Rows;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
@@ -33,7 +34,7 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
  * 
  * @param <TElement> the type of {@linkplain CapellaElement} this row view model represents
  */
-public abstract class PropertyValueBaseRowViewModel<TElement extends CapellaElement> extends ElementRowViewModel<TElement>
+public abstract class PropertyValueBaseRowViewModel<TElement extends NamedElement> extends ElementRowViewModel<TElement>
 {    
     /**
      * Initializes a new {@linkplain ComponentRowViewModel}

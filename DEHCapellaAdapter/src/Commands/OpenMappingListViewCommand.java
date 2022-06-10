@@ -1,5 +1,5 @@
 /*
- * IHubToDstMappingConfigurationDialogViewModel.java
+ * OpenMappingListViewCommand.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
@@ -21,17 +21,21 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package ViewModels.Dialogs.Interfaces;
+package Commands;
 
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.capellacore.NamedElement;
-
-import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
-import cdp4common.commondata.Thing;
+import Views.CapellaMappingListViewPanel;
 
 /**
- * The IHubToDstMappingConfigurationDialogViewModel is the interface definition for the {@linkplain HubToDstMappingConfigurationDialogViewModel}
+ * The {@linkplain OpenMappingListViewCommand} is the command handler for {@linkplain CapellaMappingListViewPanel}
  */
-public interface IHubToDstMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends NamedElement>>
+@Annotations.ExludeFromCodeCoverageGeneratedReport
+public final class OpenMappingListViewCommand extends OpenAdapterPanelCommand<CapellaMappingListViewPanel>
 {
+    /**
+     * Initializes a new {@linkplain OpenMappingListViewCommand}
+     */
+    public OpenMappingListViewCommand()
+    {
+        super(new CapellaMappingListViewPanel());
+    }
 }

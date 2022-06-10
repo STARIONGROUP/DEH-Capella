@@ -18,6 +18,10 @@
             id="DEH.Capella.OpenLocalExchangeHistory">
       </command>
       <command categoryId="DEH.Capella.Commands.CommandsCategory"
+            name="Open Mapping List View Panel"
+            id="DEH.Capella.OpenMappingListViewPanel">
+      </command>
+      <command categoryId="DEH.Capella.Commands.CommandsCategory"
             id="DEH.Capella.MapToHub"
             name="Map Selection To Hub">
       </command>
@@ -35,6 +39,9 @@
       <handler class="Commands.MapToHubCommand"
             commandId="DEH.Capella.MapToHub">
       </handler>
+      <handler class="Commands.OpenMappingListViewCommand"
+            commandId="DEH.Capella.OpenMappingListViewPanel">
+      </handler>
    </extension>
    <extension point="org.eclipse.ui.menus">
 		<menuContribution locationURI="menu:org.eclipse.ui.main.menu?after=additions">
@@ -51,6 +58,10 @@
             	</command>
             	<command commandId="DEH.Capella.OpenLocalExchangeHistory"
                   id="DEH.Capella.Menus.OpenLocalExchangeHistory"
+                  mnemonic="S">
+            	</command>
+            	<command commandId="DEH.Capella.OpenMappingListViewPanel"
+                  id="DEH.Capella.Menus.OpenMappingListView"
                   mnemonic="S">
             	</command>
 			</menu>
@@ -87,6 +98,13 @@
                    id="DEH.Capella.Toolbars.OpenLocalExchangeHistory"
                    tooltip="View Local Exchange History">
         	</command>
+        	<separator name="additions" visible="false"/>
+	        <command commandId="DEH.Capella.OpenMappingListViewPanel"
+                   icon="icons/icon16.png"
+                   style="push"
+                   id="DEH.Capella.Toolbars.OpenMappingListViewPanel"
+                   tooltip="View Mapping List View Panel">
+        	</command>
      	</menuContribution>
 		<menuContribution allPopups="false" locationURI="popup:org.eclipse.ui.popup.any">
 		      <command commandId="DEH.Capella.MapToHub"
@@ -108,5 +126,10 @@
                 icon="icons/icon16.png"
              	category="DEH.Capella.Views"
                 class="Views.CapellaImpactViewPanel"/>
+        <view id="MappingListView"
+                name="MappingListView"
+                icon="icons/icon16.png"
+             	category="DEH.Capella.Views"
+                class="Views.CapellaMappingListViewPanel"/>
 	</extension>
 </plugin>

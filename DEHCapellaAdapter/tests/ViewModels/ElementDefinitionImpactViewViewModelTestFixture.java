@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 
 import Reactive.ObservableCollection;
 import Utils.Ref;
@@ -47,6 +48,7 @@ import ViewModels.ObjectBrowser.RequirementTree.Rows.IterationRequirementRowView
 import ViewModels.ObjectBrowser.Rows.IterationRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.Iteration;
@@ -60,16 +62,16 @@ class ElementDefinitionImpactViewViewModelTestFixture
     private IDstController dstController;
     private IHubController hubController;
     private ElementDefinitionImpactViewViewModel viewModel;
-    private ArrayList<MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>> elements;
+    private ArrayList<MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>> elements;
     private Iteration iteration;
     private ObservableCollection<Thing> selectedDstMapResultForTransfer;
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> dstMapResult;
+    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> dstMapResult;
     private ElementDefinition elementDefinition0;
     private ElementDefinition elementDefinition1;
     private ElementDefinition elementDefinition2;
-    private MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement> mappedElement0;
-    private MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement> mappedElement1;
-    private MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement> mappedElement2;
+    private MappedElementRowViewModel<ElementDefinition, ? extends NamedElement> mappedElement0;
+    private MappedElementRowViewModel<ElementDefinition, ? extends NamedElement> mappedElement1;
+    private MappedElementRowViewModel<ElementDefinition, ? extends NamedElement> mappedElement2;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -84,7 +86,7 @@ class ElementDefinitionImpactViewViewModelTestFixture
         when(this.hubController.GetIsSessionOpen()).thenReturn(true);
         when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
         
-        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
+        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
         when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
         
         this.selectedDstMapResultForTransfer = new ObservableCollection<Thing>();
@@ -180,17 +182,17 @@ class ElementDefinitionImpactViewViewModelTestFixture
         this.elementDefinition2.setOwner(owner);
         this.elementDefinition2.setName("elementDefinition2");
         
-        this.mappedElement0 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement0 = (MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement0.GetHubElement()).thenReturn(elementDefinition0.clone(false));
-        this.mappedElement1 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement1 = (MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement1.GetHubElement()).thenReturn(elementDefinition1);
-        this.mappedElement2 = (MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement2 = (MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement2.GetHubElement()).thenReturn(elementDefinition2);
 
         assertEquals(1, this.viewModel.GetBrowserTreeModel().getRowCount());
                 
-        this.elements = new ArrayList<MappedElementRowViewModel<ElementDefinition, ? extends CapellaElement>>();
-        elements.add(this.mappedElement0);
+        this.elements = new ArrayList<MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>>();
+        elements.add( this.mappedElement0);
         elements.add(this.mappedElement1);
         elements.add(this.mappedElement2);
     }

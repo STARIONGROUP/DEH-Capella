@@ -39,6 +39,7 @@ import DstController.IDstController;
 import HubController.IHubController;
 import Services.CapellaLog.ICapellaLogService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
+import ViewModels.Interfaces.ICapellaImpactViewPanelViewModel;
 import ViewModels.Interfaces.ICapellaImpactViewViewModel;
 import ViewModels.Interfaces.IElementDefinitionImpactViewViewModel;
 import ViewModels.Interfaces.IImpactViewContextMenuViewModel;
@@ -56,7 +57,7 @@ class CapellaImpactViewPanelViewModelTestFixture
     private IImpactViewContextMenuViewModel impactViewContextMenuViewModel;
     private ICapellaLogService capellaLogService;
     private ICapellaMappingConfigurationService capellaMappingConfigurationService;
-    private CapellaImpactViewPanelViewModel viewModel;
+    private ICapellaImpactViewPanelViewModel viewModel;
     private ICapellaImpactViewViewModel capellaImpactViewViewModel;
 
     @BeforeEach

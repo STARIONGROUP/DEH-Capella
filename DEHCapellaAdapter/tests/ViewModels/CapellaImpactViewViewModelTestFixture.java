@@ -37,6 +37,7 @@ import org.eclipse.emf.common.util.URI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 
 import DstController.IDstController;
@@ -49,6 +50,7 @@ import ViewModels.CapellaObjectBrowser.Rows.ComponentRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
 import io.reactivex.Observable;
 
@@ -57,7 +59,7 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
     private ICapellaSessionService sessionService;
     private IDstController dstController;
     private CapellaImpactViewViewModel viewModel;
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> hubMapResult;
+    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> hubMapResult;
     private ICapellaTransactionService transactionService;
 
     @BeforeEach
@@ -102,7 +104,7 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
     @Test
     public void VerifyComputeDifferences()
     {
-        var newHubMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
+        var newHubMapResult = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
         when(this.dstController.GetHubMapResult()).thenReturn(newHubMapResult);
         newHubMapResult.add(new MappedElementDefinitionRowViewModel(this.LogicalComponent, MappingDirection.FromHubToDst));
         when(this.sessionService.HasAnyOpenSession()).thenReturn(true);
@@ -110,7 +112,7 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
         when(this.sessionService.HasAnyOpenSession()).thenReturn(false);
         this.hubMapResult.clear();
         when(this.sessionService.HasAnyOpenSession()).thenReturn(true);
-        var newNewHubMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
+        var newNewHubMapResult = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
         when(this.dstController.GetHubMapResult()).thenReturn(newNewHubMapResult);
         this.viewModel.UpdateBrowserTrees(true);
         newNewHubMapResult.add(new MappedElementDefinitionRowViewModel(this.LogicalComponent, MappingDirection.FromHubToDst));
