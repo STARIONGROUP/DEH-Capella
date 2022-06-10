@@ -64,8 +64,8 @@ import Services.MappingConfiguration.CapellaMappingConfigurationService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingEngineService.IMappingEngineService;
 import Services.MappingEngineService.MappingEngineService;
-import Services.VersionNumber.CapellaAdapterVersionNumberService;
-import Services.VersionNumber.IAdapterVersionNumberService;
+import Services.AdapterInfo.CapellaAdapterInfoService;
+import Services.AdapterInfo.IAdapterInfoService;
 import Utils.Stereotypes.CapellaTracedElementCollection;
 import ViewModels.CapellaHubBrowserPanelViewModel;
 import ViewModels.CapellaImpactViewPanelViewModel;
@@ -93,6 +93,8 @@ import ViewModels.MappedElementListView.CapellaMappedElementListViewViewModel;
 import ViewModels.MappedElementListView.MappedElementListViewViewModel;
 import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
 import ViewModels.MappedElementListView.Interfaces.IMappedElementListViewViewModel;
+import ViewModels.MappingListView.CapellaMappingListViewViewModel;
+import ViewModels.MappingListView.Interfaces.IMappingListViewViewModel;
 
 /**
  * The {@linkplain App} class is the main entry point for the DEH-Capella adapter
@@ -125,7 +127,7 @@ public class App extends AbstractUIPlugin
      */
     private void LogAdapterInitialization()
     {
-        var version = AppContainer.Container.getComponent(IAdapterVersionNumberService.class).GetVersion();
+        var version = AppContainer.Container.getComponent(IAdapterInfoService.class).GetVersion();
         var message = String.format("DEH-Capella adapter %s initialized with success", version);
         
         this.logger.info("----------------------------------------------------------------------------");
@@ -169,7 +171,7 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.as(CACHE).addComponent(IMapCommandService.class, MapCommandService.class);
             AppContainer.Container.addComponent(ISiriusSessionManagerWrapper.class, SiriusSessionManagerWrapper.class);
             AppContainer.Container.as(CACHE).addComponent(ICapellaTransactionService.class, CapellaTransactionService.class);
-            AppContainer.Container.addComponent(IAdapterVersionNumberService.class, CapellaAdapterVersionNumberService.class);
+            AppContainer.Container.addComponent(IAdapterInfoService.class, CapellaAdapterInfoService.class);
             AppContainer.Container.as(CACHE).addComponent(ICapellaLocalExchangeHistoryService.class, CapellaLocalExchangeHistoryService.class);
 
             AppContainer.Container.addComponent(ComponentToElementMappingRule.class.getName(), ComponentToElementMappingRule.class);
@@ -191,6 +193,7 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.as(NO_CACHE).addComponent(IHubBrowserContextMenuViewModel.class, HubBrowserContextMenuViewModel.class);
             AppContainer.Container.addComponent(ICapellaHubBrowserPanelViewModel.class, CapellaHubBrowserPanelViewModel.class);
             AppContainer.Container.addComponent(ICapellaMappedElementListViewViewModel.class, CapellaMappedElementListViewViewModel.class);
+            AppContainer.Container.addComponent(IMappingListViewViewModel.class, CapellaMappingListViewViewModel.class);
         }
         catch (Exception exception) 
         {

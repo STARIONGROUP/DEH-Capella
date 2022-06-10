@@ -72,7 +72,6 @@ import cdp4common.sitedirectorydata.DomainOfExpertise;
  */
 class RequirementsSpecificationToRequirementMappingRuleTestFixture
 {
-    
     private ICapellaMappingConfigurationService mappingConfigurationService;
     private IDstController dstController;
     private IHubController hubController;

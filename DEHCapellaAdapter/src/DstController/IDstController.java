@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.function.Predicate;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Trace;
 import org.polarsys.capella.core.data.information.datatype.DataType;
 
@@ -46,9 +47,8 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain IDstController} is the interface definition for the {@linkplain DstController}
  */
-public interface IDstController extends IDstControllerBase<CapellaElement>
+public interface IDstController extends IDstControllerBase<NamedElement>
 {
-
     /**
      * Gets the {@linkplain ObservableCollection} of mapped {@linkplain Trace}s
      * 
@@ -132,14 +132,14 @@ public interface IDstController extends IDstControllerBase<CapellaElement>
      * 
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
-    ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetDstMapResult();
+    ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> GetDstMapResult();
 
     /**
      * Gets The {@linkplain ObservableCollection} of Hub map result
      * 
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
-    ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> GetHubMapResult();
+    ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> GetHubMapResult();
 
     /**
      * Gets an {@linkplain Observable} of value indicating whether there is any session open in Capella

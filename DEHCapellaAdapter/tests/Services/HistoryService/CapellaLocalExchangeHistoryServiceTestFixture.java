@@ -38,7 +38,8 @@ import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 
 import HubController.IHubController;
-import Services.VersionNumber.IAdapterVersionNumberService;
+import Services.AdapterInfo.IAdapterInfoService;
+import Services.AdapterInfo.IAdapterInfoService;
 import cdp4common.ChangeKind;
 import cdp4common.sitedirectorydata.DomainOfExpertise;
 import cdp4common.sitedirectorydata.Person;
@@ -47,7 +48,7 @@ class CapellaLocalExchangeHistoryServiceTestFixture
 {
     private CapellaLocalExchangeHistoryService service;
     private IHubController hubController;
-    private IAdapterVersionNumberService versionService;
+    private IAdapterInfoService adapterInfoService;
     
     @BeforeEach
     void Setup()
@@ -57,9 +58,9 @@ class CapellaLocalExchangeHistoryServiceTestFixture
         when(this.hubController.GetActivePerson()).thenReturn(person);
         var domain = new DomainOfExpertise();
         when(this.hubController.GetCurrentDomainOfExpertise()).thenReturn(domain);
-        this.versionService = mock(IAdapterVersionNumberService.class);
+        this.adapterInfoService = mock(IAdapterInfoService.class);
         
-        this.service = new CapellaLocalExchangeHistoryService(this.hubController, this.versionService);
+        this.service = new CapellaLocalExchangeHistoryService(this.hubController, this.adapterInfoService);
     }
     
     @Test

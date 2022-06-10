@@ -108,4 +108,11 @@ public interface ICapellaImpactViewPanelViewModel extends IViewModel
      * @return the {@linkplain ICapellaImpactViewViewModel}
      */
     ICapellaImpactViewViewModel GetCapellaImpactViewViewModel();
+
+    /**
+     * Gets a value indicating whether the Impact view can load mapping configurations
+     * 
+     * @return a {@linkplain boolean}
+     */
+    boolean CanLoadMappingConfiguration();
 }

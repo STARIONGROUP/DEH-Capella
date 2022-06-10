@@ -1,5 +1,5 @@
 /*
- * IHubToDstMappingConfigurationDialogViewModel.java
+ * CapellaAdapterVersionNumberServiceTestFixture.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
@@ -21,17 +21,20 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package ViewModels.Dialogs.Interfaces;
+package Services.AdapterInfo;
 
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.capellacore.NamedElement;
+import static org.junit.jupiter.api.Assertions.*;
 
-import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
-import cdp4common.commondata.Thing;
+import org.junit.jupiter.api.Test;
 
-/**
- * The IHubToDstMappingConfigurationDialogViewModel is the interface definition for the {@linkplain HubToDstMappingConfigurationDialogViewModel}
- */
-public interface IHubToDstMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends NamedElement>>
+import cdp4common.Version;
+
+class CapellaAdapterVersionNumberServiceTestFixture
 {
+    @Test
+    void VerifyVersion()
+    {
+        assertNotEquals(Version.emptyVersion, new CapellaAdapterInfoService());
+        assertTrue(new CapellaAdapterInfoService().GetVersion().getMajor() == 0);
+    }
 }

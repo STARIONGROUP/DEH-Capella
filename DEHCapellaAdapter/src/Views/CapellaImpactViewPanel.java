@@ -86,26 +86,28 @@ public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanel
     @Override
     public void Bind()
     {
-       this.DataContext.GetIsSessionOpen().subscribe(x -> 
-       {     
-           this.View.SetSavedMappingconfigurationCollection(this.DataContext.GetSavedMappingconfigurationCollection());
-       });
+        this.View.SetLoadMappingControlsIsEnable(this.DataContext.CanLoadMappingConfiguration());
+        
+        this.DataContext.GetIsSessionOpen().subscribe(x -> 
+        {
+            this.View.SetSavedMappingconfigurationCollection(this.DataContext.GetSavedMappingconfigurationCollection());
+        });
 
-       Observable.combineLatest(Observable.fromArray(true), this.DataContext.GetIsSessionOpen(),
+        Observable.combineLatest(this.DataContext.GetHasOneCapellaModelOpen(), this.DataContext.GetIsSessionOpen(),
                (hasAnyCapellaModelOpen, isHubSessionOpen) -> 
                    hasAnyCapellaModelOpen && isHubSessionOpen)
-           .subscribe(x -> this.View.SetLoadMappingControlsIsEnable(x));
+            .subscribe(x -> this.View.SetLoadMappingControlsIsEnable(x));
        
-       this.View.AttachOnSaveLoadMappingConfiguration(x -> this.DataContext.OnSaveLoadMappingConfiguration(x));
-       
-       this.View.AttachOnChangeDirection(this.DataContext.GetOnChangeMappingDirectionCallable());
+        this.View.AttachOnSaveLoadMappingConfiguration(x -> this.DataContext.OnSaveLoadMappingConfiguration(x));
+   
+        this.View.AttachOnChangeDirection(this.DataContext.GetOnChangeMappingDirectionCallable());
 
-       this.View.GetElementDefinitionBrowser().SetDataContext(this.DataContext.GetElementDefinitionImpactViewViewModel());
-       this.View.GetRequirementBrowser().SetDataContext(this.DataContext.GetRequirementDefinitionImpactViewViewModel());
-       this.capellaObjectBrowser.SetDataContext(this.DataContext.GetCapellaImpactViewViewModel());
-       this.capellaContextMenu.SetDataContext(this.DataContext.GetContextMenuViewModel());
-       this.View.BindNumberOfSelectedThingToTransfer(this.DataContext.GetTransferControlViewModel().GetNumberOfSelectedThing());
-       this.View.SetContextMenuDataContext(this.DataContext.GetContextMenuViewModel());
-       this.View.AttachOnTransfer(this.DataContext.GetTransferControlViewModel().GetOnTransferCallable());
+        this.View.GetElementDefinitionBrowser().SetDataContext(this.DataContext.GetElementDefinitionImpactViewViewModel());
+        this.View.GetRequirementBrowser().SetDataContext(this.DataContext.GetRequirementDefinitionImpactViewViewModel());
+        this.capellaObjectBrowser.SetDataContext(this.DataContext.GetCapellaImpactViewViewModel());
+        this.capellaContextMenu.SetDataContext(this.DataContext.GetContextMenuViewModel());
+        this.View.BindNumberOfSelectedThingToTransfer(this.DataContext.GetTransferControlViewModel().GetNumberOfSelectedThing());
+        this.View.SetContextMenuDataContext(this.DataContext.GetContextMenuViewModel());
+        this.View.AttachOnTransfer(this.DataContext.GetTransferControlViewModel().GetOnTransferCallable());
     }
 }

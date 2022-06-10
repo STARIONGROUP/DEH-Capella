@@ -64,7 +64,7 @@ class RequirementToRequirementsSpecificationMappingRuleTestFixture
     private Iteration iteration;
     private CapellaRequirementCollection elements;
     private RequirementsPkg capellaRequirementPackage0;
-    private Requirement capellaRequirement2;
+    private Requirement capellaRequirement2;    
     private Requirement capellaRequirement1;
     private Requirement capellaRequirement0;
     private RequirementsPkg capellaRequirementPackage1;

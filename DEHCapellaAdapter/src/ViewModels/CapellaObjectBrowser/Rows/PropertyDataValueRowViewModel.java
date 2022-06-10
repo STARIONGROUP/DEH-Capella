@@ -58,23 +58,6 @@ public class PropertyDataValueRowViewModel extends PropertyValueBaseRowViewModel
      */
     public String GetValueRepresentation()
     {
-        if(this.GetElement() instanceof LiteralNumericValue)
-        {
-            return StereotypeUtils.GetValueRepresentation((LiteralNumericValue)this.GetElement());
-        }
-        else if(this.GetElement() instanceof LiteralBooleanValue) 
-        {
-            return (String.valueOf(((LiteralBooleanValue)this.GetElement()).isValue()));
-        }
-        else if(this.GetElement() instanceof LiteralStringValue) 
-        {
-            return (((LiteralStringValue)this.GetElement()).getValue());
-        }
-        else if(this.GetElement() instanceof EnumerationLiteral)
-        {
-            return ((EnumerationLiteral)this.GetElement()).getDomainValue().getName();
-        }   
-        
-        return "";
+        return StereotypeUtils.GetValueRepresentation(this.GetElement());
     }
 }

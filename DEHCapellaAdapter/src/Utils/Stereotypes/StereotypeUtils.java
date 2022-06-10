@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -44,18 +43,19 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.polarsys.capella.core.data.capellacommon.CapellacommonPackage;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.capellacore.CapellacorePackage;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
-import org.polarsys.capella.core.data.cs.ArchitectureAllocation;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.CsPackage;
-import org.polarsys.capella.core.data.cs.provider.ArchitectureAllocationItemProvider;
 import org.polarsys.capella.core.data.fa.FaPackage;
-import org.polarsys.capella.core.data.helpers.cs.delegates.ArchitectureAllocationHelper;
 import org.polarsys.capella.core.data.information.InformationPackage;
+import org.polarsys.capella.core.data.information.Unit;
 import org.polarsys.capella.core.data.information.datatype.DatatypePackage;
+import org.polarsys.capella.core.data.information.datavalue.DataValue;
 import org.polarsys.capella.core.data.information.datavalue.DatavaluePackage;
+import org.polarsys.capella.core.data.information.datavalue.EnumerationLiteral;
+import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
+import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
 import org.polarsys.capella.core.data.la.LaPackage;
 import org.polarsys.capella.core.data.pa.PaPackage;
 import org.polarsys.capella.core.data.requirement.Requirement;
@@ -364,5 +364,34 @@ public final class StereotypeUtils
         }
         
         return null;
+    }
+    
+    /**
+     * Gets the value representation based on the represented {@linkplain TElement}
+     * 
+     * @param dataValue the {@linkplain DataValue} 
+     * 
+     * @return a {@linkplain String}
+     */
+    public static String GetValueRepresentation(DataValue dataValue)
+    {
+        if(dataValue instanceof LiteralNumericValue)
+        {
+            return StereotypeUtils.GetValueRepresentation((LiteralNumericValue)dataValue);
+        }
+        else if(dataValue instanceof LiteralBooleanValue) 
+        {
+            return (String.valueOf(((LiteralBooleanValue)dataValue).isValue()));
+        }
+        else if(dataValue instanceof LiteralStringValue) 
+        {
+            return (((LiteralStringValue)dataValue).getValue());
+        }
+        else if(dataValue instanceof EnumerationLiteral)
+        {
+            return ((EnumerationLiteral)dataValue).getDomainValue().getName();
+        }   
+        
+        return "";
     }
 }

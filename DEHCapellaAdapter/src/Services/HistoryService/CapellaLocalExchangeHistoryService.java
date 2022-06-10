@@ -30,11 +30,11 @@ import org.polarsys.capella.core.data.information.datavalue.DataValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
-import org.polarsys.capella.core.data.pa.PhysicalComponent;
 
 import HubController.IHubController;
+import Services.AdapterInfo.IAdapterInfoService;
+import Services.LocalExchangeHistory.ILocalExchangeHistoryService;
 import Services.LocalExchangeHistory.LocalExchangeHistoryService;
-import Services.VersionNumber.IAdapterVersionNumberService;
 import Utils.Stereotypes.StereotypeUtils;
 import cdp4common.ChangeKind;
 
@@ -49,7 +49,7 @@ public class CapellaLocalExchangeHistoryService extends LocalExchangeHistoryServ
      * @param hubController the {@linkplain IHubController}
      * @param versionService the {@linkplain IAdapterVersionNumberService}
      */
-    public CapellaLocalExchangeHistoryService(IHubController hubController, IAdapterVersionNumberService versionService)
+    public CapellaLocalExchangeHistoryService(IHubController hubController, IAdapterInfoService versionService)
     {
         super(hubController, versionService);
     }

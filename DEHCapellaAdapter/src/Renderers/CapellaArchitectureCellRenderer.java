@@ -82,7 +82,7 @@ public class CapellaArchitectureCellRenderer extends JComboBox<CapellaArchitectu
         }
         
         var container = new JPanel();
-        container.getInsets(new Insets(2, 2, 2, 2));   
+        container.getInsets(new Insets(2, 2, 2, 2));
         this.setEditable(true);
         this.setToolTipText("Select the target Architecture");
         

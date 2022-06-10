@@ -50,6 +50,7 @@ import ViewModels.Interfaces.IRequirementBrowserViewModel;
 import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
 import ViewModels.ObjectBrowser.Rows.ThingRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.Iteration;
 import io.reactivex.Observable;
@@ -113,10 +114,10 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
     private ICapellaObjectBrowserViewModel capellaObjectBrowser;
     private HubToDstMappingConfigurationDialogViewModel viewModel;
     private Iteration iteration;
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> hubMapResult;
+    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> hubMapResult;
     private ObservableValue<ThingRowViewModel<? extends Thing>> selectedElementDefinitionObservable;
     private ObservableValue<ThingRowViewModel<? extends Thing>> selectedRequirementObservable;
-    private ObservableValue<ElementRowViewModel<? extends CapellaElement>> selectedCapellaElementObservable;
+    private ObservableValue<ElementRowViewModel<? extends NamedElement>> selectedCapellaElementObservable;
     private ICapellaMappedElementListViewViewModel mappedElementListViewViewModel;
     private ICapellaTransactionService transactionService;
     private Collection<Thing> elements;
@@ -133,10 +134,10 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
         this.transactionService = mock(ICapellaTransactionService.class);
         when(this.mappedElementListViewViewModel.GetSelectedElement()).thenReturn(Observable.empty());
         
-        this.hubMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
+        this.hubMapResult = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
         when(this.dstController.GetHubMapResult()).thenReturn(this.hubMapResult);
         
-        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends CapellaElement>>();
+        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends NamedElement>>();
         when(this.capellaObjectBrowser.GetSelectedElement()).thenReturn(this.selectedCapellaElementObservable.Observable());
         this.selectedElementDefinitionObservable = new ObservableValue<ThingRowViewModel<? extends Thing>>();
         when(this.elementDefinitionBrowser.GetSelectedElement()).thenReturn(this.selectedElementDefinitionObservable.Observable());

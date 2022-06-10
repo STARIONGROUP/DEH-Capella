@@ -36,6 +36,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.la.LogicalComponentPkg;
@@ -498,7 +499,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
      * @param selectedRow the selected view model {@linkplain ElementRowViewModel}
      */
     @Override
-    public void OnSelectionChanged(ElementRowViewModel<? extends CapellaElement> selectedRow) 
+    public void OnSelectionChanged(ElementRowViewModel<? extends NamedElement> selectedRow) 
     {
         this.AddOrRemoveSelectedRowToTransfer(selectedRow);
     }

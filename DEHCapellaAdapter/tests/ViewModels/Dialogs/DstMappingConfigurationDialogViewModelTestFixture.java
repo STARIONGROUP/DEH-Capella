@@ -35,6 +35,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.data.requirement.Requirement;
@@ -61,6 +62,7 @@ import ViewModels.ObjectBrowser.Rows.ThingRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.Iteration;
@@ -77,10 +79,10 @@ class DstMappingConfigurationDialogViewModelTestFixture
     private ICapellaObjectBrowserViewModel capellaObjectBrowser;
     private DstToHubMappingConfigurationDialogViewModel viewModel;
     private Iteration iteration;
-    private ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> dstMapResult;
+    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> dstMapResult;
     private ObservableValue<ThingRowViewModel<? extends Thing>> selectedElementDefinitionObservable;
     private ObservableValue<ThingRowViewModel<? extends Thing>> selectedRequirementObservable;
-    private ObservableValue<ElementRowViewModel<? extends CapellaElement>> selectedCapellaElementObservable;
+    private ObservableValue<ElementRowViewModel<? extends NamedElement>> selectedCapellaElementObservable;
     private ICapellaMappedElementListViewViewModel mappedElementListViewViewModel;
 
     /**
@@ -97,10 +99,10 @@ class DstMappingConfigurationDialogViewModelTestFixture
         this.mappedElementListViewViewModel = mock(ICapellaMappedElementListViewViewModel.class);
         when(this.mappedElementListViewViewModel.GetSelectedElement()).thenReturn(Observable.empty());
         
-        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>();
+        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
         when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
         
-        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends CapellaElement>>();
+        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends NamedElement>>();
         when(this.capellaObjectBrowser.GetSelectedElement()).thenReturn(this.selectedCapellaElementObservable.Observable());
         this.selectedElementDefinitionObservable = new ObservableValue<ThingRowViewModel<? extends Thing>>();
         when(this.elementDefinitionBrowser.GetSelectedElement()).thenReturn(this.selectedElementDefinitionObservable.Observable());

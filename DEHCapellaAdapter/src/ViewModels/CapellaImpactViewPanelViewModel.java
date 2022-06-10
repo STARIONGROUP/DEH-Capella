@@ -177,6 +177,17 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
     }
 
     /**
+     * Gets a value indicating whether the Impact view can load mapping configurations
+     * 
+     * @return a {@linkplain boolean}
+     */
+    @Override
+    public boolean CanLoadMappingConfiguration()
+    {
+        return this.HubController.GetIsSessionOpen();
+    }
+    
+    /**
      * Initializes a new {@linkplain MagicDrawImpactViewPanelViewModel}
      * 
      * @param hubController the {@linkplain IHubController}

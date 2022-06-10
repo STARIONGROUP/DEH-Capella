@@ -33,6 +33,7 @@ import java.util.UUID;
 
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.requirement.Requirement;
@@ -57,6 +58,7 @@ import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import Views.Dialogs.CapellaDstToHubMappingConfigurationDialog;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
@@ -65,7 +67,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain DstToHubMappingConfigurationDialogViewModel} is the main view model for the {@linkplain CapellaDstToHubMappingConfigurationDialog}
  */
-public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<EObject, CapellaElement, ElementRowViewModel<? extends CapellaElement>> implements IDstToHubMappingConfigurationDialogViewModel
+public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<EObject, NamedElement, ElementRowViewModel<? extends NamedElement>> implements IDstToHubMappingConfigurationDialogViewModel
 {    
     /**
      * The {@linkplain IMagicDrawObjectBrowserViewModel}
@@ -78,7 +80,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      * @return an {@linkplain IObjectBrowserViewModel}
      */
     @Override
-    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> GetDstObjectBrowserViewModel()
+    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends NamedElement>> GetDstObjectBrowserViewModel()
     {
         return this.dstObjectBrowser;
     }
@@ -99,6 +101,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
     {
         super(dstController, hubController, elementDefinitionBrowserViewModel, requirementBrowserViewModel, 
                 mappedElementListViewViewModel);
+        
         this.dstObjectBrowser = capellaObjectBrowserViewModel;
         this.InitializeObservables();
     }
@@ -127,7 +130,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
         
         if(!optionalMappedElement.isPresent())
         {
-            MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElement;
+            MappedElementRowViewModel<? extends Thing, ? extends NamedElement> mappedElement;
             
             if(rowViewModel.GetElement() instanceof Component)
             {
@@ -172,9 +175,9 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
             {
                 this.PreMap((Collection<EObject>) GetChildren((Structure)element));
             }
-            else if (element instanceof CapellaElement)
+            else if (element instanceof NamedElement)
             {
-                var mappedElement = this.GetMappedElementRowViewModel((CapellaElement)element);
+                var mappedElement = this.GetMappedElementRowViewModel((NamedElement)element);
 
                 if(mappedElement != null)
                 {
@@ -190,10 +193,10 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      * @param capellaElement the {@linkplain Class} element
      * @return a {@linkplain MappedElementRowViewModel}
      */
-    protected MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> GetMappedElementRowViewModel(CapellaElement capellaElement)
+    protected MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> GetMappedElementRowViewModel(NamedElement capellaElement)
     {
         Ref<Boolean> refShouldCreateNewTargetElement = new Ref<>(Boolean.class, false);
-        MappedElementRowViewModel<? extends Thing, ? extends CapellaElement> mappedElementRowViewModel = null;
+        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementRowViewModel = null;
         
         if(capellaElement instanceof Component)
         {
