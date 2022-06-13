@@ -88,6 +88,11 @@ public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanel
     {
         this.View.SetLoadMappingControlsIsEnable(this.DataContext.CanLoadMappingConfiguration());
         
+        if(this.DataContext.CanLoadMappingConfiguration())
+        {
+            this.View.SetSavedMappingconfigurationCollection(this.DataContext.GetSavedMappingconfigurationCollection());
+        }
+        
         this.DataContext.GetIsSessionOpen().subscribe(x -> 
         {
             this.View.SetSavedMappingconfigurationCollection(this.DataContext.GetSavedMappingconfigurationCollection());

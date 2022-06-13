@@ -23,12 +23,20 @@
  */
 package Commands;
 
+import java.awt.EventQueue;
+import java.lang.reflect.InvocationTargetException;
+
+import javax.swing.SwingUtilities;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.swt.widgets.Display;
 
 import App.AppContainer;
 import Services.NavigationService.INavigationService;
+import Utils.Ref;
+import Utils.Tasks.Task;
 import Views.ExchangeHistory.ExchangeHistoryDialog;
 
 /**
@@ -50,8 +58,12 @@ public class OpenLocalExchangeHistoryCommand extends AbstractHandler
      */
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException
-    {
-        this.navigationService.Show(new ExchangeHistoryDialog());
-        return null;
+    {      
+      EventQueue.invokeLater(() ->
+      {
+          this.navigationService.ShowDialog(new ExchangeHistoryDialog());
+      });
+      
+      return null;
     }
 }
