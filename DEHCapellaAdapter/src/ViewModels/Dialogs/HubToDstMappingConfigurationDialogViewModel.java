@@ -59,6 +59,7 @@ import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import Views.Dialogs.CapellaHubToDstMappingConfigurationDialog;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
@@ -156,11 +157,11 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
         
         if(rowViewModel.GetElement() instanceof Component)
         {
-            ((MappedElementDefinitionRowViewModel)this.selectedMappedElement.Value()).SetDstElement((Component)rowViewModel.GetElement());
+            this.selectedMappedElement.Value().SetDstElement((Component)rowViewModel.GetElement());
         }
         else if(rowViewModel.GetElement() instanceof Requirement)
         {
-            ((MappedHubRequirementRowViewModel)this.selectedMappedElement.Value()).SetDstElement((Requirement)rowViewModel.GetElement());
+            this.selectedMappedElement.Value().SetDstElement((Requirement)rowViewModel.GetElement());
         }
         
         this.UpdateTargetArchitecture(rowViewModel.GetElement());
@@ -214,12 +215,11 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
         }
         
         for (var mappedElementRowViewModel : mappedElements.stream()
-                .filter(x -> x instanceof MappedElementDefinitionRowViewModel)
-                .map(x -> (MappedElementDefinitionRowViewModel)x)
+                .filter(x -> x instanceof IHaveTargetArchitecture && x.GetHubElement() instanceof ElementDefinition)
                 .collect(Collectors.toList()))
         {
-            var subscription = mappedElementRowViewModel.GetTargetArchitectureObservable().subscribe(x -> 
-                    this.UpdateComponent(mappedElementRowViewModel));
+            var subscription = ((IHaveTargetArchitecture)mappedElementRowViewModel).GetTargetArchitectureObservable()
+                    .subscribe(x -> this.UpdateComponent((MappedElementRowViewModel<? extends DefinedThing, NamedElement>)mappedElementRowViewModel));
             
             this.disposables.add(subscription);
         }
@@ -231,10 +231,11 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      * @param thing the {@linkplain Class} element
      * @return a {@linkplain MappedElementRowViewModel}
      */
-    protected MappedElementRowViewModel<? extends Thing, ? extends NamedElement> GetMappedElementRowViewModel(Thing thing)
+    @SuppressWarnings("unchecked")
+    protected MappedElementRowViewModel<DefinedThing, NamedElement> GetMappedElementRowViewModel(Thing thing)
     {
         Ref<Boolean> refShouldCreateNewTargetElement = new Ref<>(Boolean.class, false);
-        MappedElementRowViewModel<? extends Thing, ? extends NamedElement> mappedElementRowViewModel = null;
+        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementRowViewModel = null;
         
         if(thing instanceof ElementDefinition)
         {
@@ -267,8 +268,12 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
         if(mappedElementRowViewModel != null)
         {
             mappedElementRowViewModel.SetShouldCreateNewTargetElement(refShouldCreateNewTargetElement.Get());
-            mappedElementRowViewModel.SetRowStatus(Boolean.TRUE.equals(refShouldCreateNewTargetElement.Get()) ? MappedElementRowStatus.NewElement : MappedElementRowStatus.ExisitingElement);
-            return mappedElementRowViewModel;
+            
+            mappedElementRowViewModel.SetRowStatus(Boolean.TRUE.equals(refShouldCreateNewTargetElement.Get()) 
+                    ? MappedElementRowStatus.NewElement 
+                    : MappedElementRowStatus.ExisitingElement);
+            
+            return (MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElementRowViewModel;
         }
         
         return null;
@@ -310,22 +315,22 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
     /**
      * Updates the target dst element when the target architecture changes
      * 
-     * @param rowViewModel the {@linkplain MappedElementDefinitionRowViewModel}
+     * @param mappedElementRowViewModel the {@linkplain MappedElementDefinitionRowViewModel}
      */
-    private void UpdateComponent(MappedElementDefinitionRowViewModel rowViewModel)
+    private void UpdateComponent(MappedElementRowViewModel<? extends DefinedThing, NamedElement> mappedElementRowViewModel)
     {
         var refComponent = new Ref<>(Component.class);
         
         Ref<Boolean> refShouldCreateNewTargetElement = new Ref<>(Boolean.class, 
-                rowViewModel.GetShouldCreateNewTargetElementValue());
+                mappedElementRowViewModel.GetShouldCreateNewTargetElementValue());
         
-        var componentType = rowViewModel.GetTargetArchitecture() == CapellaArchitecture.PhysicalArchitecture
+        var componentType = ((IHaveTargetArchitecture) mappedElementRowViewModel).GetTargetArchitecture() == CapellaArchitecture.PhysicalArchitecture
                 ? PhysicalComponent.class
                 : LogicalComponent.class;
         
-        if(TryGetComponent(rowViewModel.GetHubElement(), componentType, refComponent, refShouldCreateNewTargetElement))
+        if(TryGetComponent((ElementDefinition)mappedElementRowViewModel.GetHubElement(), componentType, refComponent, refShouldCreateNewTargetElement))
         {
-            rowViewModel.SetDstElement(refComponent.Get());
+            mappedElementRowViewModel.SetDstElement(refComponent.Get());
         }
     }
     

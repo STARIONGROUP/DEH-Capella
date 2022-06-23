@@ -132,14 +132,14 @@ public interface IDstController extends IDstControllerBase<NamedElement>
      * 
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
-    ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> GetDstMapResult();
+    ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> GetDstMapResult();
 
     /**
      * Gets The {@linkplain ObservableCollection} of Hub map result
      * 
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
-    ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> GetHubMapResult();
+    ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> GetHubMapResult();
 
     /**
      * Gets an {@linkplain Observable} of value indicating whether there is any session open in Capella
@@ -188,4 +188,11 @@ public interface IDstController extends IDstControllerBase<NamedElement>
      * @return a {@linkplain boolean}
      */
     <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, CapellaElement referenceElement, Ref<DataType> refDataType);
+
+    /**
+     * Gets a value indicating whether there is any session open in Capella
+     * 
+     * @return a {@linkplain Boolean} 
+     */
+    boolean HasAnyOpenSession();
 }

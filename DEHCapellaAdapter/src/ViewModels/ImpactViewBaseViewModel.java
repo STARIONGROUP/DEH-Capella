@@ -91,7 +91,7 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
             .subscribe(x -> this.ComputeDifferences(), e -> this.logger.catching(e));
         
         this.DstController.GetDstMapResult()
-            .IsEmpty()
+            .IsEmptyObservable()
             .subscribe(isEmpty ->
             {
                 if(isEmpty)
@@ -271,6 +271,11 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
     @SuppressWarnings("unchecked")
     private void UpdateHighlightOnRows(IHaveContainedRows<IRowViewModel> rowViewModel, boolean shouldHighlight)
     {
+        if(this.DstController == null)
+        {
+            return;
+        }
+        
         for (IRowViewModel row : rowViewModel.GetContainedRows())
         {
             if(row instanceof IThingRowViewModel)
@@ -297,7 +302,7 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
      * @param selectedRow the selected row view model {@linkplain IThingRowViewModel}
      */
     @Override
-    public void OnSelectionChanged(ThingRowViewModel<?> selectedRow) 
+    public void OnSelectionChanged(ThingRowViewModel<Thing> selectedRow) 
     {
         if(selectedRow != null && selectedRow.GetThing() != null)
         {
@@ -367,7 +372,7 @@ public abstract class ImpactViewBaseViewModel<TThing extends Thing> extends Obje
         }
         else if(!shouldSelect.Get())
         {
-            this.DstController.GetSelectedDstMapResultForTransfer().Remove(rowViewModel.GetThing());
+            this.DstController.GetSelectedDstMapResultForTransfer().RemoveOne(rowViewModel.GetThing());
         }
     }
 }

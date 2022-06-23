@@ -101,7 +101,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
         }
         catch (Exception exception)
         {
-            this.Logger.catching(exception);
+            this.logger.catching(exception);
             return new ArrayList<MappedDstRequirementRowViewModel>();
         }
         finally
@@ -136,7 +136,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             
             if(!refRequirementsSpecification.HasValue())
             {
-                this.Logger.error(
+                this.logger.error(
                         String.format("The mapping of the current requirement %s is no possible, because no eligible parent could be found current RequirementsPkg name %s", 
                                 mappedRequirement.GetDstElement().getName(), mappedRequirement.GetDstElement().eContainer()));
                 
@@ -148,7 +148,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             
             if(!TryCreateRelevantGroupsAndTheRequirement(mappedRequirement.GetDstElement(), GetChildren(refParent.Get()), refRequirementsSpecification, refRequirementsGroup, refRequirement))
             {
-                this.Logger.error(String.format("Could not map requirement %s", mappedRequirement.GetDstElement().getName()));
+                this.logger.error(String.format("Could not map requirement %s", mappedRequirement.GetDstElement().getName()));
             }
             
             if(refRequirement.HasValue())
@@ -183,7 +183,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             {                
                 if(!this.TryGetOrCreateRequirementGroup((RequirementsPkg)element, refRequirementsSpecification, refRequirementsGroup))
                 {
-                    this.Logger.error(String.format("Could not create the requirement %s, because the creation/update of the requirement group %s failed", 
+                    this.logger.error(String.format("Could not create the requirement %s, because the creation/update of the requirement group %s failed", 
                             requirement.getName(), ((RequirementsPkg)element).getName()));
                     
                     break;
@@ -223,6 +223,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
         var optionalRequirement = refRequirementsSpecification.Get()
                 .getRequirement()
                 .stream()
+                .filter(x -> !x.isDeprecated())
                 .filter(x -> this.AreShortNamesEquals(x, GetShortName(dstRequirement)) || AreTheseEquals(x.getName(), dstRequirement.getName(), true))
                 .findFirst();
         

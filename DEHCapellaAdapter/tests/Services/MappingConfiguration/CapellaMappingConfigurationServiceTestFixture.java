@@ -113,8 +113,8 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
         requirementExternalId.Identifier = this.UserRequirementId;
         requirementExternalId.MappingDirection = MappingDirection.FromDstToHub;
         
-        this.service.Correspondences.add(ImmutableTriple.of(UUID.randomUUID(), componentExternalId, this.elementDefinition.getIid()));
-        this.service.Correspondences.add(ImmutableTriple.of(UUID.randomUUID(), requirementExternalId, this.requirement.getIid()));
+        this.service.correspondences.add(ImmutableTriple.of(UUID.randomUUID(), componentExternalId, this.elementDefinition.getIid()));
+        this.service.correspondences.add(ImmutableTriple.of(UUID.randomUUID(), requirementExternalId, this.requirement.getIid()));
 
         when(this.hubController.TryGetThingById(any(UUID.class), any(Ref.class))).thenAnswer(new Answer<Boolean>() 
         {

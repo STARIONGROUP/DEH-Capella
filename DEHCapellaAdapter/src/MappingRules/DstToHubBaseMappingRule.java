@@ -95,12 +95,12 @@ public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> ex
             }
             else
             {
-                this.Logger.debug(String.format("The Category %s could not be found or created", categoryShortName));
+                this.logger.debug(String.format("The Category %s could not be found or created", categoryShortName));
             }
         }
         catch(Exception exception)
         {
-            this.Logger.catching(exception);
+            this.logger.catching(exception);
         }
     }
     
@@ -151,8 +151,8 @@ public abstract class DstToHubBaseMappingRule<TInput extends Object, TOutput> ex
         }
         catch(Exception exception)
         {
-            this.Logger.error(String.format("Could not create the %s because %s", newThing.getClassKind(), exception));
-            this.Logger.catching(exception);
+            this.logger.error(String.format("Could not create the %s because %s", newThing.getClassKind(), exception));
+            this.logger.catching(exception);
             return false;
         }
     }

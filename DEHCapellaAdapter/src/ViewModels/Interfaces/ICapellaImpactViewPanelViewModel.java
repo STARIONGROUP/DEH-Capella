@@ -65,14 +65,14 @@ public interface ICapellaImpactViewPanelViewModel extends IViewModel
      * 
      * @return the {@linkplain Observable} of {@linkplain Boolean}
      */
-    Observable<Boolean> GetIsSessionOpen();
+    Observable<Boolean> GetIsHubSessionOpen();
 
     /**
      * Gets the {@linkplain Observable} of {@linkplain Boolean} indicating whether MagicDraw
      * 
      * @return the {@linkplain Observable} of {@linkplain Boolean}
      */
-    Observable<Boolean> GetHasOneCapellaModelOpen();
+    Observable<Boolean> GetHasAnyCapellaModelOpenObservable();
 
     /**
      * Gets the {@linkplain IRequirementImpactViewViewModel} requirementDefinitionImpactViewViewModel
@@ -115,4 +115,11 @@ public interface ICapellaImpactViewPanelViewModel extends IViewModel
      * @return a {@linkplain boolean}
      */
     boolean CanLoadMappingConfiguration();
+
+    /**
+     * Gets a value {@linkplain Boolean} indicating whether there is any Capella model open
+     * 
+     * @return a {@linkplain boolean}
+     */
+    boolean GetHasAnyCapellaModelOpen();
 }

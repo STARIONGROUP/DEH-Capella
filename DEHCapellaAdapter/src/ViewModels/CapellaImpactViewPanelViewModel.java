@@ -155,14 +155,25 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
     }
     
     /**
-     * Gets the {@linkplain Observable} of {@linkplain Boolean} indicating whether MagicDraw
+     * Gets the {@linkplain Observable} of {@linkplain Boolean} indicating whether there is any Capella model open
      * 
      * @return the {@linkplain Observable} of {@linkplain Boolean}
      */
     @Override
-    public Observable<Boolean> GetHasOneCapellaModelOpen()
+    public Observable<Boolean> GetHasAnyCapellaModelOpenObservable()
     {
-        return this.dstController.HasAnyOpenSessionObservable();
+        return this.dstController.HasAnyOpenSessionObservable().startWith(this.dstController.HasAnyOpenSession());
+    }
+
+    /**
+     * Gets a value {@linkplain Boolean} indicating whether there is any Capella model open
+     * 
+     * @return a {@linkplain boolean}
+     */
+    @Override
+    public boolean GetHasAnyCapellaModelOpen()
+    {
+        return this.dstController.HasAnyOpenSession();
     }
 
     /**
@@ -171,7 +182,7 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
      * @return the {@linkplain Observable} of {@linkplain Boolean}
      */
     @Override
-    public Observable<Boolean> GetIsSessionOpen()
+    public Observable<Boolean> GetIsHubSessionOpen()
     {
         return this.isSessionOpen;
     }
@@ -184,7 +195,7 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
     @Override
     public boolean CanLoadMappingConfiguration()
     {
-        return this.HubController.GetIsSessionOpen();
+        return this.hubController.GetIsSessionOpen() && this.dstController.HasAnyOpenSession();
     }
     
     /**
@@ -212,7 +223,7 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
         this.contextMenuViewModel = contextMenuViewModel;
         this.mappingConfigurationService = mappingConfigurationService;
         this.logService = logService;
-        this.isSessionOpen = this.HubController.GetIsSessionOpenObservable();
+        this.isSessionOpen = this.hubController.GetIsSessionOpenObservable();
         this.elementDefinitionImpactViewViewModel = elementDefinitionImpactViewModel;
         this.requirementDefinitionImpactViewViewModel = requirementImpactViewModel;
         this.capellaImpactViewViewModel = capellaImpactViewViewModel;
@@ -226,12 +237,12 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
     @Override
     public List<String> GetSavedMappingconfigurationCollection()
     {
-        if(!this.HubController.GetIsSessionOpen())
+        if(!this.hubController.GetIsSessionOpen())
         {
             return new ArrayList<>();
         }
         
-        List<String> externalIdentifierMaps = this.HubController.GetAvailableExternalIdentifierMap(DstController.THISTOOLNAME)
+        List<String> externalIdentifierMaps = this.hubController.GetAvailableExternalIdentifierMap(DstController.THISTOOLNAME)
                 .stream()
                 .map(x -> x.getName())
                 .sorted()
@@ -269,7 +280,7 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
             return false;
         }
 
-        this.mappingConfigurationService.SetExternalIdentifierMap(this.HubController.GetAvailableExternalIdentifierMap(DstController.THISTOOLNAME)
+        this.mappingConfigurationService.SetExternalIdentifierMap(this.hubController.GetAvailableExternalIdentifierMap(DstController.THISTOOLNAME)
                 .stream().filter(x -> AreTheseEquals(x.getName(), configurationName))
                 .findFirst()
                 .orElse(this.CreateNewMappingConfiguration(configurationName)));

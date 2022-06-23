@@ -29,7 +29,6 @@ import org.eclipse.ui.part.ViewPart;
 import Annotations.ExludeFromCodeCoverageGeneratedReport;
 import App.AppContainer;
 import ViewModels.Interfaces.ICapellaImpactViewPanelViewModel;
-import Views.ImpactViewPanel;
 import Views.ContextMenu.CapellaImpactViewContextMenu;
 import Views.ContextMenu.ImpactViewContextMenu;
 import Views.ViewParts.BaseViewPart;
@@ -93,12 +92,12 @@ public class CapellaImpactViewPanel extends BaseViewPart<ICapellaImpactViewPanel
             this.View.SetSavedMappingconfigurationCollection(this.DataContext.GetSavedMappingconfigurationCollection());
         }
         
-        this.DataContext.GetIsSessionOpen().subscribe(x -> 
+        this.DataContext.GetIsHubSessionOpen().subscribe(x -> 
         {
             this.View.SetSavedMappingconfigurationCollection(this.DataContext.GetSavedMappingconfigurationCollection());
         });
 
-        Observable.combineLatest(this.DataContext.GetHasOneCapellaModelOpen(), this.DataContext.GetIsSessionOpen(),
+        Observable.combineLatest(this.DataContext.GetHasAnyCapellaModelOpenObservable(), this.DataContext.GetIsHubSessionOpen(),
                (hasAnyCapellaModelOpen, isHubSessionOpen) -> 
                    hasAnyCapellaModelOpen && isHubSessionOpen)
             .subscribe(x -> this.View.SetLoadMappingControlsIsEnable(x));
