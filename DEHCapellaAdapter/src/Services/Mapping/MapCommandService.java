@@ -333,6 +333,7 @@ public class MapCommandService implements IMapCommandService
         hubRequirements.addAll(elements.stream()
                 .filter(x -> x instanceof cdp4common.engineeringmodeldata.Requirement)
                 .map(x -> (cdp4common.engineeringmodeldata.Requirement)x)
+                .filter(x -> !x.isDeprecated())
                 .collect(Collectors.toList()));        
 
         for (var requirementsSpecification : elements.stream()
@@ -349,7 +350,7 @@ public class MapCommandService implements IMapCommandService
                 .collect(Collectors.toList()))
         {            
             SortRequirements(hubRequirements, requirementsGroup.getContainerOfType(RequirementsSpecification.class), 
-                    x -> AreTheseEquals(x.getGroup().getIid(), requirementsGroup.getIid()));
+                    x -> x.getGroup() != null && AreTheseEquals(x.getGroup().getIid(), requirementsGroup.getIid()));
         }
     }
 
@@ -367,6 +368,7 @@ public class MapCommandService implements IMapCommandService
     {
         for (var requirement : requirementsSpecification.getRequirement()
                 .stream()
+                .filter(x -> !x.isDeprecated())
                 .collect(Collectors.toList()))
         {
             if(filterOnGroup == null || filterOnGroup.test(requirement))
@@ -471,7 +473,6 @@ public class MapCommandService implements IMapCommandService
                 .filter(x -> x instanceof MappedElementDefinitionRowViewModel)
                 .map(x -> (MappedElementDefinitionRowViewModel)x)
                 .collect(Collectors.toList()));
-
         
         if(!mappedHubRequirements.isEmpty())
         {

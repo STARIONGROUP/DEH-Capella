@@ -114,9 +114,9 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
     private ICapellaObjectBrowserViewModel capellaObjectBrowser;
     private HubToDstMappingConfigurationDialogViewModel viewModel;
     private Iteration iteration;
-    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> hubMapResult;
-    private ObservableValue<ThingRowViewModel<? extends Thing>> selectedElementDefinitionObservable;
-    private ObservableValue<ThingRowViewModel<? extends Thing>> selectedRequirementObservable;
+    private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> hubMapResult;
+    private ObservableValue<ThingRowViewModel<Thing>> selectedElementDefinitionObservable;
+    private ObservableValue<ThingRowViewModel<Thing>> selectedRequirementObservable;
     private ObservableValue<ElementRowViewModel<? extends NamedElement>> selectedCapellaElementObservable;
     private ICapellaMappedElementListViewViewModel mappedElementListViewViewModel;
     private ICapellaTransactionService transactionService;
@@ -134,14 +134,14 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
         this.transactionService = mock(ICapellaTransactionService.class);
         when(this.mappedElementListViewViewModel.GetSelectedElement()).thenReturn(Observable.empty());
         
-        this.hubMapResult = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
+        this.hubMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
         when(this.dstController.GetHubMapResult()).thenReturn(this.hubMapResult);
         
         this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends NamedElement>>();
         when(this.capellaObjectBrowser.GetSelectedElement()).thenReturn(this.selectedCapellaElementObservable.Observable());
-        this.selectedElementDefinitionObservable = new ObservableValue<ThingRowViewModel<? extends Thing>>();
+        this.selectedElementDefinitionObservable = new ObservableValue<ThingRowViewModel<Thing>>();
         when(this.elementDefinitionBrowser.GetSelectedElement()).thenReturn(this.selectedElementDefinitionObservable.Observable());
-        this.selectedRequirementObservable = new ObservableValue<ThingRowViewModel<? extends Thing>>();
+        this.selectedRequirementObservable = new ObservableValue<ThingRowViewModel<Thing>>();
         when(this.requirementBrowserViewModel.GetSelectedElement()).thenReturn(this.selectedRequirementObservable.Observable());
         
         this.iteration = new Iteration();
@@ -229,11 +229,16 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
         when(physicalComponent.eContents()).thenReturn(new BasicEList<EObject>());
         this.viewModel.SetMappedElement(this.elements);
         this.viewModel.SetSelectedMappedElement(this.viewModel.GetMappedElementCollection().get(0));
-        assertDoesNotThrow(() -> this.selectedCapellaElementObservable.Value(new ComponentRowViewModel(null, physicalComponent)));
+        
+        ElementRowViewModel<? extends NamedElement> componentRow = new ComponentRowViewModel(null, physicalComponent);
+        assertDoesNotThrow(() -> this.selectedCapellaElementObservable.Value((ElementRowViewModel<NamedElement>)componentRow));
+        
         this.viewModel.SetSelectedMappedElement(this.viewModel.GetMappedElementCollection().get(0));
         var requirement = mock(Requirement.class);
         when(requirement.getId()).thenReturn(UUID.randomUUID().toString());
-        assertDoesNotThrow(() -> this.selectedCapellaElementObservable.Value(new RequirementRowViewModel(null, requirement)));
+        
+        ElementRowViewModel<? extends NamedElement> requirementRow = new RequirementRowViewModel(null, requirement);
+        assertDoesNotThrow(() -> this.selectedCapellaElementObservable.Value((ElementRowViewModel<NamedElement>) requirementRow));
     }
 
     @Test

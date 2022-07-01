@@ -104,7 +104,7 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
         }
         catch (Exception exception)
         {
-            this.Logger.catching(exception);
+            this.logger.catching(exception);
             return new ArrayList<MappedHubRequirementRowViewModel>();
         }
         finally

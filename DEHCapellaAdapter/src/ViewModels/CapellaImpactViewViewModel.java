@@ -111,7 +111,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
             .subscribe(x -> this.UpdateBrowserTrees(this.SessionService.HasAnyOpenSession()), this.logger::catching);
         
         this.dstController.GetHubMapResult()
-            .IsEmpty()
+            .IsEmptyObservable()
             .subscribe(isEmpty ->
             {
                 if(isEmpty)
@@ -141,7 +141,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
             });
         
         this.dstController.GetSelectedHubMapResultForTransfer()
-            .IsEmpty()
+            .IsEmptyObservable()
             .subscribe(x -> 
             {
                 this.DeselectRow((RootRowViewModel)this.browserTreeModel.Value().getRoot());

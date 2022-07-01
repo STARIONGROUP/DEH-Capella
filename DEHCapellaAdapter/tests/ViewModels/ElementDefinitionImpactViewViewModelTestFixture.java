@@ -46,6 +46,7 @@ import ViewModels.ObjectBrowser.ElementDefinitionTree.Rows.ElementDefinitionRowV
 import ViewModels.ObjectBrowser.ElementDefinitionTree.Rows.IterationElementDefinitionRowViewModel;
 import ViewModels.ObjectBrowser.RequirementTree.Rows.IterationRequirementRowViewModel;
 import ViewModels.ObjectBrowser.Rows.IterationRowViewModel;
+import ViewModels.ObjectBrowser.Rows.ThingRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import cdp4common.commondata.DefinedThing;
@@ -62,16 +63,16 @@ class ElementDefinitionImpactViewViewModelTestFixture
     private IDstController dstController;
     private IHubController hubController;
     private ElementDefinitionImpactViewViewModel viewModel;
-    private ArrayList<MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>> elements;
+    private Collection<MappedElementRowViewModel<DefinedThing, NamedElement>> elements;
     private Iteration iteration;
     private ObservableCollection<Thing> selectedDstMapResultForTransfer;
-    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> dstMapResult;
+    private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> dstMapResult;
     private ElementDefinition elementDefinition0;
     private ElementDefinition elementDefinition1;
     private ElementDefinition elementDefinition2;
-    private MappedElementRowViewModel<ElementDefinition, ? extends NamedElement> mappedElement0;
-    private MappedElementRowViewModel<ElementDefinition, ? extends NamedElement> mappedElement1;
-    private MappedElementRowViewModel<ElementDefinition, ? extends NamedElement> mappedElement2;
+    private MappedElementRowViewModel<DefinedThing, NamedElement> mappedElement0;
+    private MappedElementRowViewModel<DefinedThing, NamedElement> mappedElement1;
+    private MappedElementRowViewModel<DefinedThing, NamedElement> mappedElement2;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -86,7 +87,7 @@ class ElementDefinitionImpactViewViewModelTestFixture
         when(this.hubController.GetIsSessionOpen()).thenReturn(true);
         when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
         
-        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
+        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
         when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
         
         this.selectedDstMapResultForTransfer = new ObservableCollection<Thing>();
@@ -135,7 +136,7 @@ class ElementDefinitionImpactViewViewModelTestFixture
         when(this.hubController.GetIsSessionOpen()).thenReturn(false);
         this.viewModel = new ElementDefinitionImpactViewViewModel(this.hubController, this.dstController);
         assertDoesNotThrow(() -> dstMapResultToTransfer.addAll(Arrays.asList(this.elementDefinition0)));
-        assertDoesNotThrow(() -> dstMapResultToTransfer.Remove(this.elementDefinition0));
+        assertDoesNotThrow(() -> dstMapResultToTransfer.RemoveOne(this.elementDefinition0));
     }
 
     @Test
@@ -152,14 +153,16 @@ class ElementDefinitionImpactViewViewModelTestFixture
         var rootRowViewModel = (IterationElementDefinitionRowViewModel)this.viewModel.GetBrowserTreeModel().getRoot();
         rootRowViewModel.GetContainedRows().forEach(x -> x.SetIsHighlighted(true));
                 
-        var elementDefinitionRow = rootRowViewModel.GetContainedRows().get(0);
+        ThingRowViewModel<? extends Thing> elementDefinitionRow = rootRowViewModel.GetContainedRows().get(0);
+        ThingRowViewModel<Thing> thingRowViewModelBeautifullyCasted = (ThingRowViewModel<Thing>) elementDefinitionRow;
+        
         assertFalse(elementDefinitionRow.GetIsSelected());
-        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(elementDefinitionRow));
+        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(thingRowViewModelBeautifullyCasted));
         assertFalse(elementDefinitionRow.GetIsSelected());
         this.dstMapResult.add(this.mappedElement0);
-        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(elementDefinitionRow));
+        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(thingRowViewModelBeautifullyCasted));
         assertTrue(elementDefinitionRow.GetIsSelected());
-        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(elementDefinitionRow));
+        assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(thingRowViewModelBeautifullyCasted));
         assertFalse(elementDefinitionRow.GetIsSelected());
         verify(this.dstController, times(9)).GetSelectedDstMapResultForTransfer();
     }
@@ -182,17 +185,17 @@ class ElementDefinitionImpactViewViewModelTestFixture
         this.elementDefinition2.setOwner(owner);
         this.elementDefinition2.setName("elementDefinition2");
         
-        this.mappedElement0 = (MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement0 = (MappedElementRowViewModel<DefinedThing, NamedElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement0.GetHubElement()).thenReturn(elementDefinition0.clone(false));
-        this.mappedElement1 = (MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement1 = (MappedElementRowViewModel<DefinedThing, NamedElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement1.GetHubElement()).thenReturn(elementDefinition1);
-        this.mappedElement2 = (MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement2 = (MappedElementRowViewModel<DefinedThing, NamedElement>)mock(MappedElementRowViewModel.class);
         when(mappedElement2.GetHubElement()).thenReturn(elementDefinition2);
 
         assertEquals(1, this.viewModel.GetBrowserTreeModel().getRowCount());
                 
-        this.elements = new ArrayList<MappedElementRowViewModel<ElementDefinition, ? extends NamedElement>>();
-        elements.add( this.mappedElement0);
+        this.elements = new ArrayList<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        elements.add(this.mappedElement0);
         elements.add(this.mappedElement1);
         elements.add(this.mappedElement2);
     }

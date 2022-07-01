@@ -123,12 +123,15 @@ class CapellaMappingListViewViewModelTestFixture
         this.capellaRequirement0 = mock(Requirement.class);
         when(this.capellaRequirement0.getName()).thenReturn("capellaRequirement0");
         
-        var mappedDstElements = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
-        mappedDstElements.add(new MappedElementDefinitionRowViewModel(new ElementDefinition(), this.physicalComponent0, MappingDirection.FromDstToHub));
-        mappedDstElements.add(new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), this.capellaRequirement0, MappingDirection.FromDstToHub));
+        var mappedDstElements = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementDefinitionRowViewModel = new MappedElementDefinitionRowViewModel(new ElementDefinition(), this.physicalComponent0, MappingDirection.FromDstToHub);
+        mappedDstElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElementDefinitionRowViewModel);
+        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedDstRequirementRowViewModel = new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), this.capellaRequirement0, MappingDirection.FromDstToHub);
+        mappedDstElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedDstRequirementRowViewModel);
         
-        var mappedHubElements = new ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
-        mappedHubElements.add(new MappedElementDefinitionRowViewModel(new ElementDefinition(), this.physicalComponent0, MappingDirection.FromHubToDst));
+        var mappedHubElements = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementDefinitionRowViewModel2 = new MappedElementDefinitionRowViewModel(new ElementDefinition(), this.physicalComponent0, MappingDirection.FromHubToDst);
+        mappedHubElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElementDefinitionRowViewModel2);
         
         when(this.dstController.GetDstMapResult()).thenReturn(mappedDstElements);
         when(this.dstController.GetHubMapResult()).thenReturn(mappedHubElements);

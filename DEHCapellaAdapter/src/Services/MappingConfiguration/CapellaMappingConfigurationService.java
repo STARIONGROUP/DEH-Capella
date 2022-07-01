@@ -82,12 +82,12 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         this.sessionService = sessionService;
         this.transactionService = transactionService;
         
-        this.HubController.GetIsSessionOpenObservable()
+        this.hubController.GetIsSessionOpenObservable()
         .subscribe(x -> 
         {
             if(!x)
             {
-                this.Correspondences.clear();
+                this.correspondences.clear();
                 this.SetExternalIdentifierMap(new ExternalIdentifierMap());
             }
         });
@@ -152,7 +152,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
      */
     private boolean TryGetMappedElement(CapellaElement element, Ref<IMappedElementRowViewModel> refMappedElementRowViewModel)
     {
-        Optional<ImmutableTriple<UUID, CapellaExternalIdentifier, UUID>> optionalCorrespondence = this.Correspondences.stream()
+        Optional<ImmutableTriple<UUID, CapellaExternalIdentifier, UUID>> optionalCorrespondence = this.correspondences.stream()
                 .filter(x -> AreTheseEquals(x.middle.Identifier, element.getId()))
                 .findFirst();
         
@@ -174,10 +174,14 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         {
             var refElementDefinition = new Ref<>(ElementDefinition.class);
             
-            var mappedElement = new MappedElementDefinitionRowViewModel(this.transactionService.Clone((Component)element), mappingDirection);
+            var mappedElement = new MappedElementDefinitionRowViewModel(
+                    mappingDirection == MappingDirection.FromDstToHub 
+                    ? (Component)element 
+                    : this.transactionService.Clone((Component)element), mappingDirection);
+            
             mappedElement.SetTargetArchitecture(targetArchitecture);
             
-            if(this.HubController.TryGetThingById(internalId, refElementDefinition))
+            if(this.hubController.TryGetThingById(internalId, refElementDefinition))
             {
                 mappedElement.SetHubElement(refElementDefinition.Get().clone(false));
             }
@@ -216,14 +220,14 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
     {
         var refHubRequirement = new Ref<>(cdp4common.engineeringmodeldata.Requirement.class);
         
-        if(this.HubController.TryGetThingById(internalId, refHubRequirement))
+        if(this.hubController.TryGetThingById(internalId, refHubRequirement))
         {
             var requirementSpecification = refHubRequirement.Get().getContainerOfType(RequirementsSpecification.class).clone(true);
             
             mappedElement.SetHubElement(requirementSpecification.getRequirement().stream()
-                    .filter(x -> AreTheseEquals(x.getIid(), refHubRequirement.Get().getIid()))
+                    .filter(x -> AreTheseEquals(x.getIid(), refHubRequirement.Get().getIid()) && !x.isDeprecated())
                     .findFirst()
-                    .orElseThrow());
+                    .orElse(null));
         }
     }
 
