@@ -194,7 +194,7 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetDstMapResult}
      */
-    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> hubMapResult = new ObservableCollection<>();
+    private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> hubMapResult = new ObservableCollection<>();
     
     /**
      * Gets The {@linkplain ObservableCollection} of Hub map result
@@ -202,7 +202,7 @@ public final class DstController implements IDstController
      * @return an {@linkplain ObservableCollection} of {@linkplain Class}
      */
     @Override
-    public ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> GetHubMapResult()
+    public ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> GetHubMapResult()
     {
         return this.hubMapResult;
     }
@@ -210,7 +210,7 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetDstMapResult}
      */
-    private ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> dstMapResult = new ObservableCollection<>();
+    private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> dstMapResult = new ObservableCollection<>();
 
     /**
      * Gets The {@linkplain ObservableCollection} of DST map result
@@ -218,7 +218,7 @@ public final class DstController implements IDstController
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
     @Override
-    public ObservableCollection<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>> GetDstMapResult()
+    public ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> GetDstMapResult()
     {
         return this.dstMapResult;
     }
@@ -309,6 +309,17 @@ public final class DstController implements IDstController
         return this.capellaSessionService.HasAnyOpenSessionObservable();
     }
     
+    /**
+     * Gets a value indicating whether there is any session open in Capella
+     * 
+     * @return a {@linkplain Boolean} 
+     */
+    @Override
+    public boolean HasAnyOpenSession()
+    {
+        return this.capellaSessionService.HasAnyOpenSession();
+    }
+        
     /**
      * Initializes a new {@linkplain DstController}
      * 
@@ -535,7 +546,7 @@ public final class DstController implements IDstController
         
         if(this.TryMap(input, output, result));
         {
-            var resultAsCollection = (ArrayList<MappedElementRowViewModel<? extends DefinedThing, NamedElement>>) output.Get();
+            var resultAsCollection = (ArrayList<MappedElementRowViewModel<DefinedThing, NamedElement>>) output.Get();
             
             if(resultAsCollection != null && !resultAsCollection.isEmpty())
             {
@@ -1242,7 +1253,7 @@ public final class DstController implements IDstController
      */
     private <TParameter extends ParameterOrOverrideBase> void PrepareParameterOrOverrideForTransfer(ThingTransaction transaction, ContainerList<TParameter> parameters) throws TransactionException
     {
-        for(var parameter : parameters)
+        for(var parameter : parameters.stream().filter(x -> x.getOriginal() != null || x.getRevisionNumber() == 0).collect(Collectors.toList()))
         {
             transaction.createOrUpdate(parameter);
         }

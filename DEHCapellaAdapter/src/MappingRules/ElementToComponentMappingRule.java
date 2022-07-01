@@ -168,7 +168,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         }
         catch (Exception exception)
         {
-            this.Logger.catching(exception);
+            this.logger.catching(exception);
             return new ArrayList<>();
         }
         finally
@@ -590,7 +590,10 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      */
     private void UpdateValue(DataValue dataValue, ParameterOrOverrideBase parameter, Ref<Property> refProperty)
     {
-        var value = ValueSetUtils.QueryParameterBaseValueSet(parameter, null, null);
+        var value = ValueSetUtils.QueryParameterBaseValueSet(parameter, 
+                parameter.isOptionDependent() ? this.hubController.GetOpenIteration().getDefaultOption() : null, 
+                        parameter.getStateDependence() != null ? parameter.getStateDependence().getActualState().get(0) : null);
+        
         var valueString = value.getActualValue().get(0);
         
         if(dataValue instanceof LiteralNumericValue)

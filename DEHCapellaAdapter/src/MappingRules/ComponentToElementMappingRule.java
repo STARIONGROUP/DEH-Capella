@@ -151,7 +151,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         }
         catch (Exception exception)
         {
-            this.Logger.catching(exception);
+            this.logger.catching(exception);
             return new ArrayList<>();
         }
         finally
@@ -255,7 +255,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
                         .map(x -> x.clone(false))
                         .orElseGet(this.CreateBinaryRelationship(capellaInterface, connectedPortElementUsage, portElementUsage.getRight()));
                 
-                this.Logger.info(String.format("BinaryRelationShip %s is linking element %s and element %s", relationship.getName(), portElementUsage.getRight().modelCode(null), connectedPortElementUsage.modelCode(null)));
+                this.logger.info(String.format("BinaryRelationShip %s is linking element %s and element %s", relationship.getName(), portElementUsage.getRight().modelCode(null), connectedPortElementUsage.modelCode(null)));
                 portElementUsage.getMiddle().GetRelationships().add(relationship);
             }
         }
@@ -617,7 +617,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             
             if (optionalParameterOverride.isPresent())
             {
-                parameterOverride = optionalParameterOverride.get();
+                parameterOverride = optionalParameterOverride.get().clone(true);
             }
             else
             {
@@ -644,7 +644,10 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
      */
     private boolean DoesParameterRequiresToBeUpdated(Property property, ParameterOrOverrideBase parameter, Ref<String> refValue)
     {        
-        var originalValue = ValueSetUtils.QueryParameterBaseValueSet(parameter, null, null).getManual().get(0);
+        var originalValue = ValueSetUtils.QueryParameterBaseValueSet(parameter, 
+                parameter.isOptionDependent() ? this.hubController.GetOpenIteration().getDefaultOption() : null, 
+                        parameter.getStateDependence() != null ? parameter.getStateDependence().getActualState().get(0) : null)
+                .getManual().get(0);
         
         return !AreTheseEquals(refValue.Get(), originalValue);
     }
@@ -689,7 +692,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
                 }
                 else
                 {
-                    this.Logger.error(String.format("Could not create ParameterType %s", property.getName()));
+                    this.logger.error(String.format("Could not create ParameterType %s", property.getName()));
                     continue;
                 }
             }
@@ -699,7 +702,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             }
             else
             {
-                this.Logger.error(String.format("Could not map property %s for element definition %s", property.getName(), elementDefinition.getName()));
+                this.logger.error(String.format("Could not map property %s for element definition %s", property.getName(), elementDefinition.getName()));
                 continue;
             }
 
@@ -713,7 +716,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             }
         }
         
-        this.Logger.info(String.format("ElementDefinition has %s parameters", elementDefinition.getParameter().size()));
+        this.logger.info(String.format("ElementDefinition has %s parameters", elementDefinition.getParameter().size()));
     }
     
     /**
@@ -783,7 +786,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
                 }                
                 else
                 {
-                    this.Logger.error(String.format("The property %s value type isn't supported by the adapter", property.getName()));
+                    this.logger.error(String.format("The property %s value type isn't supported by the adapter", property.getName()));
                 }
                                 
                 if(parameterType != null)
@@ -805,8 +808,8 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         }
         catch(Exception exception)
         {
-            this.Logger.error(String.format("Could not create the parameter type with the shortname: %s, because %s", property.getName(), exception));
-            this.Logger.catching(exception);
+            this.logger.error(String.format("Could not create the parameter type with the shortname: %s, because %s", property.getName(), exception));
+            this.logger.catching(exception);
             return false;
         }
     }
@@ -928,7 +931,9 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
                
         if(!parameter.getValueSets().isEmpty())
         {
-            valueSet = (TValueSet) ValueSetUtils.QueryParameterBaseValueSet(parameter, null, null);    
+            valueSet = (TValueSet) ValueSetUtils.QueryParameterBaseValueSet(parameter, 
+                    parameter.isOptionDependent() ? this.hubController.GetOpenIteration().getDefaultOption() : null, 
+                            parameter.getStateDependence() != null ? parameter.getStateDependence().getActualState().get(0) : null);;    
         }
         else
         {
@@ -959,7 +964,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             }
             catch (Exception exception)
             {
-                this.Logger.catching(exception);
+                this.logger.catching(exception);
             }
         }
 

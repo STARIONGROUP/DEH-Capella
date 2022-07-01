@@ -97,7 +97,7 @@ public class BinaryRelationshipToCapellaTraces extends HubToDstBaseMappingRule<H
         }
         catch (Exception exception)
         {
-            this.Logger.catching(exception);
+            this.logger.catching(exception);
             return new ArrayList<>();
         }
         finally

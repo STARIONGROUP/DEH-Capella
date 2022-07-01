@@ -59,7 +59,6 @@ import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import Views.Dialogs.CapellaDstToHubMappingConfigurationDialog;
 import cdp4common.commondata.DefinedThing;
-import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import io.reactivex.Observable;
@@ -122,6 +121,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      * 
      * @param rowViewModel the {@linkplain IElementRowViewModel}
      */
+    @SuppressWarnings("unchecked")
     private void UpdateMappedElements(ElementRowViewModel<? extends CapellaElement> rowViewModel)
     {
         var optionalMappedElement = this.mappedElements.stream()
@@ -130,7 +130,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
         
         if(!optionalMappedElement.isPresent())
         {
-            MappedElementRowViewModel<? extends Thing, ? extends NamedElement> mappedElement;
+            MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElement;
             
             if(rowViewModel.GetElement() instanceof Component)
             {
@@ -141,8 +141,8 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
                 mappedElement = new MappedDstRequirementRowViewModel((Requirement) rowViewModel.GetElement(), MappingDirection.FromDstToHub);
             }
 
-            this.mappedElements.add(mappedElement);
-            this.SetSelectedMappedElement(mappedElement);
+            this.mappedElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElement);
+            this.SetSelectedMappedElement((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElement);
         }
         else
         {
@@ -166,6 +166,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      * 
      * @param selectedElement the collection of {@linkplain #TElement}
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected void PreMap(Collection<EObject> selectedElements)
     {
@@ -181,7 +182,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
 
                 if(mappedElement != null)
                 {
-                    this.mappedElements.add(mappedElement);
+                    this.mappedElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElement);
                 }
             }
         }
@@ -280,7 +281,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
         Optional<cdp4common.engineeringmodeldata.Requirement> optionalRequirement = 
               this.hubController.GetOpenIteration().getRequirementsSpecification().stream()
               .flatMap(x -> x.getRequirement().stream())
-              .filter(x -> AreTheseEquals(x.getName(), requirement.getName()))
+              .filter(x -> AreTheseEquals(x.getName(), requirement.getName()) && !x.isDeprecated())
               .findFirst();
 
         if(optionalRequirement.isPresent())
@@ -344,7 +345,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
         {
             this.selectedMappedElement.Value().SetHubElement(null);
         }
-                
+
         if(this.selectedMappedElement.Value().GetHubElement() instanceof ElementDefinition)
         {
             this.UpdateRowStatus(this.selectedMappedElement.Value(), ElementDefinition.class);

@@ -69,7 +69,7 @@ public class CapellaLocalExchangeHistoryService extends LocalExchangeHistoryServ
 
         var elementType = element.getClass().getSimpleName().replace("Impl", "");
 
-        this.Append(String.format("%s [%s] has been %sD", elementType, modelCode, changeKind));
+        this.Append(modelCode, String.format("%s [%s] has been %sD", elementType, modelCode, changeKind));
     }
 
     /**
@@ -89,7 +89,7 @@ public class CapellaLocalExchangeHistoryService extends LocalExchangeHistoryServ
                     ? ((NamedElement) originalProperty.eContainer()).getName() 
                     : "", originalProperty.getName());
         
-        this.Append(String.format("Value: [%s] from Property [%s] has been updated to [%s]", valueToUpdateString, propertyName, newValueString));
+        this.Append(propertyName, String.format("Value: [%s] from Property [%s] has been updated to [%s]", valueToUpdateString, propertyName, newValueString));
     }
 
     /**
