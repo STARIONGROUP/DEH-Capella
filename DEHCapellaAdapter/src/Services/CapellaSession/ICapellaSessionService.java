@@ -23,6 +23,7 @@
  */
 package Services.CapellaSession;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -133,9 +134,9 @@ public interface ICapellaSessionService
     /**
      * Gets the open {@linkplain Session}s
      * 
-     * @return a {@linkplain List} of {@linkplain Session}
+     * @return a {@linkplain Collection} of {@linkplain Session}
      */
-    List<Session> GetOpenSessions();
+    Collection<Session> GetOpenSessions();
 
     /**
      * Gets the {@linkplain Project} element from the provided {@linkplain Session}

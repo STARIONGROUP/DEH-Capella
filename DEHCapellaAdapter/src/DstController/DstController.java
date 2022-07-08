@@ -25,6 +25,7 @@ package DstController;
 
 import static Utils.Operators.Operators.AreTheseEquals;
 
+import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -62,10 +63,13 @@ import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
+import Services.CapellaUserPreference.ICapellaUserPreferenceService;
+import Services.CapellaUserPreference.UserPreferenceKey;
 import Services.HistoryService.ICapellaLocalExchangeHistoryService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
 import Services.MappingEngineService.IMappingEngineService;
+import Services.NavigationService.INavigationService;
 import Utils.Ref;
 import Utils.Stereotypes.CapellaComponentCollection;
 import Utils.Stereotypes.CapellaRequirementCollection;
@@ -79,6 +83,7 @@ import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import ViewModels.Rows.MappedRequirementBaseRowViewModel;
+import Views.Dialogs.AlertMoreThanOneCapellaModelOpenDialog;
 import cdp4common.ChangeKind;
 import cdp4common.commondata.ClassKind;
 import cdp4common.commondata.DefinedThing;
@@ -103,6 +108,8 @@ import cdp4common.types.ContainerList;
 import cdp4dal.exceptions.TransactionException;
 import cdp4dal.operations.ThingTransaction;
 import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * The {@linkplain DstController} is a class that manage transfer and connection to attached running instance of Capella
@@ -153,6 +160,16 @@ public final class DstController implements IDstController
      * The {@linkplain ICapellaLocalExchangeHistoryService} instance
      */
     private final ICapellaLocalExchangeHistoryService exchangeHistory;
+
+    /**
+     * The {@linkplain INavigationService} instance
+     */
+    private final INavigationService navigationService;
+
+    /**
+     * The {@linkplain ICapellaUserPreferenceService} instance
+     */
+    private final ICapellaUserPreferenceService userPreferenceService;
 
     /**
      * A value indicating whether the {@linkplain DstController} should load mapping when the HUB session is refresh or reloaded
@@ -330,10 +347,13 @@ public final class DstController implements IDstController
      * @param capellaSessionService the {@linkplain ICapellaSessionService} instance
      * @param transactionService the {@linkplain ICapellaTransactionService} instance
      * @param exchangeHistory the {@linkplain ICapellaLocalExchangeHistoryService} instance
+     * @param userPreferenceService the {@linkplain CapellaUserPreferenceService} instance
+     * @param navigationService the {@linkplain INavigationService} instance
      */
     public DstController(IMappingEngineService mappingEngine, IHubController hubController, ICapellaLogService logService, 
             ICapellaMappingConfigurationService mappingConfigurationService, ICapellaSessionService capellaSessionService,
-            ICapellaTransactionService transactionService, ICapellaLocalExchangeHistoryService exchangeHistory)
+            ICapellaTransactionService transactionService, ICapellaLocalExchangeHistoryService exchangeHistory,
+            ICapellaUserPreferenceService userPreferenceService, INavigationService navigationService)
     {
         this.mappingEngine = mappingEngine;
         this.hubController = hubController;
@@ -342,6 +362,8 @@ public final class DstController implements IDstController
         this.capellaSessionService = capellaSessionService;
         this.transactionService = transactionService;
         this.exchangeHistory = exchangeHistory;
+        this.userPreferenceService = userPreferenceService;
+        this.navigationService = navigationService;
         
         this.hubController.GetIsSessionOpenObservable().subscribe(isSessionOpen ->
         {
@@ -362,9 +384,35 @@ public final class DstController implements IDstController
             {
                 if(!this.isHubSessionRefreshSilent)
                 {
-                    this.LoadMapping(); 
+                    this.LoadMapping();
                 }
             });
+        
+        if(!this.userPreferenceService.Get(UserPreferenceKey.ShouldNeverRemindMeThatMoreThanOneCapellaModelIsOpen, Boolean.class, false))
+        {
+            Ref<Boolean> isDialogOpen = new Ref<>(Boolean.class, false);
+            
+            Observable.combineLatest(this.capellaSessionService.HasAnyOpenSessionObservable().startWith(this.HasAnyOpenSession()), 
+                    this.hubController.GetIsSessionOpenObservable(),
+                    (hasAnyCapellaModelOpen, isHubSessionOpen) -> 
+                        hasAnyCapellaModelOpen && isHubSessionOpen 
+                        && this.capellaSessionService.GetOpenSessions().size() > 1
+                        && !this.userPreferenceService.Get(UserPreferenceKey.ShouldNeverRemindMeThatMoreThanOneCapellaModelIsOpen, Boolean.class, false))
+                 .filter(x -> x)
+                 .subscribe(x -> 
+                 {
+                     if(!isDialogOpen.Get())
+                     {
+                         isDialogOpen.Set(true);
+                         
+                         EventQueue.invokeLater(() -> 
+                         {
+                             this.navigationService.ShowDialog(new AlertMoreThanOneCapellaModelOpenDialog());
+                             isDialogOpen.Set(false);
+                         });
+                     }
+                 });
+        }
         
         this.GetDstMapResult().ItemsAdded().subscribe(x -> this.MapTraces(MappingDirection.FromDstToHub));
         this.GetHubMapResult().ItemsAdded().subscribe(x -> this.MapTraces(MappingDirection.FromHubToDst));
