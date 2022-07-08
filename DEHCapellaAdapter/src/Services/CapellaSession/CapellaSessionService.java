@@ -24,6 +24,7 @@
 package Services.CapellaSession;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -45,6 +46,7 @@ import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 
 import Enumerations.CapellaArchitecture;
 import Reactive.ObservableValue;
+import Services.NavigationService.INavigationService;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import io.reactivex.Observable;
 
@@ -116,7 +118,7 @@ public class CapellaSessionService implements ICapellaSessionService
     {
         if(currentSession == null) 
         {
-            this.currentSession = this.GetOpenSessions().get(0);
+            this.currentSession = new ArrayList<>(this.GetOpenSessions()).get(0);
         }
         else if(!this.GetOpenSessions().contains(this.currentSession))
         {
@@ -199,12 +201,12 @@ public class CapellaSessionService implements ICapellaSessionService
     /**
      * Gets the open {@linkplain Session}s
      * 
-     * @return a {@linkplain List} of {@linkplain Session}
+     * @return a {@linkplain Collection} of {@linkplain Session}
      */
     @Override
-    public List<Session> GetOpenSessions()
+    public Collection<Session> GetOpenSessions()
     {
-        return this.sessionManager.GetSessions().stream().collect(Collectors.toList());
+        return this.sessionManager.GetSessions();
     }
     
     /**
