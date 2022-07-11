@@ -56,6 +56,8 @@ import Services.CapellaSession.ISiriusSessionManagerWrapper;
 import Services.CapellaSession.SiriusSessionManagerWrapper;
 import Services.CapellaTransaction.CapellaTransactionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
+import Services.CapellaUserPreference.CapellaUserPreferenceService;
+import Services.CapellaUserPreference.ICapellaUserPreferenceService;
 import Services.HistoryService.CapellaLocalExchangeHistoryService;
 import Services.HistoryService.ICapellaLocalExchangeHistoryService;
 import Services.Mapping.IMapCommandService;
@@ -77,8 +79,10 @@ import ViewModels.TransferControlViewModel;
 import ViewModels.CapellaObjectBrowser.CapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.ContextMenu.HubBrowserContextMenuViewModel;
+import ViewModels.Dialogs.AlertMoreThanOneCapellaModelOpenDialogViewModel;
 import ViewModels.Dialogs.DstToHubMappingConfigurationDialogViewModel;
 import ViewModels.Dialogs.HubToDstMappingConfigurationDialogViewModel;
+import ViewModels.Dialogs.Interfaces.IAlertMoreThanOneCapellaModelOpenDialogViewModel;
 import ViewModels.Dialogs.Interfaces.IDstToHubMappingConfigurationDialogViewModel;
 import ViewModels.Dialogs.Interfaces.IHubToDstMappingConfigurationDialogViewModel;
 import ViewModels.Interfaces.ICapellaHubBrowserPanelViewModel;
@@ -173,6 +177,7 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.as(CACHE).addComponent(ICapellaTransactionService.class, CapellaTransactionService.class);
             AppContainer.Container.addComponent(IAdapterInfoService.class, CapellaAdapterInfoService.class);
             AppContainer.Container.as(CACHE).addComponent(ICapellaLocalExchangeHistoryService.class, CapellaLocalExchangeHistoryService.class);
+            AppContainer.Container.addComponent(ICapellaUserPreferenceService.class, CapellaUserPreferenceService.class);
 
             AppContainer.Container.addComponent(ComponentToElementMappingRule.class.getName(), ComponentToElementMappingRule.class);
             AppContainer.Container.addComponent(ElementToComponentMappingRule.class.getName(), ElementToComponentMappingRule.class);
@@ -194,6 +199,7 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.addComponent(ICapellaHubBrowserPanelViewModel.class, CapellaHubBrowserPanelViewModel.class);
             AppContainer.Container.addComponent(ICapellaMappedElementListViewViewModel.class, CapellaMappedElementListViewViewModel.class);
             AppContainer.Container.addComponent(IMappingListViewViewModel.class, CapellaMappingListViewViewModel.class);
+            AppContainer.Container.addComponent(IAlertMoreThanOneCapellaModelOpenDialogViewModel.class.getSimpleName(), AlertMoreThanOneCapellaModelOpenDialogViewModel.class);
         }
         catch (Exception exception) 
         {

@@ -72,12 +72,14 @@ import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaTransaction.ClonedReferenceElement;
 import Services.CapellaTransaction.ICapellaTransactionService;
+import Services.CapellaUserPreference.ICapellaUserPreferenceService;
 import Services.HistoryService.ICapellaLocalExchangeHistoryService;
 import Services.LocalExchangeHistory.ILocalExchangeHistoryService;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
 import Services.MappingEngineService.IMappingEngineService;
+import Services.NavigationService.INavigationService;
 import Utils.Ref;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
@@ -112,6 +114,8 @@ public class DstControllerTestFixture
     private ICapellaSessionService capellaSessionService;
     private ICapellaTransactionService transactionService;
     private ICapellaLocalExchangeHistoryService transferHistory;
+    private INavigationService navigationService;
+    private ICapellaUserPreferenceService userPreference;
 
     /**
      * @throws java.lang.Exception
@@ -126,6 +130,10 @@ public class DstControllerTestFixture
         this.capellaSessionService = mock(ICapellaSessionService.class);
         this.transactionService = mock(ICapellaTransactionService.class);
         this.transferHistory = mock(ICapellaLocalExchangeHistoryService.class);
+        this.userPreference = mock(ICapellaUserPreferenceService.class);
+        this.navigationService = mock(INavigationService.class);
+        
+        when(this.userPreference.Get(any(), any(), any())).thenReturn(true);
         
         when(this.capellaSessionService.SessionUpdated())
             .thenReturn(Observable.fromArray(mock(org.eclipse.sirius.business.api.session.Session.class)));
@@ -147,7 +155,7 @@ public class DstControllerTestFixture
         when(mappedThings1.GetHubElement()).thenReturn(requirement);
         
         this.controller = new DstController(this.mappingEngine, this.hubController, this.logService, 
-                this.mappingConfigurationService, this.capellaSessionService, this.transactionService, this.transferHistory);
+                this.mappingConfigurationService, this.capellaSessionService, this.transactionService, this.transferHistory, this.userPreference, this.navigationService);
         
         this.controller.GetDstMapResult().add(mappedThings0);
         this.controller.GetDstMapResult().add(mappedThings1);
