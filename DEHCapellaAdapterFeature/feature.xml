@@ -2,7 +2,7 @@
 <feature
       id="DEHCapellaAdapterFeature"
       label="DEHCapellaAdapter"
-      version="1.5.1.qualifier"
+      version="1.5.2.qualifier"
       provider-name="Rhea Group SA">
 
    <description url="www.rheagroup.com">

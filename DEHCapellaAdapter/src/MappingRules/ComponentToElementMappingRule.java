@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -437,14 +438,16 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
     {
         var shortName = GetShortName(name);
         
+        Predicate<? super ElementDefinition> matcher = x -> AreTheseEquals(x.getShortName(), shortName, true) || AreTheseEquals(x.getName(), name);
         ElementDefinition elementDefinition = this.elements.stream()
-                .filter(x -> x.GetHubElement() != null && AreTheseEquals(x.GetHubElement().getShortName(), shortName, true))
+                .filter(x -> x.GetHubElement() != null)
                 .map(x -> x.GetHubElement())
+                .filter(matcher)
                 .findFirst()
                 .orElse(this.hubController.GetOpenIteration()
                     .getElement()
                     .stream()
-                    .filter(x -> AreTheseEquals(x.getShortName(), shortName))
+                    .filter(matcher)
                     .findFirst()
                     .map(x -> x.clone(false))
                     .orElse(null));
@@ -971,5 +974,6 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         ValueArray<String> newValue = new ValueArray<>(Arrays.asList(refValue.Get()), String.class);
         
         valueSet.setManual(newValue);
+        valueSet.setValueSwitch(ParameterSwitchKind.MANUAL);
     }
 }

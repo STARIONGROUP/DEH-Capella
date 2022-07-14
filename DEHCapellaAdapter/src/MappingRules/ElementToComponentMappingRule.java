@@ -739,7 +739,9 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
                 .filter(x -> x.getInterfaceEnd() == InterfaceEndKind.NONE).collect(Collectors.toList()))
         {
             MappedElementDefinitionRowViewModel usageDefinitionMappedElement = this.elements.stream()
-                    .filter(x -> x.GetDstElement() != null && AreTheseEquals(x.GetDstElement().getName(), containedUsage.getName(), true))
+                    .filter(x -> ((x.GetDstElement() != null && AreTheseEquals(x.GetDstElement().getName(), containedUsage.getName(), true))
+                            || AreTheseEquals(containedUsage.getElementDefinition().getIid(), x.GetHubElement().getIid()))
+                            && x.GetTargetArchitecture() == targetArchitecture)
                     .findFirst()
                     .orElseGet(() -> 
                     {
@@ -751,11 +753,19 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
                         return newMappedElement;
                     });
             
+            if(usageDefinitionMappedElement.GetDstElement() == null)
+            {
+                usageDefinitionMappedElement.SetDstElement(this.GetOrCreateComponent(containedUsage, targetArchitecture));
+            }
+            
             this.MapProperties(containedUsage, usageDefinitionMappedElement.GetDstElement());
             this.UpdateContainement(mappedElement.GetDstElement(), usageDefinitionMappedElement.GetDstElement());
             this.MapPort(usageDefinitionMappedElement);
 
-            this.MapContainedElement(usageDefinitionMappedElement, targetArchitecture);
+            if(!AreTheseEquals(mappedElement.GetHubElement().getIid(), usageDefinitionMappedElement.GetHubElement().getIid()))
+            {
+                this.MapContainedElement(usageDefinitionMappedElement, targetArchitecture);
+            }
         }
     }
 

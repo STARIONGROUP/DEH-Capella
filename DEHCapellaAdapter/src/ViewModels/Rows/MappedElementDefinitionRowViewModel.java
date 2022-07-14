@@ -88,7 +88,18 @@ public class MappedElementDefinitionRowViewModel extends MappedElementRowViewMod
     public MappedElementDefinitionRowViewModel(ElementDefinition thing, Component dstElement, MappingDirection mappingDirection)
     {
         super(thing, ElementDefinition.class, dstElement, mappingDirection);
-    }    
+    }
+
+    /**
+     * Initializes a new {@linkplain MappedElementDefinitionRowViewModel}
+     * 
+     * @param thing the {@linkplain TThing} that is at one end of the mapping
+     * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
+     */
+    public MappedElementDefinitionRowViewModel(ElementDefinition thing, MappingDirection mappingDirection)
+    {
+        super(thing, ElementDefinition.class, null, mappingDirection);
+    }
 
     /**
      * Initializes a new {@linkplain MappedElementDefinitionRowViewModel} with {@linkplain MappingDirection}.{@code FromDstToHub}

@@ -280,10 +280,13 @@ public class CapellaImpactViewPanelViewModel extends ImpactViewPanelViewModel im
             return false;
         }
 
-        this.mappingConfigurationService.SetExternalIdentifierMap(this.hubController.GetAvailableExternalIdentifierMap(DstController.THISTOOLNAME)
-                .stream().filter(x -> AreTheseEquals(x.getName(), configurationName))
-                .findFirst()
-                .orElse(this.CreateNewMappingConfiguration(configurationName)));
+        if(isNew)
+        {
+            this.mappingConfigurationService.SetExternalIdentifierMap(this.hubController.GetAvailableExternalIdentifierMap(DstController.THISTOOLNAME)
+                    .stream().filter(x -> AreTheseEquals(x.getName(), configurationName))
+                    .findFirst()
+                    .orElse(this.CreateNewMappingConfiguration(configurationName)));
+        }
         
         Task.Run(() -> this.dstController.LoadMapping());
         

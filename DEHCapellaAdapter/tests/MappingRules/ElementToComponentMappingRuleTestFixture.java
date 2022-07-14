@@ -112,6 +112,7 @@ class ElementToComponentMappingRuleTestFixture
     private TextParameterType stringParameterType;
     private EnumerationParameterType enumParameterType;
     private BasicEList<EnumerationLiteral> literals;
+    private ElementDefinition elementDefinition3;
 
     @BeforeEach
     public void Setup()
@@ -186,7 +187,7 @@ class ElementToComponentMappingRuleTestFixture
     {
         assertDoesNotThrow(() -> this.mappingRule.Transform(null));
         assertDoesNotThrow(() -> this.mappingRule.Transform(mock(List.class)));
-        assertEquals(3, this.mappingRule.Transform(this.elements).size());
+        assertEquals(2, this.mappingRule.Transform(this.elements).size());
 
         when(this.dstController.TryGetElementBy(any(), any(Ref.class))).thenAnswer(x -> 
         {
@@ -197,14 +198,14 @@ class ElementToComponentMappingRuleTestFixture
         
         when(this.transactionService.Clone(any())).thenAnswer(x -> x.getArgument(0));
         
-        assertEquals(3, this.mappingRule.Transform(this.elements).size());
+        assertEquals(2, this.mappingRule.Transform(this.elements).size());
 
         this.elements.clear();
         this.elements.add(new MappedElementDefinitionRowViewModel(elementDefinition2, null, MappingDirection.FromHubToDst));
         
         assertEquals(1, this.mappingRule.Transform(this.elements).size());
         
-        verify(this.transactionService, times(48)).Create(any(Class.class));
+        verify(this.transactionService, times(39)).Create(any(Class.class));
         verify(this.transactionService, times(2)).AddReferenceDataToDataPackage(any(PhysicalQuantity.class));
         verify(this.transactionService, times(2)).AddReferenceDataToDataPackage(any(Unit.class));
     }
@@ -307,6 +308,10 @@ class ElementToComponentMappingRuleTestFixture
         this.elementDefinition1 = new ElementDefinition();
         this.elementDefinition1.setName("elementDefinition1");
         this.elementDefinition1.setShortName("elementDefinition1");
+
+        this.elementDefinition3 = new ElementDefinition();
+        this.elementDefinition3.setName("elementDefinition3");
+        this.elementDefinition3.setShortName("elementDefinition3");
         this.elementUsage0 = new ElementUsage();
         this.elementUsage0.setName("elementUsage0");
         this.elementUsage0.setShortName("elementUsage0");
@@ -330,7 +335,7 @@ class ElementToComponentMappingRuleTestFixture
         this.iteration.getElement().add(this.elementDefinition1);
         
         var mappedElement0 = new MappedElementDefinitionRowViewModel(this.elementDefinition0, null, MappingDirection.FromHubToDst);
-        mappedElement0.SetTargetArchitecture(CapellaArchitecture.LogicalArchitecture);
+        mappedElement0.SetTargetArchitecture(CapellaArchitecture.PhysicalArchitecture);
         var mappedElement1 = new MappedElementDefinitionRowViewModel(elementDefinition1, null, MappingDirection.FromHubToDst);
         mappedElement1.SetTargetArchitecture(CapellaArchitecture.PhysicalArchitecture);
         
