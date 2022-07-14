@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: DEH-CapellaAdapter
 Bundle-SymbolicName: com.rheagroup.dehcapellaadapter;singleton:=true
-Bundle-Version: 1.5.1
+Bundle-Version: 1.5.2
 Bundle-Vendor: RHEAGROUP
 Require-Bundle: org.eclipse.ui,
  org.polarsys.capella.core.model.handler;bundle-version="5.1.0";visibility:=reexport,

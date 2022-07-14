@@ -26,13 +26,15 @@ package Services.MappingConfiguration;
 import static Utils.Operators.Operators.AreTheseEquals;
 import static Utils.Stereotypes.StereotypeUtils.GetChildren;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutableTriple;
-
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.requirement.Requirement;
@@ -43,8 +45,11 @@ import HubController.IHubController;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
 import Utils.Ref;
+import Utils.StreamExtensions;
+import ViewModels.Interfaces.IHaveTargetArchitecture;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
+import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import ViewModels.Rows.MappedRequirementBaseRowViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
@@ -109,9 +114,88 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
             mappedElements.addAll(this.LoadMapping(sessionsAndElementsMap.get(sessionUri)));
         }
         
+        this.LoadMappingForMissingCapellaElement(mappedElements);
+        
         return mappedElements;
     }
-    
+
+    /**
+     * Loading all mapped HubElement that misses their target on the currently loaded Capella Model 
+     * 
+     * @param mappedElements the {@linkplain Collection} of currently {@linkplain IMappedElementRowViewModel}   
+     */
+    private void LoadMappingForMissingCapellaElement(ArrayList<IMappedElementRowViewModel> mappedElements)
+    {
+        var mappedElementRowViewModels = StreamExtensions.OfType(mappedElements, MappedElementRowViewModel.class);
+        
+        var correspondencesNotLoaded = this.correspondences.stream()
+                .filter(x -> x.middle.MappingDirection == MappingDirection.FromHubToDst && mappedElementRowViewModels.stream()
+                        .noneMatch(p -> AreTheseEquals(x.right, p.GetHubElement().getIid())))
+                .collect(Collectors.toList());
+        
+        for (MutableTriple<UUID, CapellaExternalIdentifier, UUID> correspondence : correspondencesNotLoaded)
+        {
+            var refMappedElement = new Ref<IMappedElementRowViewModel>(IMappedElementRowViewModel.class);
+            
+            try
+            {
+                if(this.TryGetMappedElement(correspondence, MappedHubRequirementRowViewModel.class, cdp4common.engineeringmodeldata.Requirement.class, refMappedElement)
+                        || this.TryGetMappedElement(correspondence, MappedElementDefinitionRowViewModel.class, ElementDefinition.class, refMappedElement))
+                {
+                    mappedElements.add((IMappedElementRowViewModel) refMappedElement.Get());
+                }
+                else
+                {
+                    this.logger.warn(String.format("Could not initialize the IMappedElementRowViewModel for the internalIid [%s] and externalId [%s]", 
+                            correspondence.getRight(), correspondence.getMiddle().Identifier));
+                }
+            }
+            catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                    | InvocationTargetException | NoSuchMethodException | SecurityException exception)
+            {
+                this.logger.catching(exception);
+            }
+        }
+    }
+
+    /**
+     * Tries to get the {@linkplain IMappedElementRowViewModel} based on the provided correspondence represented by a 
+     * {@linkplain Triple} of {@linkplain UUID}, {@linkplain CapellaExternalIdentifier}, {@linkplain UUID}
+     * 
+     * if the represented thing is of the provided {@linkplain Class} thingType, a rowViewModelType is initialized and 
+     * sets as the value carried by the provided {@linkplain Ref} of {@linkplain IMappedElementRowViewModel}
+     * 
+     * @param <TThing> the type of {@linkplain Thing} the internalId of the correspondence could represent
+     * @param <TRowViewModel> the type of {@linkplain IMappedElementRowViewModel} & {@linkplain IHaveTargetArchitecture} that should be initialized if the Thing is found
+     * @param correspondence a {@linkplain Triple} of {@linkplain UUID}, {@linkplain CapellaExternalIdentifier}, {@linkplain UUID} representing an id correspondence
+     * @param rowViewModelType the {@linkplain Class} of {@linkplain #TRowViewModel}
+     * @param thingType the {@linkplain Class} of {@linkplain #TThing}
+     * @param refMappedElement the {@linkplain Ref} of {@linkplain IMappedElementRowViewModel}
+     * @return a value indicating whether the {@linkplain IMappedElementRowViewModel} could be initialized
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     * @throws InvocationTargetException
+     * @throws NoSuchMethodException
+     * @throws SecurityException
+     */
+    private <TThing extends Thing, TRowViewModel extends IMappedElementRowViewModel & IHaveTargetArchitecture> boolean TryGetMappedElement(
+            MutableTriple<UUID, CapellaExternalIdentifier, UUID> correspondence, Class<TRowViewModel> rowViewModelType, Class<TThing> thingType, Ref<IMappedElementRowViewModel> refMappedElement) 
+                    throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
+    {
+        var refHubElement = new Ref<TThing>(thingType);
+        
+        if(this.hubController.TryGetThingById(correspondence.getRight(), refHubElement))
+        {
+            TRowViewModel newMappedElement = rowViewModelType.getDeclaredConstructor(thingType, MappingDirection.class).newInstance(refHubElement.Get(), MappingDirection.FromHubToDst);
+                
+            newMappedElement.SetTargetArchitecture(correspondence.getMiddle().TargetArchitecture);
+            refMappedElement.Set(newMappedElement);
+        }
+        
+        return refMappedElement.HasValue();
+    }
+
     /**
      * Loads the mapping configuration and generates the map result respectively
      * 
@@ -130,13 +214,6 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
             if(this.TryGetMappedElement(element, refMappedElementRowViewModel))
             {
                 mappedElements.add(refMappedElementRowViewModel.Get());
-                
-                var children = GetChildren(element, CapellaElement.class);
-                
-                if(!children.isEmpty())
-                {
-                    mappedElements.addAll(this.LoadMapping(children));
-                }
             }
         }
         
@@ -152,7 +229,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
      */
     private boolean TryGetMappedElement(CapellaElement element, Ref<IMappedElementRowViewModel> refMappedElementRowViewModel)
     {
-        Optional<ImmutableTriple<UUID, CapellaExternalIdentifier, UUID>> optionalCorrespondence = this.correspondences.stream()
+        Optional<MutableTriple<UUID, CapellaExternalIdentifier, UUID>> optionalCorrespondence = this.correspondences.stream()
                 .filter(x -> AreTheseEquals(x.middle.Identifier, element.getId()))
                 .findFirst();
         
@@ -263,6 +340,8 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         externalIdentifier.Identifier = externalId;
         externalIdentifier.TargetArchitecture = targetArchitecture;
         
-        this.AddToExternalIdentifierMap(internalId, externalIdentifier, x -> x.getMiddle().TargetArchitecture == targetArchitecture);
+        this.AddToExternalIdentifierMap(internalId, externalIdentifier, 
+                x -> x.getMiddle().TargetArchitecture == targetArchitecture 
+                    && AreTheseEquals(x.getRight(), internalId));
     }
 }

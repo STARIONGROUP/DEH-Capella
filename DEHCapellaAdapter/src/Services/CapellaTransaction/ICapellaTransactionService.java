@@ -29,6 +29,7 @@ import java.util.Map;
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.information.Unit;
 import org.polarsys.capella.core.data.information.datatype.DataType;
@@ -79,9 +80,9 @@ public interface ICapellaTransactionService
     Map<String, ClonedReferenceElement<? extends CapellaElement>> GetClones();
 
     /**
-     * Reset the clones references, by means of finalizing the transaction
+     * Reset the clones references, the new ones and the registered target architecture
      */
-    void Finalize();
+    void Reset();
 
     /**
      * Adds the provided {@linkplain Unit} to the {@linkplain DataPackage} of the current project
@@ -187,4 +188,14 @@ public interface ICapellaTransactionService
      * @return an assert
      */
     <TElement extends CapellaElement> boolean IsNew(TElement element);
+    
+    /**
+     * Gets the original reference from the {@linkplain ClonedReferenceElement} where the element id == the provided {@linkplain #TElement} id.
+     * In the case the provided element is not a clone, it is returned.
+     * 
+     * @param <TElement> the type of the element
+     * @param element the element
+     * @return a {@linkplain #TElement}
+     */
+    <TElement extends CapellaElement> TElement GetOriginal(TElement element);
 }

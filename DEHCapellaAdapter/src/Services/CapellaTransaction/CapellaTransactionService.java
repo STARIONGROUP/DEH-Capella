@@ -229,6 +229,19 @@ public class CapellaTransactionService implements ICapellaTransactionService
     }
 
     /**
+     * Gets the original reference from the {@linkplain ClonedReferenceElement} where the element id == the provided {@linkplain #TElement} id.
+     * In the case the provided element is not a clone, it is returned.
+     * 
+     * @param <TElement> the type of the element
+     * @param element the element
+     * @return a {@linkplain #TElement}
+     */
+    public <TElement extends CapellaElement> TElement GetOriginal(TElement element)
+    {
+        return this.IsCloned(element) ? this.GetClone(element).GetOriginal() : element;
+    }
+    
+    /**
      * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}, and registers the target {@linkplain CapellaArchitecture}
      * 
      * @param <TInstance> the {@linkplain Type} of {@linkplain CapellaElement}
@@ -313,10 +326,10 @@ public class CapellaTransactionService implements ICapellaTransactionService
     }
     
     /**
-     * Reset the clones references, by means of finalizing the transaction
+     * Reset the clones references, the new ones and the registered target architecture
      */
     @Override
-    public void Finalize()
+    public void Reset()
     {
         this.cloneReferences.clear();
         this.newReferences.clear();
@@ -382,7 +395,7 @@ public class CapellaTransactionService implements ICapellaTransactionService
         var project = this.sessionService.GetProject();
         var result = new Ref<>(Boolean.class, false);
         TransactionHelper.getExecutionManager(project).execute(new CapellaTransaction(transactionMethod, result));
-        this.Finalize();
+        this.Reset();
         this.Logger.info("End commiting transaction to Capella");
         return result.Get();
     }

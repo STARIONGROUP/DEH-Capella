@@ -293,7 +293,7 @@ public class DstControllerTestFixture
         this.controller.GetSelectedDstMapResultForTransfer().add(requirement);
         this.controller.GetSelectedDstMapResultForTransfer().add(elementDefinition);
         assertTrue(this.controller.Transfer());
-        verify(this.hubController, times(8)).Refresh();
+        verify(this.hubController, times(10)).Refresh();
     }
     
     @Test

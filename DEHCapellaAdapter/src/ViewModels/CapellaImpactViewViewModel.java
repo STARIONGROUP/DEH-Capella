@@ -308,7 +308,9 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
             return false;
         }
         
-        return CapellaArchitecture.From(targetElement) == ((IHaveTargetArchitecture)mappedElementRowViewModel).GetTargetArchitecture();
+        var sourceArchitecture = CapellaArchitecture.From(this.transactionService.GetOriginal(targetElement));
+        var targetArchitecture = ((IHaveTargetArchitecture)mappedElementRowViewModel).GetTargetArchitecture();
+        return (sourceArchitecture != null ? sourceArchitecture : targetArchitecture)  == targetArchitecture;
     }
 
     /**
@@ -513,8 +515,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     {
         if(rowViewModel.SwitchIsSelectedValue())
         {
-            this.AddOrRemoveSelectedRowToTransfer(rowViewModel, 
-                    row -> 
+            this.AddOrRemoveSelectedRowToTransfer(rowViewModel, row -> 
             {
                 if(this.dstController.GetSelectedHubMapResultForTransfer().stream().noneMatch(x -> x == row.GetElement()))
                 {

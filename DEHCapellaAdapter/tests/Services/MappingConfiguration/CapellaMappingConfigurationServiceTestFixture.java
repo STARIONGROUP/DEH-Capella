@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.util.URI;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +64,7 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
     private CapellaMappingConfigurationService service;
     private ICapellaSessionService sessionService;
     private URI sessionUri;
-    private ElementDefinition elementDefinition;
+    private ElementDefinition elementDefinition0;
     private cdp4common.engineeringmodeldata.Requirement requirement;
     private ICapellaTransactionService transactionService;
 
@@ -75,7 +76,7 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
     {
         this.hubController = mock(IHubController.class);
         when(this.hubController.GetIsSessionOpenObservable()).thenReturn(Observable.fromArray(true, false));
-        this.elementDefinition = new ElementDefinition(UUID.randomUUID(), null, null);
+        this.elementDefinition0 = new ElementDefinition(UUID.randomUUID(), null, null);
         this.requirement = new cdp4common.engineeringmodeldata.Requirement(UUID.randomUUID(), null, null);
         var requirementsSpecification = new RequirementsSpecification();
         requirementsSpecification.getRequirement().add(this.requirement);
@@ -105,16 +106,20 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
         assertDoesNotThrow(() -> result.Set(this.service.LoadMapping()));
         assertTrue(result.Get().isEmpty());
         
-        var componentExternalId = new CapellaExternalIdentifier();
-        componentExternalId.Identifier = this.LogicalComponentId;
-        componentExternalId.MappingDirection = MappingDirection.FromDstToHub;
+        var componentExternalId0 = new CapellaExternalIdentifier();
+        componentExternalId0.Identifier = this.LogicalComponentId;
+        componentExternalId0.MappingDirection = MappingDirection.FromDstToHub;
         
+        var componentExternalId1 = new CapellaExternalIdentifier();
+        componentExternalId1.Identifier = UUID.randomUUID().toString();
+        componentExternalId1.MappingDirection = MappingDirection.FromHubToDst;
+                
         var requirementExternalId = new CapellaExternalIdentifier();
         requirementExternalId.Identifier = this.UserRequirementId;
         requirementExternalId.MappingDirection = MappingDirection.FromDstToHub;
         
-        this.service.correspondences.add(ImmutableTriple.of(UUID.randomUUID(), componentExternalId, this.elementDefinition.getIid()));
-        this.service.correspondences.add(ImmutableTriple.of(UUID.randomUUID(), requirementExternalId, this.requirement.getIid()));
+        this.service.correspondences.add(MutableTriple.of(UUID.randomUUID(), requirementExternalId, this.requirement.getIid()));
+        this.service.correspondences.add(MutableTriple.of(UUID.randomUUID(), componentExternalId1, this.elementDefinition0.getIid()));
 
         when(this.hubController.TryGetThingById(any(UUID.class), any(Ref.class))).thenAnswer(new Answer<Boolean>() 
         {
@@ -122,11 +127,15 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
             public Boolean answer(InvocationOnMock invocation) throws Throwable 
             {
                 var arguments = invocation.getArguments();
-                var thing = (Thing)(((UUID)arguments[0]).equals(elementDefinition.getIid()) ? elementDefinition : requirement);
+                var thing = (Thing)(((UUID)arguments[0]).equals(elementDefinition0.getIid()) ? elementDefinition0 : requirement);
                 ((Ref<Thing>)arguments[1]).Set(thing);
                 return true;
             }});
         
+        assertDoesNotThrow(() -> result.Set(this.service.LoadMapping()));
+        assertFalse(result.Get().isEmpty());
+        assertEquals(1, result.Get().size());
+        this.service.correspondences.add(MutableTriple.of(UUID.randomUUID(), componentExternalId0, this.elementDefinition0.getIid()));
         assertDoesNotThrow(() -> result.Set(this.service.LoadMapping()));
         assertFalse(result.Get().isEmpty());
         assertEquals(2, result.Get().size());
