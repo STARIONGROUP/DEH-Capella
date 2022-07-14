@@ -26,6 +26,7 @@ package DstController;
 import java.util.Collection;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Trace;
@@ -66,9 +67,10 @@ public interface IDstController extends IDstControllerBase<NamedElement>
     /**
      * Transfers all the {@linkplain Thing} contained in the {@linkplain dstMapResult} to the Hub
      * 
-     * @return a value indicating that all transfer could be completed
+     * @return a pair of value where one indicates that all transfer could be completed and 
+     * the other one indicates whether the mapping configuration should be persisted
      */
-    boolean TransferToHub();
+    Pair<Boolean, Boolean> TransferToHub();
 
     /**
      * Transfers the selected things to be transfered depending on the current {@linkplain MappingDirection}

@@ -424,7 +424,7 @@ public class MapCommandService implements IMapCommandService
                     this.logger.catching(t.GetException());
                 }
                 
-                this.logService.Append(String.format("Mapping action is done in %s ms", timer.getTime(TimeUnit.MILLISECONDS)), t.GetResult() == true);
+                this.logService.Append(String.format("Mapping action is done in %s ms", timer.getTime(TimeUnit.MILLISECONDS)), t.GetResult() == null ? false : t.GetResult().booleanValue());
 
             }, t -> this.logger.catching(t));
     }

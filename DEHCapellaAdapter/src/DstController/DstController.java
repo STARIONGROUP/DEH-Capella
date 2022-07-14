@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -371,6 +372,8 @@ public final class DstController implements IDstController
             {
                 this.hubMapResult.clear();
                 this.dstMapResult.clear();
+                this.mappedTracesToBinaryRelationships.clear();
+                this.mappedBinaryRelationshipsToTraces.clear();
                 this.selectedDstMapResultForTransfer.clear();
                 this.selectedHubMapResultForTransfer.clear();
             }
@@ -457,6 +460,8 @@ public final class DstController implements IDstController
     {
         StopWatch timer = StopWatch.createStarted();
         
+        this.transactionService.Reset();
+        
         var mappedElements = this.mappingConfigurationService.LoadMapping();
         
         var allMappedCapellaComponents = new CapellaComponentCollection();
@@ -474,6 +479,8 @@ public final class DstController implements IDstController
     
         this.dstMapResult.clear();
         this.hubMapResult.clear();
+        this.selectedHubMapResultForTransfer.clear();
+        this.selectedDstMapResultForTransfer.clear();
         
         var result = this.Map(allMappedCapellaComponents, MappingDirection.FromDstToHub)
                    & this.Map(allMappedCapellaRequirements, MappingDirection.FromDstToHub)
@@ -626,7 +633,7 @@ public final class DstController implements IDstController
      * Tries to map the provided {@linkplain IMappableThingCollection}
      * 
      * @param input the {@linkplain IMappableThingCollection}
-     * @param output the {@linkplain ArrayList} output of whatever mapping rule returns
+     * @param output the  {@linkplain ArrayList} output of whatever mapping rule returns
      * @param result the result to return {@linkplain #Map(IMappableThingCollection, MappingDirection)} from in case the mapping fails
      * @return a value that is true when the {@linkplain IMappableThingCollection} mapping succeed
      */
@@ -654,26 +661,71 @@ public final class DstController implements IDstController
      */
     @Override
     public boolean Transfer()
-    {
-        boolean result;
+    { 
+        MutablePair<Boolean, Boolean> result = MutablePair.of(true, true);
         
-        switch(this.CurrentMappingDirection())
+        try
         {
-            case FromDstToHub:
-                result = this.TransferToHub();
-                break;
-            case FromHubToDst:
-                result = this.TransferToDst();
-                break;
-            default:
-                result = false;
-                break;        
+            this.isHubSessionRefreshSilent = true;
+               
+            switch(this.CurrentMappingDirection())
+            {
+                case FromDstToHub:
+                    result = this.TransferToHub();
+                    break;
+                case FromHubToDst:
+                    result.left &= this.TransferToDst();
+                    break;
+                default:
+                    result = MutablePair.of(false, false);
+                    break;        
+            }
+            
+            if(result.getRight().booleanValue())
+            {
+                this.SaveMappingConfiguration();
+                result.left &= this.hubController.Refresh();
+            }
+        } 
+        catch (TransactionException exception)
+        {
+            this.logger.catching(exception);
+        }
+        finally
+        {
+            (this.CurrentMappingDirection() == MappingDirection.FromHubToDst ? this.selectedHubMapResultForTransfer : this.selectedDstMapResultForTransfer).clear();
+            this.isHubSessionRefreshSilent = false;
+            this.logService.Append("Reloading the mapping configuration in progress...");
+            this.LoadMapping();
         }
         
-        this.LoadMapping();
-        return result;
+        return result.getLeft();
     }
     
+    /**
+     * Saves the mapping configuration
+     * 
+     * @throws TransactionException
+     */
+    private void SaveMappingConfiguration() throws TransactionException
+    {
+        if(!this.mappingConfigurationService.IsTheCurrentIdentifierMapTemporary())
+        {
+            this.logService.Append("Saving the mapping configuration in progress...");
+
+            Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
+
+            Iteration iterationClone = iterationTransaction.getLeft();
+            ThingTransaction transaction = iterationTransaction.getRight();
+            this.mappingConfigurationService.PersistExternalIdentifierMap(transaction, iterationClone);
+            transaction.createOrUpdate(iterationClone);
+            
+            this.hubController.Write(transaction);
+            this.hubController.Refresh();
+            this.mappingConfigurationService.RefreshExternalIdentifierMap();
+        }
+    }
+
     /**
      * Transfers all the {@linkplain CapellaElement} contained in the {@linkplain hubMapResult} to the DST
      * 
@@ -686,37 +738,13 @@ public final class DstController implements IDstController
             var result = this.transactionService.Commit(() -> PrepareElementsForTransferToCapella());
             this.logService.Append(String.format("Transfered %s elements to Capella", this.selectedHubMapResultForTransfer.size()), result);
             
-            if(!this.mappingConfigurationService.IsTheCurrentIdentifierMapTemporary())
-            {
-                this.logService.Append("Saving the mapping configuration in progress...");
-
-                this.isHubSessionRefreshSilent = true;
-                Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
-    
-                Iteration iterationClone = iterationTransaction.getLeft();
-                ThingTransaction transaction = iterationTransaction.getRight();
-                this.mappingConfigurationService.PersistExternalIdentifierMap(transaction, iterationClone);
-                transaction.createOrUpdate(iterationClone);
-                
-                this.hubController.Write(transaction);
-                result &= this.hubController.Refresh();
-                this.mappingConfigurationService.RefreshExternalIdentifierMap();
-            }
-            
-            this.selectedHubMapResultForTransfer.clear();
-            this.logService.Append("Reloading the mapping configuration in progress...");
-            return result & this.hubController.Refresh();
+            return result;
         } 
         catch (Exception exception)
         {
-            this.logService.Append(exception.toString(), exception);
+            this.logService.Append(String.format("The transfer to Capella failed because %s : %s", exception.getClass().getSimpleName(), exception.toString()), exception);
             this.logger.catching(exception);
             return false;
-        }
-        finally
-        {
-            this.selectedHubMapResultForTransfer.clear();
-            this.isHubSessionRefreshSilent = false;
         }
     }
 
@@ -1035,14 +1063,14 @@ public final class DstController implements IDstController
     /**
      * Transfers all the {@linkplain Thing} contained in the {@linkplain dstMapResult} to the Hub
      * 
-     * @return a value indicating that all transfer could be completed
+     * @return a {@linkplain MutablePair} of value where one indicates that all transfer could be completed and
+     * the other one indicates whether the mapping configuration should be persisted
      */
     @Override
-    public boolean TransferToHub()
+    public MutablePair<Boolean, Boolean> TransferToHub()
     {
         try
         {
-            this.isHubSessionRefreshSilent = true;
             Pair<Iteration, ThingTransaction> iterationTransaction = this.hubController.GetIterationTransaction();
             Iteration iterationClone = iterationTransaction.getLeft();
             ThingTransaction transaction = iterationTransaction.getRight();
@@ -1050,36 +1078,26 @@ public final class DstController implements IDstController
             if(!this.hubController.TrySupplyAndCreateLogEntry(transaction))
             {
                 this.logService.Append("Transfer to the HUB aborted!");
-                return true;
+                return MutablePair.of(true, false);
             }
             
             this.PrepareThingsForTransfer(iterationClone, transaction);
-
-            this.mappingConfigurationService.PersistExternalIdentifierMap(transaction, iterationClone);
-            transaction.createOrUpdate(iterationClone);
-            
             this.hubController.Write(transaction);
+            
             boolean result = this.hubController.Refresh();
-            this.mappingConfigurationService.RefreshExternalIdentifierMap();
             this.PrepareParameterOverrides();
             result &= this.hubController.Refresh();
             this.UpdateParameterValueSets();
-            this.isHubSessionRefreshSilent = true;
-            return result && this.hubController.Refresh();
+            return MutablePair.of(result, true);
         }
         catch (Exception exception)
         {
-            this.logService.Append(exception.toString(), exception);
-            return false;
-        }
-        finally
-        {
-            this.selectedDstMapResultForTransfer.clear();
-            this.isHubSessionRefreshSilent = true;
+            this.logService.Append(String.format("The transfer to the HUB failed because %s : %s", exception.getClass().getSimpleName(), exception.toString()), exception);
+            return MutablePair.of(false, true);
         }
     }
 
-    /**
+   /**
     * Prepares all the {@linkplain ParameterOverrides}s that are to be updated or created
     * 
     * @throws TransactionException can throw {@linkplain TransactionException}

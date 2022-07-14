@@ -42,6 +42,7 @@ import Views.ExchangeHistory.ExchangeHistoryDialog;
 /**
  * The {@linkplain OpenLocalExchangeHistoryCommand} is the command {@linkplain AbstractHandler} to handle the local exchange history dialog
  */
+@Annotations.ExludeFromCodeCoverageGeneratedReport
 public class OpenLocalExchangeHistoryCommand extends AbstractHandler
 {
     /**
