@@ -30,8 +30,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.common.util.EList;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.capella.core.data.capellacore.TypedElement;
+import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.Interface;
 import org.polarsys.capella.core.data.fa.ComponentPort;
@@ -193,7 +196,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             if(mappedElement.GetDstElement() == null)
             {
                 var component = this.GetOrCreateComponent(mappedElement.GetHubElement(), mappedElement.GetTargetArchitecture());
-                mappedElement.SetDstElement(component);
+                mappedElement.SetDstElement(component.getLeft());
             }
             
             this.MapContainedElement(mappedElement, mappedElement.GetTargetArchitecture());
@@ -334,25 +337,30 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * Updates the containment information of the provided parent and component
      * 
      * @param parent the {@linkplain Component} parent
-     * @param component the {@linkplain Component} child
+     * @param componentWithPart the {@linkplain Pair} of child component and its {@linkplain Part}
      */
-    private void UpdateContainement(Component parent, Component component)
+    private void UpdateContainement(Component parent, Pair<Component, Part> componentWithPart)
     {
         if(parent.eContents().stream()
                 .filter(x -> x instanceof Component)
                 .map(x -> (Component)x)
-                .anyMatch(x -> AreTheseEquals(x.getId(), component.getId())))
+                .anyMatch(x -> componentWithPart != null && AreTheseEquals(x.getId(), componentWithPart.getLeft().getId())))
         {
             return;
         }
         
         if(parent instanceof PhysicalComponent)
         {
-            this.UpdateContainement((PhysicalComponent)component, ((PhysicalComponent)parent).getOwnedPhysicalComponents());
+            this.UpdateContainement((PhysicalComponent)componentWithPart.getLeft(), ((PhysicalComponent)parent).getOwnedPhysicalComponents());
         }
         else if(parent instanceof LogicalComponent)
         {
-            this.UpdateContainement((LogicalComponent)component, ((LogicalComponent)parent).getOwnedLogicalComponents());
+            this.UpdateContainement((LogicalComponent)componentWithPart.getLeft(), ((LogicalComponent)parent).getOwnedLogicalComponents());
+        }
+        
+        if(componentWithPart.getRight() != null)
+        {
+            parent.getOwnedFeatures().add(componentWithPart.getRight());
         }
     }
 
@@ -738,6 +746,8 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         for (var containedUsage : mappedElement.GetHubElement().getContainedElement().stream()
                 .filter(x -> x.getInterfaceEnd() == InterfaceEndKind.NONE).collect(Collectors.toList()))
         {
+            Ref<Pair<Component, Part>> componentWithPart = new Ref<Pair<Component, Part>>(null);
+            
             MappedElementDefinitionRowViewModel usageDefinitionMappedElement = this.elements.stream()
                     .filter(x -> ((x.GetDstElement() != null && AreTheseEquals(x.GetDstElement().getName(), containedUsage.getName(), true))
                             || AreTheseEquals(containedUsage.getElementDefinition().getIid(), x.GetHubElement().getIid()))
@@ -745,8 +755,10 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
                     .findFirst()
                     .orElseGet(() -> 
                     {
+                        componentWithPart.Set(this.GetOrCreateComponent(containedUsage, targetArchitecture));
+                        
                         var newMappedElement = new MappedElementDefinitionRowViewModel(containedUsage.getElementDefinition(),
-                                this.GetOrCreateComponent(containedUsage, targetArchitecture), MappingDirection.FromHubToDst);
+                                componentWithPart.Get().getLeft(), MappingDirection.FromHubToDst);
                         
                         newMappedElement.SetTargetArchitecture(targetArchitecture);
                         this.elements.add(newMappedElement);
@@ -755,11 +767,17 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             
             if(usageDefinitionMappedElement.GetDstElement() == null)
             {
-                usageDefinitionMappedElement.SetDstElement(this.GetOrCreateComponent(containedUsage, targetArchitecture));
+                componentWithPart.Set(this.GetOrCreateComponent(containedUsage, targetArchitecture));
+                usageDefinitionMappedElement.SetDstElement(componentWithPart.Get().getLeft());
+            }
+            
+            if(!componentWithPart.HasValue())
+            {
+                componentWithPart.Set(Pair.of(usageDefinitionMappedElement.GetDstElement(), null));
             }
             
             this.MapProperties(containedUsage, usageDefinitionMappedElement.GetDstElement());
-            this.UpdateContainement(mappedElement.GetDstElement(), usageDefinitionMappedElement.GetDstElement());
+            this.UpdateContainement(mappedElement.GetDstElement(), componentWithPart.Get());
             this.MapPort(usageDefinitionMappedElement);
 
             if(!AreTheseEquals(mappedElement.GetHubElement().getIid(), usageDefinitionMappedElement.GetHubElement().getIid()))
@@ -776,7 +794,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * @param targetArchitecture the {@linkplain CapellaArchitecture} that determines the type of the component
      * @return an existing or a new {@linkplain Component}
      */
-    private Component GetOrCreateComponent(ElementBase elementBase, CapellaArchitecture targetArchitecture)
+    private Pair<Component, Part> GetOrCreateComponent(ElementBase elementBase, CapellaArchitecture targetArchitecture)
     {
         @SuppressWarnings("unchecked")
         var refComponentType = new Ref<>((Class<Class<? extends Component>>) Component.class.getClass());
@@ -785,10 +803,39 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         {
             refComponentType.Set(PhysicalComponent.class);
         }
-           
-        return this.GetOrCreateComponent(elementBase.getName(), refComponentType.Get());
+
+        var component = this.GetOrCreateComponent(elementBase.getName(), refComponentType.Get());
+        
+        if(component != null)
+        {
+            return Pair.of(component, this.GetOrCreatePart(component));
+        }
+        
+        return Pair.of(component, null);
     }
     
+    /**
+     * Creates the {@linkplain Part} if non existent otherwise returns null
+     * 
+     * @param typeReference the {@linkplain Component} type reference
+     * @return a {@linkplain Part}
+     */
+    private Part GetOrCreatePart(Component typeReference)
+    {
+        if(typeReference.eContainer() != null && typeReference.eContainer() instanceof Component 
+                && typeReference.eContents().stream()
+                .anyMatch(x -> x instanceof Part 
+                        && ((TypedElement)x).getType() != null 
+                        && ((TypedElement)x).getType().getId().equals(typeReference.getId())))
+        {
+            return null;
+        }
+        
+        var part = this.transactionService.Create(Part.class, typeReference.getName());
+        part.setAbstractType(typeReference);
+        return part;
+    }
+
     /**
      * Gets the {@linkplain RequirementType} based on the {@linkplain Category} applied to the provided {@linkplain cdp4common.engineeringmodeldata.Requirement}
      * 
