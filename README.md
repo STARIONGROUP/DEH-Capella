@@ -9,6 +9,7 @@ The DEH Capella adapter is supported by all Capella versions starting from Capel
 
 - Download the [latest release](https://github.com/RHEAGROUP/DEH-Capella/releases/latest).
 - Drag and drop the downloaded zip file onto the "Install new Software" window of Capella and the select the DEH Capella Adapter plugin in the list.
+- Uncheck the checkbox "Group Items by category" in the case no feature are visible.
 - Follow the plugin installation process in Capella.
 - The same step applies for updating the adapter.
 
