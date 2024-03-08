@@ -74,11 +74,15 @@ public class ComponentRowViewModel extends ElementRowViewModel<Component> implem
     {
         for (var element : this.GetElement().eContents())
         {
+//            if(element instanceof Part)
+//            {
+//                continue;
+//            }
             if(element instanceof Part)
             {
-                continue;
+                this.GetContainedRows().add(new PartRowViewModel(this, (Part)element));
             }
-            if(element instanceof Property)
+            else if(element instanceof Property)
             {
                 this.GetContainedRows().add(new PropertyRowViewModel(this, (Property)element));
             }

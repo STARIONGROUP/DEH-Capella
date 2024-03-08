@@ -43,6 +43,7 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.polarsys.capella.core.data.capellacommon.CapellacommonPackage;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.CapellacorePackage;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.CsPackage;
@@ -257,7 +258,7 @@ public final class StereotypeUtils
      */
     public static Pair<EClassifier, EFactory> GetEClassAndFactory(String className)
     {
-        for (var ePackage : GetEPackages())
+        for (var ePackage : StereotypeUtils.GetEPackages())
         {
             var eClass = ePackage.getEClassifier(className);
             
@@ -277,7 +278,7 @@ public final class StereotypeUtils
      */
     private static List<EPackage> GetEPackages()
     {
-        return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, 
+        return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, CapellacorePackage.eINSTANCE,
                 InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE, CapellacommonPackage.eINSTANCE, CsPackage.eINSTANCE);
     }
 

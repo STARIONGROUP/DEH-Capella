@@ -43,11 +43,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.EnumerationPropertyType;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Namespace;
 import org.polarsys.capella.core.data.capellacore.Trace;
+import org.polarsys.capella.core.data.capellacore.TypedElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.Interface;
+import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
@@ -104,6 +107,7 @@ import cdp4common.engineeringmodeldata.Relationship;
 import cdp4common.engineeringmodeldata.RequirementsGroup;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.engineeringmodeldata.ValueSet;
+import cdp4common.sitedirectorydata.EnumerationParameterType;
 import cdp4common.sitedirectorydata.MeasurementScale;
 import cdp4common.types.ContainerList;
 import cdp4dal.exceptions.TransactionException;
@@ -963,6 +967,20 @@ public final class DstController implements IDstController
         childrenSelector.apply(original).add(element);
         this.exchangeHistory.Append(container, ChangeKind.UPDATE);
         this.exchangeHistory.Append(element, ChangeKind.CREATE);
+
+        if(container instanceof Component 
+                && container.eContents().stream()
+                .anyMatch(x -> x instanceof Part 
+                        && ((Part)x).getAbstractType() != null 
+                        && ((Part)x).getAbstractType().getId().equals(element.getId()) 
+                        && AreTheseEquals(((Part)x).getName(), element.getName())))
+        {
+            return;
+        }
+        
+        var part = this.transactionService.Create(Part.class, element.getName());
+        part.setAbstractType(original);
+        original.getOwnedFeatures().add(part);
     }
     
     /**
@@ -1023,6 +1041,12 @@ public final class DstController implements IDstController
             }
             
             childrenSelector.apply(clonedReference.GetOriginal()).add(containedElement);
+        }
+        
+        for (var part : clonedReference.GetClone().getContainedParts())
+        {
+            clonedReference.GetOriginal().getOwnedFeatures().removeIf(x -> x instanceof Part && AreTheseEquals(x.getId(), part.getId()));
+            clonedReference.GetOriginal().getOwnedFeatures().add(part);
         }
         
         for (var clonedPort : clonedReference.GetClone().getContainedComponentPorts())
@@ -1527,9 +1551,9 @@ public final class DstController implements IDstController
         
         for (var elements : elementsBySession.values())
         {
-            var element = elements.stream().filter(predicate).findFirst();
+            var element = elements.stream().filter(x -> refElement.GetType().isInstance(x)).filter(predicate).findFirst();
             
-            if(element.isPresent() && refElement.GetType().isInstance(element.get()))
+            if(element.isPresent())
             {
                 refElement.Set((TElement) element.get());
                 break;
@@ -1539,6 +1563,40 @@ public final class DstController implements IDstController
         return refElement.HasValue();
     }
 
+
+    /**
+     * Tries to get a {@linkplain EnumerationPropertyType} that matches the provided {@linkplain EnumerationParameterType}
+     * 
+     * @param thing the {@linkplain #TThing} of reference
+     * @param referenceElement a {@linkplain CapellaElement} that will point to the right session
+     * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
+     * @return a {@linkplain boolean}
+     */
+    @Override
+    public boolean TryGetEnumerationPropertyType(EnumerationParameterType thing, CapellaElement referenceElement, Ref<EnumerationPropertyType> refDataType)
+    {
+        var sessionUri = this.capellaSessionService.GetSession(referenceElement).getSessionResource().getURI();
+        
+        var elementsBySession = this.capellaSessionService.GetAllCapellaElementsFromOpenSessions();
+                
+        var dataTypes = elementsBySession.get(sessionUri).stream()
+                .filter(x -> x instanceof EnumerationPropertyType)
+                .map(x -> (EnumerationPropertyType)x)
+                .collect(Collectors.toList());
+        
+        var optionalDatatype = dataTypes.stream()
+                .filter(x -> AreTheseEquals(x.getName(), thing.getName(), true) 
+                        || AreTheseEquals(x.getName(), thing.getShortName(), true))
+                .findAny();
+        
+        if(optionalDatatype.isPresent())
+        {
+            refDataType.Set(optionalDatatype.get());
+        }
+        
+        return refDataType.HasValue();
+    }
+    
     /**
      * Tries to get a {@linkplain DataType} that matches the provided {@linkplain MeasurementScale}
      * 

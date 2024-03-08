@@ -175,7 +175,8 @@ public class MapCommandService implements IMapCommandService
     {
         this.canExecute = Observable.combineLatest(this.dstController.HasAnyOpenSessionObservable().startWith(this.sessionService.HasAnyOpenSession()), 
                     this.hubController.GetIsSessionOpenObservable().startWith(this.hubController.GetIsSessionOpen()),
-                (hasAnyOpenSession, isHubSessionOpen) -> hasAnyOpenSession && isHubSessionOpen);
+                (hasAnyOpenSession, isHubSessionOpen) -> 
+        hasAnyOpenSession && isHubSessionOpen);
     }
     
     /**

@@ -209,7 +209,14 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
      */
     protected RootRowViewModel ComputeDifferences()
     {
-        var rootRowViewModel = (RootRowViewModel) this.browserTreeModel.Value().getRoot();
+        var model = this.browserTreeModel.Value();
+        
+        if(model == null)
+        {
+            return null;
+        }
+        
+        var rootRowViewModel = (RootRowViewModel) model.getRoot();
         
         try
         {
@@ -428,12 +435,14 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     @Override
     protected void UpdateBrowserTrees(Boolean isConnected)
     {
-        if(isConnected)
+        if(this.browserTreeModel.Value() == null || this.dstController.GetHubMapResult().isEmpty())
         {
-            var treeModel = this.dstController.GetHubMapResult().isEmpty() 
-                    ? new CapellaObjectBrowserTreeViewModel(this.SessionService.GetModels())
-                    : new CapellaObjectBrowserTreeViewModel(this.ComputeDifferences());
-                        
+            this.SetOutlineModel(DefaultOutlineModel.createOutlineModel(
+                    new CapellaObjectBrowserTreeViewModel(this.SessionService.GetModels()), new CapellaObjectBrowserTreeRowViewModel(), true));
+        }
+        if(isConnected || !this.dstController.GetHubMapResult().isEmpty())
+        {
+            var treeModel = new CapellaObjectBrowserTreeViewModel(this.ComputeDifferences());                        
             this.SetOutlineModel(DefaultOutlineModel.createOutlineModel(treeModel, new CapellaObjectBrowserTreeRowViewModel(), true));
         }
     

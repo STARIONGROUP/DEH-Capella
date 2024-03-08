@@ -38,6 +38,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.common.ef.command.AbstractReadWriteCommand;
 import org.polarsys.capella.common.helpers.TransactionHelper;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.EnumerationPropertyType;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.information.DataPkg;
 import org.polarsys.capella.core.data.information.Unit;
@@ -298,6 +299,7 @@ public class CapellaTransactionService implements ICapellaTransactionService
             return reference;
         }
         
+        this.Logger.error(String.format("Could not initialize the tpe [%s]", clazz.getSimpleName()));
         return null;
     }    
 
@@ -346,7 +348,7 @@ public class CapellaTransactionService implements ICapellaTransactionService
     {
         this.AddReferenceDataToDataPackage(x -> x.getOwnedDataTypes(), newDataType);
     }
-
+   
     /**
      * Adds the provided {@linkplain Unit} to the {@linkplain DataPackage} of the current project
      * 
@@ -356,6 +358,17 @@ public class CapellaTransactionService implements ICapellaTransactionService
     public void AddReferenceDataToDataPackage(Unit newUnit)
     {
         this.AddReferenceDataToDataPackage(x -> x.getOwnedUnits(), newUnit);
+    }
+
+    /**
+     * Adds the provided {@linkplain EnumerationPropertyType} to the {@linkplain DataPackage} of the current project
+     * 
+     * @param newDataType the new {@linkplain DataType}
+     */
+    @Override
+    public void AddReferenceDataToDataPackage(EnumerationPropertyType enumerationPropertyType)
+    {
+        this.AddReferenceDataToDataPackage(x -> x.getOwnedEnumerationPropertyTypes(), enumerationPropertyType);
     }
     
     /**

@@ -28,10 +28,20 @@ import static Utils.Operators.Operators.AreTheseEquals;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.common.util.EList;
+import org.polarsys.capella.core.data.capellacore.AbstractPropertyValue;
+import org.polarsys.capella.core.data.capellacore.Classifier;
+import org.polarsys.capella.core.data.capellacore.EnumerationPropertyLiteral;
+import org.polarsys.capella.core.data.capellacore.EnumerationPropertyType;
+import org.polarsys.capella.core.data.capellacore.EnumerationPropertyValue;
+import org.polarsys.capella.core.data.capellacore.FloatPropertyValue;
+import org.polarsys.capella.core.data.capellacore.IntegerPropertyValue;
+import org.polarsys.capella.core.data.capellacore.BooleanPropertyValue;
+import org.polarsys.capella.core.data.capellacore.StringPropertyValue;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.TypedElement;
 import org.polarsys.capella.core.data.cs.Part;
@@ -80,6 +90,7 @@ import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.ElementUsage;
 import cdp4common.engineeringmodeldata.InterfaceEndKind;
 import cdp4common.engineeringmodeldata.ParameterOrOverrideBase;
+import cdp4common.engineeringmodeldata.ParameterOverride;
 import cdp4common.engineeringmodeldata.Relationship;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import cdp4common.sitedirectorydata.BooleanParameterType;
@@ -116,6 +127,11 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * The {@linkplain Collection} of {@linkplain DataType} that were created during this mapping
      */
     private Collection<DataType> temporaryDataTypes = new ArrayList<>();
+    
+    /**
+     * The {@linkplain Collection} of {@linkplain EnumerationPropertyType} that were created during this mapping
+     */
+    private Collection<EnumerationPropertyType> temporaryEnumerationPropertyTypes = new ArrayList<>();
 
     /**
      * The {@linkplain Collection} of {@linkplain Unit} that were created during this mapping
@@ -341,25 +357,26 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      */
     private void UpdateContainement(Component parent, Pair<Component, Part> componentWithPart)
     {
-        if(parent.eContents().stream()
+        if(parent != null && !parent.eContents().stream()
                 .filter(x -> x instanceof Component)
                 .map(x -> (Component)x)
                 .anyMatch(x -> componentWithPart != null && AreTheseEquals(x.getId(), componentWithPart.getLeft().getId())))
         {
-            return;
-        }
-        
-        if(parent instanceof PhysicalComponent)
-        {
-            this.UpdateContainement((PhysicalComponent)componentWithPart.getLeft(), ((PhysicalComponent)parent).getOwnedPhysicalComponents());
-        }
-        else if(parent instanceof LogicalComponent)
-        {
-            this.UpdateContainement((LogicalComponent)componentWithPart.getLeft(), ((LogicalComponent)parent).getOwnedLogicalComponents());
+            if(parent instanceof PhysicalComponent)
+            {
+                this.UpdateContainement((PhysicalComponent)componentWithPart.getLeft(), ((PhysicalComponent)parent).getOwnedPhysicalComponents());
+            }
+            else if(parent instanceof LogicalComponent)
+            {
+                this.UpdateContainement((LogicalComponent)componentWithPart.getLeft(), ((LogicalComponent)parent).getOwnedLogicalComponents());
+            }
         }
         
         if(componentWithPart.getRight() != null)
         {
+            parent.getOwnedFeatures().removeIf(x -> x instanceof Part && AreTheseEquals(componentWithPart.getRight().getName(), x.getName()) 
+                    && AreTheseEquals(componentWithPart.getRight().getAbstractType().getId(), ((Part)x).getAbstractType().getId()));
+            
             parent.getOwnedFeatures().add(componentWithPart.getRight());
         }
     }
@@ -394,7 +411,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * @param hubElement the {@linkplain ElementUsage} from which the properties are to be mapped
      * @param component the target {@linkplain Component}
      */
-    private void MapProperties(ElementUsage hubElement, Component component)
+    private void MapProperties(ElementUsage hubElement, NamedElement element)
     {
         var allParametersAndOverrides = hubElement.getElementDefinition().getParameter().stream()
                 .filter(x -> hubElement.getParameterOverride().stream()
@@ -404,9 +421,58 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         
         allParametersAndOverrides.addAll(hubElement.getParameterOverride());
         
-        this.MapProperties(allParametersAndOverrides, component);
+        if(element instanceof Component)
+        {
+            this.MapProperties(allParametersAndOverrides, (Component)element);
+        }
+        else if(element instanceof Part)
+        {
+            this.MapProperties(allParametersAndOverrides, ((Part)element)); //getOwnedPropertyValues
+        }
     }
     
+    /**
+     * Maps the properties of the provided {@linkplain Collection} of {@linkplain ParameterOrOverrideBase}
+     * 
+     * @param parameters the {@linkplain Collection} of {@linkplain ParameterOrOverrideBase} to map
+     * @param component the target {@linkplain Component}
+     */
+    @SuppressWarnings("unchecked")
+    private void MapProperties(Collection<? extends ParameterOrOverrideBase> parameters, Part part)
+    {
+        for (var parameter : parameters)
+        {
+            Ref<EnumerationPropertyType> refEnumerationType = new Ref<>(EnumerationPropertyType.class);            
+            Ref<? extends AbstractPropertyValue> refProperty = null;
+            
+            if(parameter.getParameterType() instanceof QuantityKind)
+            {
+                refProperty = new Ref<FloatPropertyValue>(FloatPropertyValue.class);
+            }
+            else if(parameter.getParameterType() instanceof BooleanParameterType)
+            {
+                refProperty = new Ref<BooleanPropertyValue>(BooleanPropertyValue.class);
+            }
+            else if(parameter.getParameterType() instanceof EnumerationParameterType)
+            {
+                this.GetOrCreateDataType((EnumerationParameterType)parameter.getParameterType(), part, refEnumerationType);
+                refProperty = new Ref<EnumerationPropertyValue>(EnumerationPropertyValue.class);
+            }
+            else
+            {
+                refProperty = new Ref<StringPropertyValue>(StringPropertyValue.class);
+            }
+
+            if(!TryGetExistingProperty(part, parameter, (Ref<AbstractPropertyValue>) refProperty))
+            {
+                this.CreatePropertyValue(parameter, (Ref<AbstractPropertyValue>) refProperty, refEnumerationType);
+                part.getOwnedPropertyValues().add(refProperty.Get());
+            }
+
+            this.UpdateValue(refProperty.Get(), parameter);
+        }
+    }
+
     /**
      * Maps the properties of the provided {@linkplain Collection} of {@linkplain ParameterOrOverrideBase}
      * 
@@ -453,7 +519,31 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             this.GetOrCreateDataType(parameter.getParameterType(), component, refParameterType);
         }
     }
-    
+
+
+    /**
+     * Get or creates the {@linkplain DataType} that matches the provided {@linkplain ParameterType}
+     * 
+     * @param parameterType the {@linkplain ParameterType} to map
+     * @param component the target {@linkplain Component}
+     * @param refParameterType the {@linkplain Ref} of {@linkplain DataType} that will contains the output {@linkplain DataType}
+     */
+    private void GetOrCreateDataType(EnumerationParameterType parameterType, Part part, Ref<EnumerationPropertyType> refParameterType)
+    {
+        this.QueryCollectionByNameAndShortName(parameterType, this.temporaryEnumerationPropertyTypes, refParameterType);
+        
+        if(!refParameterType.HasValue() && !this.dstController.TryGetEnumerationPropertyType(parameterType, this.sessionService.GetTopElement(), refParameterType))
+        {
+            var newDataType = this.transactionService.Create(EnumerationPropertyType.class, parameterType.getName());
+            
+            this.CreateEnumerationLiterals(newDataType, (EnumerationParameterType)parameterType);
+            
+            this.temporaryEnumerationPropertyTypes.add(newDataType);
+            this.transactionService.AddReferenceDataToDataPackage(newDataType);
+            refParameterType.Set(newDataType);
+        }
+    }
+
 
     /**
      * Get or creates the {@linkplain DataType} that matches the provided {@linkplain ParameterType}
@@ -496,6 +586,23 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
     }
 
     /**
+     * Creates the possible {@linkplain EnumerationLiteral} for the provided {@linkplain Enumeration} based on the provided {@linkplain EnumerationParameterType}
+     * 
+     * @param enumerationDataType the {@linkplain Enumeration} data type
+     * @param enumerationParameterType the {@linkplain EnumerationParameterType} parameter type
+     */
+    private void CreateEnumerationLiterals(EnumerationPropertyType enumerationDataType, EnumerationParameterType enumerationParameterType)
+    {
+        for (var valueDefinition : enumerationParameterType.getValueDefinition().stream()
+                .filter(x -> enumerationDataType.getOwnedLiterals().stream()
+                        .noneMatch(l -> AreTheseEquals(l.getName(), x.getName(), true)))
+                .collect(Collectors.toList()))
+        {
+            enumerationDataType.getOwnedLiterals().add(this.transactionService.Create(EnumerationPropertyLiteral.class, valueDefinition.getName()));
+        }
+    }
+    
+    /**
      * Determine the {@linkplain DataType} {@linkplain Class} based on the provided {@linkplain ParameterType}
      * 
      * @param parameterType the {@linkplain ParameterType}
@@ -522,7 +629,7 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * @param component the target {@linkplain Component}
      * @param refParameterType the {@linkplain Ref} of {@linkplain DataType} that will contains the output {@linkplain DataType}
      */
-    private void GetOrCreateDataType(MeasurementScale scale, Component component, Ref<DataType> refParameterType)
+    private void GetOrCreateDataType(MeasurementScale scale, Classifier component, Ref<DataType> refParameterType)
     {
         this.QueryCollectionByNameAndShortName(scale, this.temporaryDataTypes, refParameterType);
         
@@ -587,6 +694,64 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
         }
         
         UpdateValue(refDataValue.Get(), parameter, refProperty);
+    }
+    
+    /**
+     * Updates the value of the provided {@linkplain Property}
+     * 
+     * @param dataValue the {@linkplain DataValue}
+     * @param parameter the {@linkplain ParameterOrOverrideBase} that contains the values to transfer
+     * @param refProperty the {@linkplain Ref} of {@linkplain Property} 
+     */
+    private void UpdateValue(AbstractPropertyValue dataValue, ParameterOrOverrideBase parameter)
+    {
+        var value = ValueSetUtils.QueryParameterBaseValueSet(parameter, 
+                parameter.isOptionDependent() ? this.hubController.GetOpenIteration().getDefaultOption() : null, 
+                        parameter.getStateDependence() != null ? parameter.getStateDependence().getActualState().get(0) : null);
+        
+        var valueString = value.getActualValue().get(0);
+        
+        if(AreTheseEquals(valueString, "-"))
+        {
+            this.logger.warn(String.format("Could not map [%s.] value [%s] to %s", parameter.getContainer().getUserFriendlyName(), 
+                    parameter.getParameterType().getName(), valueString, dataValue.getClass().getSimpleName()));
+            
+            return;
+        }
+        
+        if(dataValue instanceof IntegerPropertyValue)
+        {
+            ((IntegerPropertyValue)dataValue).setValue(Integer.valueOf(valueString));
+        }
+        else if(dataValue instanceof FloatPropertyValue)
+        {
+            ((FloatPropertyValue)dataValue).setValue(Float.valueOf(valueString));
+        }
+        else if(dataValue instanceof BooleanPropertyValue)
+        {
+            ((BooleanPropertyValue)dataValue).setValue(Boolean.valueOf(valueString));
+        }
+        else if(dataValue instanceof StringPropertyValue)
+        {
+            ((StringPropertyValue)dataValue).setValue(valueString);
+        }
+        else if(dataValue instanceof EnumerationPropertyValue)
+        {
+            var enumerationValueDefinition = ((EnumerationParameterType)parameter.getParameterType()).getValueDefinition().stream()
+                .filter(x -> AreTheseEquals(x.getShortName(), valueString, true) || AreTheseEquals(x.getName(), valueString, true))
+                .findFirst();
+            
+            var enumerationType = ((EnumerationPropertyValue)dataValue).getType();
+            
+            if(enumerationValueDefinition.isPresent() && enumerationType instanceof EnumerationPropertyType)
+            {
+                enumerationType.getOwnedLiterals().stream()
+                    .filter(x -> 
+                        AreTheseEquals(x.getName(), enumerationValueDefinition.get().getName(), true))
+                    .findFirst()
+                    .ifPresent(x -> ((EnumerationPropertyValue)dataValue).setValue(x));
+            }
+        }
     }
     
     /**
@@ -694,6 +859,26 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * @param refProperty the {@linkplain Ref} {@linkplain Property}
      * @param dstDataType the {@linkplain Ref} of {@linkplain DataType}
      */
+    private void CreatePropertyValue(ParameterOrOverrideBase parameter, Ref<AbstractPropertyValue> refProperty, Ref<EnumerationPropertyType> dstDataType)
+    {
+        var newProperty = this.transactionService.Create(refProperty.GetType(), parameter.getParameterType().getName());
+        newProperty.setSummary(String.format("%sparameter [%s]", parameter instanceof ParameterOverride ? "Overrides " : "", parameter.modelCode(null)));
+        
+        if(dstDataType.HasValue())
+        {
+            ((EnumerationPropertyValue)newProperty).setType(dstDataType.Get());
+        }
+        
+        refProperty.Set(newProperty);
+    }
+
+    /**
+     * Creates a {@linkplain Property} based on the provided {@linkplain ParameterOrOverrideBase}
+     * 
+     * @param parameter the {@linkplain ParameterOrOverrideBase}
+     * @param refProperty the {@linkplain Ref} {@linkplain Property}
+     * @param dstDataType the {@linkplain Ref} of {@linkplain DataType}
+     */
     private void CreateProperty(ParameterOrOverrideBase parameter, Ref<Property> refProperty, Ref<DataType> dstDataType)
     {
         var newProperty = this.transactionService.Create(Property.class, parameter.getParameterType().getName());
@@ -722,7 +907,30 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * @param refProperty the {@linkplain Ref} of {@linkplain Property}
      * @return a value indicating whether the {@linkplain Property} could be found
      */
-    private boolean TryGetExistingProperty(Component dstElement, ParameterOrOverrideBase parameter, Ref<Property> refProperty)
+    private boolean TryGetExistingProperty(Part dstElement, ParameterOrOverrideBase parameter, Ref<AbstractPropertyValue> refProperty)
+    {
+        var optionalProperty = dstElement.getOwnedPropertyValues().stream()
+                .filter(x -> AreTheseEquals(x.getName(), parameter.getParameterType().getName(), true)
+                        && refProperty.GetType().isInstance(x))
+                .findFirst();
+        
+        if(optionalProperty.isPresent())
+        {
+            refProperty.Set(optionalProperty.get());
+        }
+        
+        return refProperty.HasValue();
+    }
+    
+    /**
+     * Tries to get an existing {@linkplain Property} that matches the provided {@linkplain ParameterOrOverrideBase}
+     * 
+     * @param dstElement the {@linkplain Component}
+     * @param parameter the {@linkplain ParameterOrOverrideBase} 
+     * @param refProperty the {@linkplain Ref} of {@linkplain Property}
+     * @return a value indicating whether the {@linkplain Property} could be found
+     */
+    private boolean TryGetExistingProperty(Classifier dstElement, ParameterOrOverrideBase parameter, Ref<Property> refProperty)
     {
         var optionalProperty = dstElement.getContainedProperties().stream()
                 .filter(x -> AreTheseEquals(x.getName(), parameter.getParameterType().getName(), true))
@@ -749,14 +957,15 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             Ref<Pair<Component, Part>> componentWithPart = new Ref<Pair<Component, Part>>(null);
             
             MappedElementDefinitionRowViewModel usageDefinitionMappedElement = this.elements.stream()
-                    .filter(x -> ((x.GetDstElement() != null && AreTheseEquals(x.GetDstElement().getName(), containedUsage.getName(), true))
+                    .filter(x -> ((x.GetDstElement() != null && AreTheseEquals(x.GetDstElement().getName(), containedUsage.getElementDefinition().getName(), true))
                             || AreTheseEquals(containedUsage.getElementDefinition().getIid(), x.GetHubElement().getIid()))
                             && x.GetTargetArchitecture() == targetArchitecture)
                     .findFirst()
                     .orElseGet(() -> 
                     {
                         componentWithPart.Set(this.GetOrCreateComponent(containedUsage, targetArchitecture));
-                        
+
+                        this.MapProperties(containedUsage, componentWithPart.Get().getLeft());
                         var newMappedElement = new MappedElementDefinitionRowViewModel(containedUsage.getElementDefinition(),
                                 componentWithPart.Get().getLeft(), MappingDirection.FromHubToDst);
                         
@@ -768,15 +977,16 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             if(usageDefinitionMappedElement.GetDstElement() == null)
             {
                 componentWithPart.Set(this.GetOrCreateComponent(containedUsage, targetArchitecture));
+                this.MapProperties(containedUsage.getElementDefinition(), componentWithPart.Get().getLeft());
                 usageDefinitionMappedElement.SetDstElement(componentWithPart.Get().getLeft());
             }
             
             if(!componentWithPart.HasValue())
             {
-                componentWithPart.Set(Pair.of(usageDefinitionMappedElement.GetDstElement(), null));
+                componentWithPart.Set(Pair.of(usageDefinitionMappedElement.GetDstElement(), this.GetOrCreatePart(usageDefinitionMappedElement.GetDstElement(), containedUsage.getName())));
             }
             
-            this.MapProperties(containedUsage, usageDefinitionMappedElement.GetDstElement());
+            this.MapProperties(containedUsage, componentWithPart.Get().getRight());
             this.UpdateContainement(mappedElement.GetDstElement(), componentWithPart.Get());
             this.MapPort(usageDefinitionMappedElement);
 
@@ -804,14 +1014,13 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
             refComponentType.Set(PhysicalComponent.class);
         }
 
-        var component = this.GetOrCreateComponent(elementBase.getName(), refComponentType.Get());
-        
-        if(component != null)
+        if(elementBase instanceof ElementUsage)
         {
-            return Pair.of(component, this.GetOrCreatePart(component));
+            var component = this.GetOrCreateComponent(((ElementUsage)elementBase).getElementDefinition().getName(), refComponentType.Get());            
+            return Pair.of(component, this.GetOrCreatePart(component, elementBase.getName()));
         }
         
-        return Pair.of(component, null);
+        return Pair.of(this.GetOrCreateComponent(elementBase.getName(), refComponentType.Get()), null);
     }
     
     /**
@@ -820,20 +1029,39 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
      * @param typeReference the {@linkplain Component} type reference
      * @return a {@linkplain Part}
      */
-    private Part GetOrCreatePart(Component typeReference)
+    private Part GetOrCreatePart(Component typeReference, String name)
     {
-        if(typeReference.eContainer() != null && typeReference.eContainer() instanceof Component 
-                && typeReference.eContents().stream()
-                .anyMatch(x -> x instanceof Part 
-                        && ((TypedElement)x).getType() != null 
-                        && ((TypedElement)x).getType().getId().equals(typeReference.getId())))
+        Optional<Part> optionalPart;
+        
+        if(typeReference.eContainer() != null && typeReference.eContainer() instanceof Component)
         {
-            return null;
+            optionalPart = typeReference.eContents().stream()
+            .filter(x -> x instanceof Part 
+                    && ((Part)x).getAbstractType() != null 
+                    && ((Part)x).getAbstractType().getId().equals(typeReference.getId()) 
+                    && AreTheseEquals(((Part)x).getName(), name))
+            .map(x -> (Part)x)
+            .findFirst();
+            
+            if(optionalPart.isPresent())
+            {
+                return optionalPart.get();
+            }               
         }
         
-        var part = this.transactionService.Create(Part.class, typeReference.getName());
-        part.setAbstractType(typeReference);
-        return part;
+        Ref<Part> refPart = new Ref<Part>(Part.class);
+        
+        if(!this.dstController.TryGetElementBy(x -> x instanceof NamedElement && 
+                AreTheseEquals(((NamedElement) x).getName(), name, true), refPart))
+        {
+            var part = this.transactionService.Create(Part.class, name);
+            part.setAbstractType(typeReference);
+            return part;
+        }
+        else
+        {
+            return this.transactionService.Clone(refPart.Get());
+        }    
     }
 
     /**

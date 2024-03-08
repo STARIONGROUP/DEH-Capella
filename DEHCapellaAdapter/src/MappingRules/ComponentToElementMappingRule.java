@@ -41,6 +41,7 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.cs.Interface;
+import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.fa.ComponentPort;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
@@ -178,6 +179,9 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             this.MapCategories(mappedElement);            
             this.MapContainedElement(mappedElement);
             this.MapProperties(mappedElement.GetHubElement(), mappedElement.GetDstElement());
+
+            mappedElement.GetHubElement().setName(mappedElement.GetDstElement().getName());
+            mappedElement.GetHubElement().setShortName(GetShortName(mappedElement.GetDstElement()));
         }
         
         this.MapPorts();
@@ -332,11 +336,11 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
     {
         for (var containedElement : mappedElement.GetDstElement().eContents()
                 .stream()
-                .filter(x -> x instanceof Component)
-                .map(x -> (Component)x)
+                .filter(x -> x instanceof Part)
+                .map(x -> (Part)x)
                 .collect(Collectors.toList()))
         {
-            this.MapContainedElement(mappedElement.GetHubElement(), containedElement);
+            this.MapContainedElement(mappedElement.GetHubElement(), containedElement, (Component)containedElement.getAbstractType());
         }
     }
         
@@ -346,7 +350,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
      * @param container the {@linkplain ElementDefinition} container
      * @param component the contained element to map
      */
-    private void MapContainedElement(ElementDefinition container, Component component)
+    private void MapContainedElement(ElementDefinition container, Part part, Component component)
     {
         MappedElementDefinitionRowViewModel mappedElement = this.elements.stream()
                 .filter(x -> AreTheseEquals(x.GetDstElement().getId(), component.getId()))
@@ -370,7 +374,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         
         this.MapProperties(mappedElement.GetHubElement(), component);
         
-        var elementUsage = this.GetOrCreateElementUsage(container, component, mappedElement);
+        var elementUsage = this.GetOrCreateElementUsage(container, part, mappedElement);
         
         this.MapProperties(elementUsage, mappedElement.GetHubElement(), component);
         
@@ -382,39 +386,42 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
      * Gets or create the {@linkplain ElementUsage} that matches the {@linkplain Component}
      * 
      * @param container the {@linkplain ElementDefinition} container
-     * @param component the contained element to map
+     * @param part the contained element to map
      * @param mappedElement the {@linkplain MappedElementDefinitionRowViewModel} of the container
      * @return an {@linkplain ElementUsage}
      */
-    private ElementUsage GetOrCreateElementUsage(ElementDefinition container, Component component,
+    private ElementUsage GetOrCreateElementUsage(ElementDefinition container, Part part,
             MappedElementDefinitionRowViewModel mappedElement)
     {
-        return container.getContainedElement()
+        var usage = container.getContainedElement()
                 .stream()
-                .filter(x -> x.getDefinition()
-                        .stream()
-                        .filter(d -> AreTheseEquals(d.getLanguageCode(), CIID))
-                        .anyMatch(d -> AreTheseEquals(d.getContent(), component.getId())))
+                .filter(x -> AreTheseEquals(part.getName(), x.getName()) && 
+                        AreTheseEquals(mappedElement.GetHubElement().getIid(), x.getElementDefinition().getIid()))
                 .findFirst()
                 .map(x -> x.clone(false))
                 .orElseGet(() ->
                 {
-                    var usage = new ElementUsage();
-                    usage.setName(mappedElement.GetHubElement().getName());
-                    usage.setShortName(mappedElement.GetHubElement().getShortName());
-                    usage.setIid(UUID.randomUUID());
-                    usage.setOwner(this.hubController.GetCurrentDomainOfExpertise());
-                    usage.setElementDefinition(mappedElement.GetHubElement());
+                    var newUsage = new ElementUsage();
+                    newUsage.setName(part.getName());
+                    newUsage.setShortName(part.getName());
+                    newUsage.setIid(UUID.randomUUID());
+                    newUsage.setOwner(this.hubController.GetCurrentDomainOfExpertise());
+                    newUsage.setElementDefinition(mappedElement.GetHubElement());
             
                     var definition = new Definition();
                     
                     definition.setIid(UUID.randomUUID());
-                    definition.setContent(component.getId());
+                    definition.setContent(part.getId());
                     definition.setLanguageCode(CIID);
-                    usage.getDefinition().add(definition);
+                    newUsage.getDefinition().add(definition);
                     
-                    return usage;
+                    return newUsage;
                 });
+
+        usage.setName(part.getName());
+        usage.setShortName(part.getName());
+        
+        return usage;
     }
     
     /**
@@ -439,6 +446,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         var shortName = GetShortName(name);
         
         Predicate<? super ElementDefinition> matcher = x -> AreTheseEquals(x.getShortName(), shortName, true) || AreTheseEquals(x.getName(), name);
+        
         ElementDefinition elementDefinition = this.elements.stream()
                 .filter(x -> x.GetHubElement() != null)
                 .map(x -> x.GetHubElement())
@@ -462,6 +470,9 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             
             return elementDefinition;
         }
+
+        elementDefinition.setName(name);
+        elementDefinition.setShortName(shortName);
 
         return elementDefinition;
     }

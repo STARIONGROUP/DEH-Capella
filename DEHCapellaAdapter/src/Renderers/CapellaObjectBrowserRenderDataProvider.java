@@ -32,6 +32,7 @@ import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.capellamodeller.Project;
 import org.polarsys.capella.core.data.capellamodeller.SystemEngineering;
 import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.fa.ComponentPort;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.DataValue;
@@ -160,6 +161,10 @@ public class CapellaObjectBrowserRenderDataProvider extends ObjectBrowserRenderD
             else if(element.GetElement() instanceof Component)
             {
                 return ImageLoader.GetIcon(ClassKind.ElementDefinition);
+            }
+            else if(element.GetElement() instanceof Part)
+            {
+                return ImageLoader.GetIcon(ClassKind.ElementUsage);
             }
             else if(element.GetElement() instanceof Requirement)
             {

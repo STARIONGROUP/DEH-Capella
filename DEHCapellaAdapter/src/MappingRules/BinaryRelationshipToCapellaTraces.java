@@ -130,11 +130,11 @@ public class BinaryRelationshipToCapellaTraces extends HubToDstBaseMappingRule<H
      * @param relationshipAndPairs a {@linkplain HashMap} of {@linkplain BinaryRelationship} and a {@linkplain Pair} of {@linkplain MappedElementRowViewModel}
      * @return a new {@linkplain Trace}
      */
-    private Trace CreateTrace(
-            Entry<BinaryRelationship, Pair<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>, MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>> relationshipAndPairs)
+    private Trace CreateTrace(Entry<BinaryRelationship, 
+            Pair<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>, MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>> relationshipAndPairs)
     {
         var newTrace = this.transactionService.Create(GenericTrace.class);
-        newTrace.setSummary(relationshipAndPairs.getKey().getName().toLowerCase());
+        newTrace.setSummary(relationshipAndPairs.getKey().getName());
         
         var sourceElement = relationshipAndPairs.getValue().getLeft().GetDstElement();
         

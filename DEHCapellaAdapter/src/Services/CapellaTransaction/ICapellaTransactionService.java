@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.EnumerationPropertyType;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
@@ -97,6 +98,13 @@ public interface ICapellaTransactionService
      * @param newDataType the new {@linkplain DataType}
      */
     void AddReferenceDataToDataPackage(DataType newDataType);
+
+    /**
+     * Adds the provided {@linkplain EnumerationPropertyType} to the {@linkplain DataPackage} of the current project
+     * 
+     * @param newDataType the new {@linkplain DataType}
+     */
+    void AddReferenceDataToDataPackage(EnumerationPropertyType enumerationPropertyType);
 
     /**
      * Gets the {@linkplain ClonedReferenceElement} where the element id == the provided {@linkplain #TElement} id

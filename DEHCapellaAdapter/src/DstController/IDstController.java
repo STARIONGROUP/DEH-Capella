@@ -28,6 +28,7 @@ import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.EnumerationPropertyType;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Trace;
 import org.polarsys.capella.core.data.information.datatype.DataType;
@@ -42,6 +43,7 @@ import cdp4common.commondata.NamedThing;
 import cdp4common.commondata.ShortNamedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.BinaryRelationship;
+import cdp4common.sitedirectorydata.EnumerationParameterType;
 import cdp4common.sitedirectorydata.MeasurementScale;
 import io.reactivex.Observable;
 
@@ -190,6 +192,16 @@ public interface IDstController extends IDstControllerBase<NamedElement>
      * @return a {@linkplain boolean}
      */
     <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, CapellaElement referenceElement, Ref<DataType> refDataType);
+
+    /**
+     * Tries to get a {@linkplain EnumerationPropertyType} that matches the provided {@linkplain EnumerationParameterType}
+     * 
+     * @param thing the {@linkplain #TThing} of reference
+     * @param referenceElement a {@linkplain CapellaElement} that will point to the right session
+     * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
+     * @return a {@linkplain boolean}
+     */
+    boolean TryGetEnumerationPropertyType(EnumerationParameterType thing, CapellaElement referenceElement, Ref<EnumerationPropertyType> refDataType);
 
     /**
      * Gets a value indicating whether there is any session open in Capella
