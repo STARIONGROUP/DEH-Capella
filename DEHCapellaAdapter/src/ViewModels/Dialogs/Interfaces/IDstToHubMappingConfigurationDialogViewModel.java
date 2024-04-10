@@ -32,6 +32,6 @@ import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 /**
  * The {@linkplain IDstToHubMappingConfigurationDialogViewModel} is the interface definition for the {@linkplain DstToHubMappingConfigurationDialogViewModel}
  */
-public interface IDstToHubMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<EObject, NamedElement, ElementRowViewModel<? extends NamedElement>>
+public interface IDstToHubMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<EObject, NamedElement, ElementRowViewModel<? extends CapellaElement>>
 {
 }

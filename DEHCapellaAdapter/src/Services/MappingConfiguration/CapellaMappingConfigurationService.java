@@ -29,14 +29,18 @@ import static Utils.Stereotypes.StereotypeUtils.GetChildren;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.MutableTriple;
+import org.polarsys.capella.common.data.modellingcore.AbstractNamedElement;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.requirement.Requirement;
 
 import Enumerations.CapellaArchitecture;
@@ -56,6 +60,7 @@ import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.commondata.NamedThing;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ElementDefinition;
+import cdp4common.engineeringmodeldata.ElementUsage;
 import cdp4common.engineeringmodeldata.ExternalIdentifierMap;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 
@@ -113,9 +118,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         {
             mappedElements.addAll(this.LoadMapping(sessionsAndElementsMap.get(sessionUri)));
         }
-        
-        this.LoadMappingForMissingCapellaElement(mappedElements);
-        
+                
         return mappedElements;
     }
 
@@ -130,7 +133,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         
         var correspondencesNotLoaded = this.correspondences.stream()
                 .filter(x -> x.middle.MappingDirection == MappingDirection.FromHubToDst && mappedElementRowViewModels.stream()
-                        .noneMatch(p -> AreTheseEquals(x.right, p.GetHubElement().getIid())))
+                        .noneMatch(p -> p.GetHubElement() != null && AreTheseEquals(x.right, p.GetHubElement().getIid())))
                 .collect(Collectors.toList());
         
         for (MutableTriple<UUID, CapellaExternalIdentifier, UUID> correspondence : correspondencesNotLoaded)
@@ -209,81 +212,99 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         
         for (var element : elements)
         {
-            var refMappedElementRowViewModel = new Ref<>(IMappedElementRowViewModel.class);
-            
-            if(this.TryGetMappedElement(element, refMappedElementRowViewModel))
-            {
-                mappedElements.add(refMappedElementRowViewModel.Get());
-            }
+            mappedElements.addAll(this.GetMappedElements(element));
         }
         
         return mappedElements;
     }
     
     /**
-     * Tries to get the {@linkplain IMappedElementRowViewModel} depending if the provided {@linkplain Class} 
-     * has a mapping defined in the currently loaded externalIdentifier map and if the corresponding {@linkplain Thing} is present in the cache
-     * 
-     * @param element the {@linkplain CapellaElement} element
-     * @return a {@linkplain Ref} of {@linkplain IMappedElementRowViewModel}
+     * Retrieves the mapped elements for the given CapellaElement.
+     *
+     * @param element The CapellaElement for which mapped elements are retrieved.
+     * @return A collection of IMappedElementRowViewModel representing the mapped elements.
      */
-    private boolean TryGetMappedElement(CapellaElement element, Ref<IMappedElementRowViewModel> refMappedElementRowViewModel)
+    private Collection<IMappedElementRowViewModel> GetMappedElements(CapellaElement element)
     {
-        Optional<MutableTriple<UUID, CapellaExternalIdentifier, UUID>> optionalCorrespondence = this.correspondences.stream()
+        var correspondences = this.correspondences.stream()
                 .filter(x -> AreTheseEquals(x.middle.Identifier, element.getId()))
-                .findFirst();
+                .collect(Collectors.toList());
         
-        if(!optionalCorrespondence.isPresent())
+        var result = new ArrayList<IMappedElementRowViewModel>();
+        
+        for(var correspondence : correspondences)
         {
-            return false;
-        }
-        
-        var mappingDirection = optionalCorrespondence.get().middle.MappingDirection;
-        var targetArchitecture = optionalCorrespondence.get().middle.TargetArchitecture;
-        var internalId = optionalCorrespondence.get().right;
-        
-        if(!(targetArchitecture == null || targetArchitecture.AreSameArchitecture(element)))
-        {
-            return false;
-        }
-        
-        if(element instanceof Component)
-        {
-            var refElementDefinition = new Ref<>(ElementDefinition.class);
+            var mappingDirection = correspondence.middle.MappingDirection;
+            var targetArchitecture = correspondence.middle.TargetArchitecture;
+            var internalId = correspondence.right;
             
-            var mappedElement = new MappedElementDefinitionRowViewModel(
-                    mappingDirection == MappingDirection.FromDstToHub 
-                    ? (Component)element 
-                    : this.transactionService.Clone((Component)element), mappingDirection);
-            
-            mappedElement.SetTargetArchitecture(targetArchitecture);
-            
-            if(this.hubController.TryGetThingById(internalId, refElementDefinition))
+            if(!(targetArchitecture == null || targetArchitecture.AreSameArchitecture(element)))
             {
-                mappedElement.SetHubElement(refElementDefinition.Get().clone(false));
+                continue;
             }
-                        
-            refMappedElementRowViewModel.Set(mappedElement);
-        }
-        else if(element instanceof Requirement)
-        {
-            if(mappingDirection == MappingDirection.FromHubToDst)
+            
+            if(element instanceof Part)
             {
-                var mappedElement = new MappedHubRequirementRowViewModel(this.transactionService.Clone((Requirement)element), mappingDirection);
-                this.GetMappedRequirement(mappedElement, internalId);
+                var refElementUsage = new Ref<>(ElementUsage.class);
+                
+                var mappedElement = new MappedElementDefinitionRowViewModel(
+                        mappingDirection == MappingDirection.FromDstToHub 
+                        ? (Part)element 
+                        : this.transactionService.Clone((Part)element), mappingDirection);
+                
                 mappedElement.SetTargetArchitecture(targetArchitecture);
                 
-                refMappedElementRowViewModel.Set(mappedElement);
+                if(this.hubController.TryGetThingById(internalId, refElementUsage))
+                {
+                    mappedElement.SetHubElement(refElementUsage.Get().clone(false));
+                }
+                else
+                {
+                    this.logger.error(String.format("ElementUsage for %s not found", ((NamedElement) element).getName()));
+                    continue;
+                }
+                            
+                result.add(mappedElement);
             }
-            else
+            
+            if(element instanceof Component)
             {
-                var mappedElement = new MappedDstRequirementRowViewModel((Requirement)element, mappingDirection);
-                this.GetMappedRequirement(mappedElement, internalId);
-                refMappedElementRowViewModel.Set(mappedElement);
-            }            
+                var refElementDefinition = new Ref<>(ElementDefinition.class);
+                
+                var mappedElement = new MappedElementDefinitionRowViewModel(
+                        mappingDirection == MappingDirection.FromDstToHub 
+                        ? (Component)element 
+                        : this.transactionService.Clone((Component)element), mappingDirection);
+                
+                mappedElement.SetTargetArchitecture(targetArchitecture);
+                
+                if(this.hubController.TryGetThingById(internalId, refElementDefinition))
+                {
+                    mappedElement.SetHubElement(refElementDefinition.Get().clone(false));
+                }
+                            
+                result.add(mappedElement);
+            }
+            else if(element instanceof Requirement)
+            {
+                if(mappingDirection == MappingDirection.FromHubToDst)
+                {
+                    var mappedElement = new MappedHubRequirementRowViewModel(this.transactionService.Clone((Requirement)element), mappingDirection);
+                    this.GetMappedRequirement(mappedElement, internalId);
+                    mappedElement.SetTargetArchitecture(targetArchitecture);
+                    
+                    result.add(mappedElement);
+                }
+                else
+                {
+                    var mappedElement = new MappedDstRequirementRowViewModel((Requirement)element, mappingDirection);
+                    this.GetMappedRequirement(mappedElement, internalId);
+                    result.add(mappedElement);
+                }            
+            }
         }
         
-        return refMappedElementRowViewModel.HasValue();
+        return result;
     }
 
     /**
@@ -341,7 +362,8 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
         externalIdentifier.TargetArchitecture = targetArchitecture;
         
         this.AddToExternalIdentifierMap(internalId, externalIdentifier, 
-                x -> x.getMiddle().TargetArchitecture == targetArchitecture 
+                x -> x.getMiddle().TargetArchitecture == targetArchitecture
+                    && AreTheseEquals(x.getMiddle().MappingDirection, mappingDirection)
                     && AreTheseEquals(x.getRight(), internalId));
     }
 }

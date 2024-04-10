@@ -114,7 +114,7 @@ public class CapellaTracesToBinaryRelationship extends DstToHubBaseMappingRule<C
             for (var outgoingTrace : sourceElement.GetDstElement().getOutgoingTraces())
             {
                 var optionalTargetElement = elements.stream()
-                        .filter(x -> Operators.AreTheseEquals(x.GetDstElement().getId(), outgoingTrace.getTargetElement().getId()))
+                        .filter(x -> outgoingTrace.getTargetElement() != null && Operators.AreTheseEquals(x.GetDstElement().getId(), outgoingTrace.getTargetElement().getId()))
                         .findFirst();
                 
                 if(!optionalTargetElement.isPresent())

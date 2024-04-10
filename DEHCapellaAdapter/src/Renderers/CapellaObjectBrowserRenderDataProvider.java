@@ -28,6 +28,7 @@ import java.awt.Color;
 import javax.swing.Icon;
 
 import org.polarsys.capella.core.data.capellacore.AbstractPropertyValue;
+import org.polarsys.capella.core.data.capellacore.Relationship;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.capellamodeller.Project;
 import org.polarsys.capella.core.data.capellamodeller.SystemEngineering;
@@ -153,6 +154,10 @@ public class CapellaObjectBrowserRenderDataProvider extends ObjectBrowserRenderD
             else if(element.GetElement() instanceof Structure)
             {
                 return ImageLoader.GetIcon(ImageLoader.ThingFolder, "parametergroup.png");
+            }
+            else if(element.GetElement() instanceof Relationship)
+            {
+                return ImageLoader.GetIcon(ClassKind.Relationship);
             }
             else if(element.GetElement() instanceof ComponentPort)
             {

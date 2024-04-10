@@ -28,6 +28,7 @@ import javax.swing.event.TableModelEvent;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 
 import Annotations.ExludeFromCodeCoverageGeneratedReport;
 import Renderers.CapellaObjectBrowserRenderDataProvider;

@@ -183,7 +183,7 @@ public class BinaryRelationshipToCapellaTraces extends HubToDstBaseMappingRule<H
         var relatedThings = new HashMap<BinaryRelationship, 
                 Pair<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>, MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>>();
         
-        for (var mappedElementRowViewModel : elements)
+        for (var mappedElementRowViewModel : elements.stream().filter(x -> x.GetHubElement() != null).collect(Collectors.toList()))
         {
             for(var relationship : mappedElementRowViewModel.GetHubElement().getRelationships().stream()
                     .filter(x -> x instanceof BinaryRelationship)

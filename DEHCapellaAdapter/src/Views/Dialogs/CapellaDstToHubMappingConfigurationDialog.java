@@ -44,7 +44,7 @@ import cdp4common.commondata.Thing;
  */
 @SuppressWarnings("serial")
 @ExludeFromCodeCoverageGeneratedReport
-public class CapellaDstToHubMappingConfigurationDialog extends MappingConfigurationDialog<IDstToHubMappingConfigurationDialogViewModel, EObject, NamedElement, ElementRowViewModel<? extends NamedElement>>
+public class CapellaDstToHubMappingConfigurationDialog extends MappingConfigurationDialog<IDstToHubMappingConfigurationDialogViewModel, EObject, NamedElement, ElementRowViewModel<? extends CapellaElement>>
 {
     /**
      * Initializes a new {@linkplain CapellaDstToHubMappingConfigurationDialog}

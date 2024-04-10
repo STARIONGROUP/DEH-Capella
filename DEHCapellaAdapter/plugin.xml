@@ -25,6 +25,10 @@
             id="DEH.Capella.MapToHub"
             name="Map Selection To Hub">
       </command>
+       <command categoryId="DEH.Capella.Commands.CommandsCategory"
+            id="DEH.Capella.GenerateArchitectureDiagram"
+            name="Generate Architecture Diagram">
+      </command>
    </extension>
    <extension point="org.eclipse.ui.handlers">
       <handler class="Commands.OpenHubBrowserCommand"
@@ -36,7 +40,10 @@
       <handler class="Commands.OpenLocalExchangeHistoryCommand"
             commandId="DEH.Capella.OpenLocalExchangeHistory">
       </handler>
-      <handler class="Commands.MapToHubCommand"
+      <handler class="Commands.GenerateArchitectureDiagram"
+            commandId="DEH.Capella.GenerateArchitectureDiagram">
+      </handler>
+       <handler class="Commands.MapToHubCommand"
             commandId="DEH.Capella.MapToHub">
       </handler>
       <handler class="Commands.OpenMappingListViewCommand"
@@ -112,6 +119,13 @@
 	      			 	icon="icons/icon16.png"
                    		id="DEH.Capella.ContextMenu.MapToHub"
                    		tooltip="Map the selected element to the Hub"/>
+	   	</menuContribution>
+	   	<menuContribution allPopups="false" locationURI="popup:org.eclipse.ui.popup.any">
+		      <command commandId="DEH.Capella.GenerateArchitectureDiagram"
+		      			style="push"
+	      			 	icon="icons/icon16.png"
+                   		id="DEH.Capella.ContextMenu.GenerateArchitectureDiagram"
+                   		tooltip="Generate The Physical Architecture Diagram From the current state of the Model"/>
 	   	</menuContribution>
    	</extension>
 	<extension point="org.eclipse.ui.views">

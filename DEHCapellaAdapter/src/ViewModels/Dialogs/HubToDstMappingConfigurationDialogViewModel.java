@@ -69,7 +69,7 @@ import io.reactivex.disposables.Disposable;
 /**
  * The {@linkplain HubToDstMappingConfigurationDialogViewModel} is the main view model for the {@linkplain CapellaHubToDstMappingConfigurationDialog}
  */
-public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends NamedElement>> implements IHubToDstMappingConfigurationDialogViewModel
+public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends CapellaElement>> implements IHubToDstMappingConfigurationDialogViewModel
 {
     /**
      * The {@linkplain IDstController}
@@ -92,7 +92,7 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      * @return an {@linkplain IObjectBrowserViewModel}
      */
     @Override
-    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends NamedElement>> GetDstObjectBrowserViewModel()
+    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> GetDstObjectBrowserViewModel()
     {
         return this.dstObjectBrowser;
     }

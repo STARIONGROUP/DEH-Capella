@@ -31,6 +31,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 
 import org.eclipse.emf.ecore.EObject;
 import org.netbeans.swing.outline.DefaultOutlineModel;
@@ -282,7 +283,15 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
 
             if(!AreTheseEquals(rootElement.getId(), parent.getId()))
             {
-                rootElement.getOwnedPhysicalComponents().add((PhysicalComponent)parent);
+                if(parent instanceof PhysicalComponent)
+                {
+                    rootElement.getOwnedPhysicalComponents().add((PhysicalComponent)parent);
+                }
+                else if(parent instanceof PhysicalComponentPkg)
+                {
+                    rootElement.getOwnedPhysicalComponentPkgs().add((PhysicalComponentPkg)parent);
+                }
+                
                 rootPhysicalElementRowViewModel.UpdateElement(rootElement, true);
             }
         }
@@ -458,6 +467,13 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
     {
         this.UpdateHighlightOnRows(model);
         this.browserTreeModel.Value(model);
+        
+        if(model.getChildCount(model.getRoot()) == 1)
+        {
+            var child = model.getChild(model.getRoot(), 0);
+            var path = new TreePath(model.getRoot()).pathByAddingChild(child);
+            model.getTreePathSupport().expandPath(path);
+        }        
     }
 
     /**
@@ -510,7 +526,7 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
      * @param selectedRow the selected view model {@linkplain ElementRowViewModel}
      */
     @Override
-    public void OnSelectionChanged(ElementRowViewModel<? extends NamedElement> selectedRow) 
+    public void OnSelectionChanged(ElementRowViewModel<? extends CapellaElement> selectedRow) 
     {
         this.AddOrRemoveSelectedRowToTransfer(selectedRow);
     }

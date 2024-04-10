@@ -32,6 +32,6 @@ import cdp4common.commondata.Thing;
 /**
  * The IHubToDstMappingConfigurationDialogViewModel is the interface definition for the {@linkplain HubToDstMappingConfigurationDialogViewModel}
  */
-public interface IHubToDstMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends NamedElement>>
+public interface IHubToDstMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends CapellaElement>>
 {
 }

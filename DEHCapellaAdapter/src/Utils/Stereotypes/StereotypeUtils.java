@@ -59,6 +59,7 @@ import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
 import org.polarsys.capella.core.data.la.LaPackage;
 import org.polarsys.capella.core.data.pa.PaPackage;
+import org.polarsys.capella.core.data.pa.deployment.DeploymentPackage;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementPackage;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
@@ -279,7 +280,8 @@ public final class StereotypeUtils
     private static List<EPackage> GetEPackages()
     {
         return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, CapellacorePackage.eINSTANCE,
-                InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE, CapellacommonPackage.eINSTANCE, CsPackage.eINSTANCE);
+                InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE, CapellacommonPackage.eINSTANCE, 
+                CsPackage.eINSTANCE, DeploymentPackage.eINSTANCE);
     }
 
     /**

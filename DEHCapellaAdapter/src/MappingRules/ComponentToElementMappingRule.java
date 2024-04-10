@@ -169,16 +169,18 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
      */
     private void Map(CapellaComponentCollection mappedElementDefinitions)
     {        
-        for (MappedElementDefinitionRowViewModel mappedElement : new ArrayList<MappedElementDefinitionRowViewModel>(mappedElementDefinitions))
+        for (MappedElementDefinitionRowViewModel mappedElement : new ArrayList<MappedElementDefinitionRowViewModel>(mappedElementDefinitions).stream()
+                .filter(x -> x.DoesRepresentAnElementDefinitionComponentMapping())
+                .collect(Collectors.toList()))
         {
-            if(mappedElement.GetHubElement() == null)
+            if(mappedElement.DoesRepresentAnElementDefinitionComponentMapping() && mappedElement.GetHubElement() == null)
             {
-                mappedElement.SetHubElement(this.GetOrCreateElementDefinition(mappedElement.GetDstElement()));
+                mappedElement.SetHubElement(this.GetOrCreateElementDefinition((Component)mappedElement.GetDstElement()));
             }
             
             this.MapCategories(mappedElement);            
             this.MapContainedElement(mappedElement);
-            this.MapProperties(mappedElement.GetHubElement(), mappedElement.GetDstElement());
+            this.MapProperties((ElementDefinition)mappedElement.GetHubElement(), (Component)mappedElement.GetDstElement());
 
             mappedElement.GetHubElement().setName(mappedElement.GetDstElement().getName());
             mappedElement.GetHubElement().setShortName(GetShortName(mappedElement.GetDstElement()));
@@ -209,7 +211,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             }
                        
             var sourcePortAndInterface = this.portsToConnect.stream()
-                    .flatMap(x -> x.getMiddle().GetDstElement().getContainedComponentPorts().stream())
+                    .flatMap(x -> ((Component)x.getMiddle().GetDstElement()).getContainedComponentPorts().stream())
                     .map(x -> 
                     {
                         var matchingInterface = x.getProvidedInterfaces().stream()
@@ -302,28 +304,40 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             this.MapCategory(mappedElement.GetHubElement(), "Subsystem", ClassKind.ElementDefinition);
         }
         
-        if(mappedElement.GetDstElement().isActor())
+        if(mappedElement.DoesRepresentAnElementDefinitionComponentMapping())
         {
-            this.MapCategory(mappedElement.GetHubElement(), "Actor", ClassKind.ElementDefinition);
-        }
+            var component = (Component)mappedElement.GetDstElement();
+            
+            if(component.isActor())
+            {
+                this.MapCategory(mappedElement.GetHubElement(), "Actor", ClassKind.ElementDefinition);
+            }
 
-        if(mappedElement.GetDstElement().isHuman())
-        {
-            this.MapCategory(mappedElement.GetHubElement(), "Human", ClassKind.ElementDefinition);
-        }
+            if(component.isHuman())
+            {
+                this.MapCategory(mappedElement.GetHubElement(), "Human", ClassKind.ElementDefinition);
+            }
 
-        if(mappedElement.GetDstElement().isAbstract())
-        {
-            this.MapCategory(mappedElement.GetHubElement(), "Abstract", ClassKind.ElementDefinition);
-        }
-        
-        else if(mappedElement.GetDstElement() instanceof LogicalComponent)
+            if(component.isAbstract())
+            {
+                this.MapCategory(mappedElement.GetHubElement(), "Abstract", ClassKind.ElementDefinition);
+            }
+        }        
+                
+        if(mappedElement.GetDstElement() instanceof LogicalComponent)
         {
             this.MapCategory(mappedElement.GetHubElement(), "Logical Component", ClassKind.ElementDefinition);
         }
-        else if(mappedElement.GetDstElement() instanceof PhysicalComponent)
+        
+        if(mappedElement.GetDstElement() instanceof PhysicalComponent)
         {
             this.MapCategory(mappedElement.GetHubElement(), "Physical Component", ClassKind.ElementDefinition);
+            
+            var physicalComponent = (PhysicalComponent)mappedElement.GetDstElement();
+                        
+            this.MapCategory(mappedElement.GetHubElement(), physicalComponent.getNature().name(), ClassKind.ElementDefinition);
+            this.MapCategory(mappedElement.GetHubElement(), physicalComponent.getKind().name(), ClassKind.ElementDefinition);
+            
         }
     }
         
@@ -336,11 +350,11 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
     {
         for (var containedElement : mappedElement.GetDstElement().eContents()
                 .stream()
-                .filter(x -> x instanceof Part)
+                .filter(x -> x instanceof Part && ((Part)x).getAbstractType() != null)
                 .map(x -> (Part)x)
                 .collect(Collectors.toList()))
         {
-            this.MapContainedElement(mappedElement.GetHubElement(), containedElement, (Component)containedElement.getAbstractType());
+            this.MapContainedElement((ElementDefinition)mappedElement.GetHubElement(), containedElement, (Component)containedElement.getAbstractType());
         }
     }
         
@@ -353,7 +367,9 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
     private void MapContainedElement(ElementDefinition container, Part part, Component component)
     {
         MappedElementDefinitionRowViewModel mappedElement = this.elements.stream()
-                .filter(x -> AreTheseEquals(x.GetDstElement().getId(), component.getId()))
+                .filter(x -> x.DoesRepresentAnElementDefinitionComponentMapping() 
+                        && x.GetDstElement() != null
+                        && AreTheseEquals(x.GetDstElement().getId(), component.getId()))
                 .findFirst()
                 .orElseGet(() -> 
                 {
@@ -372,11 +388,11 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             mappedElement.SetHubElement(this.GetOrCreateElementDefinition(component));
         }
         
-        this.MapProperties(mappedElement.GetHubElement(), component);
+        this.MapProperties((ElementDefinition)mappedElement.GetHubElement(), component);
         
         var elementUsage = this.GetOrCreateElementUsage(container, part, mappedElement);
         
-        this.MapProperties(elementUsage, mappedElement.GetHubElement(), component);
+        this.MapProperties(elementUsage, (ElementDefinition)mappedElement.GetHubElement(), component);
         
         container.getContainedElement().removeIf(x -> AreTheseEquals(elementUsage.getIid(), x.getIid()));
         container.getContainedElement().add(elementUsage);
@@ -390,38 +406,71 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
      * @param mappedElement the {@linkplain MappedElementDefinitionRowViewModel} of the container
      * @return an {@linkplain ElementUsage}
      */
-    private ElementUsage GetOrCreateElementUsage(ElementDefinition container, Part part,
-            MappedElementDefinitionRowViewModel mappedElement)
+    private ElementUsage GetOrCreateElementUsage(ElementDefinition container, Part part, MappedElementDefinitionRowViewModel mappedElement)
     {
-        var usage = container.getContainedElement()
-                .stream()
-                .filter(x -> AreTheseEquals(part.getName(), x.getName()) && 
-                        AreTheseEquals(mappedElement.GetHubElement().getIid(), x.getElementDefinition().getIid()))
-                .findFirst()
-                .map(x -> x.clone(false))
-                .orElseGet(() ->
-                {
-                    var newUsage = new ElementUsage();
-                    newUsage.setName(part.getName());
-                    newUsage.setShortName(part.getName());
-                    newUsage.setIid(UUID.randomUUID());
-                    newUsage.setOwner(this.hubController.GetCurrentDomainOfExpertise());
-                    newUsage.setElementDefinition(mappedElement.GetHubElement());
+        var usage = this.elements.stream().filter(x -> x != null)
+                              .filter(x -> !x.DoesRepresentAnElementDefinitionComponentMapping() && AreTheseEquals(x.GetDstElement().getId(), part.getId()))
+                              .map(x -> 
+                              {
+                                  var existingMappedUsage = (ElementUsage) x.GetHubElement();
+                                  
+                                  if(existingMappedUsage == null)
+                                  {
+                                      var newElementUsage = this.CreateElementUsage(container, part, (ElementDefinition)mappedElement.GetHubElement());
+                                      x.SetHubElement(newElementUsage);
+                                      return newElementUsage;
+                                  }
+                                  
+                                  return existingMappedUsage;
+                              })
+                              .findFirst()
+                              .orElse(null);
+        
+        if(usage == null)
+        {
+            usage = container.getContainedElement()
+                        .stream()
+                        .filter(x -> AreTheseEquals(part.getName(), x.getName()) && 
+                                AreTheseEquals(mappedElement.GetHubElement().getIid(), x.getElementDefinition().getIid()))
+                        .findFirst()
+                        .map(x -> x.clone(false))
+                        .orElseGet(() -> this.CreateElementUsage(container, part, (ElementDefinition)mappedElement.GetHubElement()));
             
-                    var definition = new Definition();
-                    
-                    definition.setIid(UUID.randomUUID());
-                    definition.setContent(part.getId());
-                    definition.setLanguageCode(CIID);
-                    newUsage.getDefinition().add(definition);
-                    
-                    return newUsage;
-                });
+            this.elements.add(new MappedElementDefinitionRowViewModel(usage, part, MappingDirection.FromDstToHub));
+        }
+        
 
         usage.setName(part.getName());
         usage.setShortName(part.getName());
         
         return usage;
+    }
+    
+    /**
+     * Create the {@linkplain ElementUsage} that matches the {@linkplain Component}
+     * 
+     * @param container the {@linkplain ElementDefinition} container
+     * @param part the contained element to map
+     * @param elementDefinition the {@linkplain ElementDefinition} definition of the returned {@linkplain ElementUsage}
+     * @return an {@linkplain ElementUsage}
+     */
+    private ElementUsage CreateElementUsage(ElementDefinition container, Part part, ElementDefinition elementDefinition)
+    {
+        var newUsage = new ElementUsage();
+        newUsage.setName(part.getName());
+        newUsage.setShortName(part.getName());
+        newUsage.setIid(UUID.randomUUID());
+        newUsage.setOwner(this.hubController.GetCurrentDomainOfExpertise());
+        newUsage.setElementDefinition(elementDefinition);
+
+        var definition = new Definition();
+        
+        definition.setIid(UUID.randomUUID());
+        definition.setContent(part.getId());
+        definition.setLanguageCode(CIID);
+        newUsage.getDefinition().add(definition);
+        
+        return newUsage;
     }
     
     /**
@@ -448,8 +497,8 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         Predicate<? super ElementDefinition> matcher = x -> AreTheseEquals(x.getShortName(), shortName, true) || AreTheseEquals(x.getName(), name);
         
         ElementDefinition elementDefinition = this.elements.stream()
-                .filter(x -> x.GetHubElement() != null)
-                .map(x -> x.GetHubElement())
+                .filter(x -> x.GetHubElement() instanceof ElementDefinition)
+                .map(x -> (ElementDefinition)x.GetHubElement())
                 .filter(matcher)
                 .findFirst()
                 .orElse(this.hubController.GetOpenIteration()
@@ -495,11 +544,16 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
      */
     private void MapPorts(MappedElementDefinitionRowViewModel mappedElement)
     {
-        for (var port : mappedElement.GetDstElement().getContainedComponentPorts())
+        if(!mappedElement.DoesRepresentAnElementDefinitionComponentMapping())
+        {
+            return;
+        }
+        
+        for (var port : ((Component)mappedElement.GetDstElement()).getContainedComponentPorts())
         {
             String portName = this.GetPortName(mappedElement, port);
             
-            var portElementUsage = mappedElement.GetHubElement().getContainedElement()
+            var portElementUsage = ((ElementDefinition)mappedElement.GetHubElement()).getContainedElement()
                     .stream()
                     .filter(x -> AreTheseEquals(x.getName(), portName))
                     .findFirst()
@@ -515,7 +569,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
                             elementUsage.setElementDefinition(this.GetPortElementDefinition());
                             elementUsage.setInterfaceEnd(this.GetInterfaceEndForPort(port));
                                         
-                            mappedElement.GetHubElement().getContainedElement().add(elementUsage);
+                            ((ElementDefinition)mappedElement.GetHubElement()).getContainedElement().add(elementUsage);
                             return elementUsage;
                         });
                        
@@ -568,7 +622,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
      * @return the port name as a string
      */
     private String GetPortName(MappedElementDefinitionRowViewModel mappedElement, ComponentPort port)
-    {
+    {        
         if(!StringUtils.isBlank(port.getName()))
         {
             return port.getName();
@@ -579,7 +633,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
             return port.getRequiredInterfaces().get(0).getName();
         }
         
-        long portNumber = mappedElement.GetHubElement().getContainedElement().stream().filter(x -> x.getInterfaceEnd() != InterfaceEndKind.NONE).count();
+        long portNumber = ((ElementDefinition)mappedElement.GetHubElement()).getContainedElement().stream().filter(x -> x.getInterfaceEnd() != InterfaceEndKind.NONE).count();
         
         String nameAfterContainer = String.format("%s_port", mappedElement.GetHubElement().getName());
         
@@ -947,7 +1001,7 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
         {
             valueSet = (TValueSet) ValueSetUtils.QueryParameterBaseValueSet(parameter, 
                     parameter.isOptionDependent() ? this.hubController.GetOpenIteration().getDefaultOption() : null, 
-                            parameter.getStateDependence() != null ? parameter.getStateDependence().getActualState().get(0) : null);;    
+                            parameter.getStateDependence() != null ? parameter.getStateDependence().getActualState().get(0) : null);
         }
         else
         {
@@ -957,7 +1011,10 @@ public class ComponentToElementMappingRule extends DstToHubBaseMappingRule<Capel
                 
                 if(valueSet instanceof ParameterOverrideValueSet)
                 {
-                    ((ParameterOverrideValueSet)valueSet).setParameterValueSet((ParameterValueSet)ValueSetUtils.QueryParameterBaseValueSet(((ParameterOverride)parameter).getParameter(), null, null));
+                    ((ParameterOverrideValueSet)valueSet).setParameterValueSet((ParameterValueSet)ValueSetUtils.QueryParameterBaseValueSet(
+                            ((ParameterOverride)parameter).getParameter(),
+                            parameter.isOptionDependent() ? this.hubController.GetOpenIteration().getDefaultOption() : null, 
+                            parameter.getStateDependence() != null ? parameter.getStateDependence().getActualState().get(0) : null));
                 }
                 
                 valueSet.setIid(UUID.randomUUID());

@@ -25,6 +25,8 @@ package ViewModels.CapellaObjectBrowser.Rows;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.Structure;
+import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.ComponentPkg;
 
 import Reactive.ObservableCollection;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
@@ -38,7 +40,7 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
  * @param <TContainedElement> the type of direct children of this represented {@linkplain CapellaElement}
  */
 public abstract class ProjectStructuralElementRowViewModel<TElement extends Structure, TContainedElement extends CapellaElement> 
-    extends ElementRowViewModel<TElement> implements IHaveContainedRows<IElementRowViewModel<? extends TContainedElement>>
+    extends ElementRowViewModel<TElement> implements IHaveContainedRows<IElementRowViewModel<?>>
 {
     /**
      * The {@linkplain Class} of the contained element
@@ -48,7 +50,7 @@ public abstract class ProjectStructuralElementRowViewModel<TElement extends Stru
     /**
      * The {@linkplain ObservableCollection} of {@linkplain IElementRowViewModel}
      */
-    private ObservableCollection<IElementRowViewModel<? extends TContainedElement>> containedRows = new ObservableCollection<IElementRowViewModel<? extends TContainedElement>>();
+    private ObservableCollection<IElementRowViewModel<?>> containedRows = new ObservableCollection<IElementRowViewModel<?>>();
         
     /**
      * Gets the contained row the implementing view model has
@@ -56,7 +58,7 @@ public abstract class ProjectStructuralElementRowViewModel<TElement extends Stru
      * @return An {@linkplain ObservableCollection} of {@linkplain IElementRowViewModel}
      */
     @Override
-    public ObservableCollection<IElementRowViewModel<? extends TContainedElement>> GetContainedRows()
+    public ObservableCollection<IElementRowViewModel<?>> GetContainedRows()
     {
         return this.containedRows;
     }
@@ -92,6 +94,10 @@ public abstract class ProjectStructuralElementRowViewModel<TElement extends Stru
             if(this.containedElementClazz.isAssignableFrom(element.getClass()))
             {
                 this.AddToContainedRows((TContainedElement)element);
+            }
+            else if(element instanceof ComponentPkg)
+            {
+                this.GetContainedRows().add(new ComponentPackageRowViewModel(this, (ComponentPkg)element));
             }
         }
     }

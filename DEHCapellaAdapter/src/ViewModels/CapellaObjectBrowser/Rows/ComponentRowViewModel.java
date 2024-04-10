@@ -25,8 +25,10 @@ package ViewModels.CapellaObjectBrowser.Rows;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.cs.Component;
+import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.information.Property;
+import org.polarsys.capella.core.data.capellacore.Relationship;
 
 import Reactive.ObservableCollection;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
@@ -74,10 +76,6 @@ public class ComponentRowViewModel extends ElementRowViewModel<Component> implem
     {
         for (var element : this.GetElement().eContents())
         {
-//            if(element instanceof Part)
-//            {
-//                continue;
-//            }
             if(element instanceof Part)
             {
                 this.GetContainedRows().add(new PartRowViewModel(this, (Part)element));
@@ -89,6 +87,14 @@ public class ComponentRowViewModel extends ElementRowViewModel<Component> implem
             else if(element instanceof Component)
             {
                 this.GetContainedRows().add(new ComponentRowViewModel(this, (Component)element));
+            }
+            else if(element instanceof ComponentPkg)
+            {
+                this.GetContainedRows().add(new ComponentPackageRowViewModel(this, (ComponentPkg)element));
+            }
+            else if(element instanceof Relationship)
+            {
+                this.GetContainedRows().add(new RelationshipRowViewModel(this, (Relationship)element));
             }
         }
     }

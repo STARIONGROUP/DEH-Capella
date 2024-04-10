@@ -66,7 +66,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain DstToHubMappingConfigurationDialogViewModel} is the main view model for the {@linkplain CapellaDstToHubMappingConfigurationDialog}
  */
-public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<EObject, NamedElement, ElementRowViewModel<? extends NamedElement>> implements IDstToHubMappingConfigurationDialogViewModel
+public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<EObject, NamedElement, ElementRowViewModel<? extends CapellaElement>> implements IDstToHubMappingConfigurationDialogViewModel
 {    
     /**
      * The {@linkplain IMagicDrawObjectBrowserViewModel}
@@ -79,7 +79,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      * @return an {@linkplain IObjectBrowserViewModel}
      */
     @Override
-    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends NamedElement>> GetDstObjectBrowserViewModel()
+    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> GetDstObjectBrowserViewModel()
     {
         return this.dstObjectBrowser;
     }

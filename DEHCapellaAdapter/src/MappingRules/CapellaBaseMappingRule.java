@@ -24,6 +24,7 @@
 package MappingRules;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 
@@ -72,7 +73,7 @@ public abstract class CapellaBaseMappingRule<TInput extends Object, TOutput> ext
      */
     protected void SaveMappingConfiguration(Collection<? extends MappedElementRowViewModel<?, ? extends CapellaElement>> elements, MappingDirection mappingDirection)
     {
-        for (var element : elements)
+        for (var element : elements.stream().filter(x -> x.GetHubElement() != null && x.GetDstElement() != null).collect(Collectors.toList()))
         {
             if(element instanceof IHaveTargetArchitecture)
             {

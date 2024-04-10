@@ -82,7 +82,7 @@ class DstMappingConfigurationDialogViewModelTestFixture
     private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> dstMapResult;
     private ObservableValue<ThingRowViewModel<Thing>> selectedElementDefinitionObservable;
     private ObservableValue<ThingRowViewModel<Thing>> selectedRequirementObservable;
-    private ObservableValue<ElementRowViewModel<? extends NamedElement>> selectedCapellaElementObservable;
+    private ObservableValue<ElementRowViewModel<? extends CapellaElement>> selectedCapellaElementObservable;
     private ICapellaMappedElementListViewViewModel mappedElementListViewViewModel;
 
     /**
@@ -102,7 +102,7 @@ class DstMappingConfigurationDialogViewModelTestFixture
         this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
         when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
         
-        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends NamedElement>>();
+        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends CapellaElement>>();
         when(this.capellaObjectBrowser.GetSelectedElement()).thenReturn(this.selectedCapellaElementObservable.Observable());
         this.selectedElementDefinitionObservable = new ObservableValue<ThingRowViewModel<Thing>>();
         when(this.elementDefinitionBrowser.GetSelectedElement()).thenReturn(this.selectedElementDefinitionObservable.Observable());

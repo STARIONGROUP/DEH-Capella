@@ -117,7 +117,7 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
     private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> hubMapResult;
     private ObservableValue<ThingRowViewModel<Thing>> selectedElementDefinitionObservable;
     private ObservableValue<ThingRowViewModel<Thing>> selectedRequirementObservable;
-    private ObservableValue<ElementRowViewModel<? extends NamedElement>> selectedCapellaElementObservable;
+    private ObservableValue<ElementRowViewModel<? extends CapellaElement>> selectedCapellaElementObservable;
     private ICapellaMappedElementListViewViewModel mappedElementListViewViewModel;
     private ICapellaTransactionService transactionService;
     private Collection<Thing> elements;
@@ -137,7 +137,7 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
         this.hubMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
         when(this.dstController.GetHubMapResult()).thenReturn(this.hubMapResult);
         
-        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends NamedElement>>();
+        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends CapellaElement>>();
         when(this.capellaObjectBrowser.GetSelectedElement()).thenReturn(this.selectedCapellaElementObservable.Observable());
         this.selectedElementDefinitionObservable = new ObservableValue<ThingRowViewModel<Thing>>();
         when(this.elementDefinitionBrowser.GetSelectedElement()).thenReturn(this.selectedElementDefinitionObservable.Observable());

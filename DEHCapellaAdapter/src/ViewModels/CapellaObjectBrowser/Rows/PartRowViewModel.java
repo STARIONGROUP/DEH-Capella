@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.polarsys.capella.core.data.capellacore.AbstractPropertyValue;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.capella.core.data.capellacore.Relationship;
 import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.DataValue;
@@ -42,12 +43,12 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 /**
  * The {@linkplain PropertyRowViewModel} is the row view model that represents a {@linkplain Property}
  */
-public class PartRowViewModel extends ElementRowViewModel<Part> implements IHaveContainedRows<PropertyValueBaseRowViewModel<? extends CapellaElement>>
+public class PartRowViewModel extends ElementRowViewModel<Part> implements IHaveContainedRows<IElementRowViewModel<? extends CapellaElement>>
 {
     /**
      * The {@linkplain ObservableCollection} of {@linkplain IElementRowViewModel}
      */
-    private ObservableCollection<PropertyValueBaseRowViewModel<? extends CapellaElement>> containedRows = new ObservableCollection<>();
+    private ObservableCollection<IElementRowViewModel<? extends CapellaElement>> containedRows = new ObservableCollection<>();
         
     /**
      * Gets the contained row the implementing view model has
@@ -55,7 +56,7 @@ public class PartRowViewModel extends ElementRowViewModel<Part> implements IHave
      * @return An {@linkplain ObservableCollection} of {@linkplain IElementRowViewModel}
      */
     @Override
-    public ObservableCollection<PropertyValueBaseRowViewModel<? extends CapellaElement>> GetContainedRows()
+    public ObservableCollection<IElementRowViewModel<? extends CapellaElement>> GetContainedRows()
     {
         return this.containedRows;
     }
@@ -83,6 +84,10 @@ public class PartRowViewModel extends ElementRowViewModel<Part> implements IHave
             if(element instanceof AbstractPropertyValue)
             {
                 this.GetContainedRows().add(new PropertyAbstractPropertyValueRowViewModel(this, (AbstractPropertyValue)element));
+            }
+            else if(element instanceof Relationship)
+            {
+                this.GetContainedRows().add(new RelationshipRowViewModel(this, (Relationship)element));
             }
         }
         

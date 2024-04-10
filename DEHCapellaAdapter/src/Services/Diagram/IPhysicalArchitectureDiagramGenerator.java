@@ -1,9 +1,9 @@
 /*
- * CapellaExternalIdentifier.java
+ * IPhysicalArchitectureDiagramGenerator.java
  *
  * Copyright (c) 2020-2022 RHEA System S.A.
  *
- * Author: Sam GerenÃ©, Alex Vorobiev, Nathanael Smiechowski 
+ * Author: Sam Gerené, Alex Vorobiev, Nathanael Smiechowski 
  *
  * This file is part of DEH-Capella
  *
@@ -21,24 +21,15 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package Services.MappingConfiguration;
-
-import java.util.UUID;
-
-import Enumerations.CapellaArchitecture;
+package Services.Diagram;
 
 /**
- * The CapellaExternalIdentifier extends the {@linkplain ExternalIdentifier} to fits the Capella adapter needs
+ * The {@linkplain IPhysicalArchitectureDiagramGenerator} is the interface definition for {@linkplain PhysicalArchitectureDiagramGenerator}
  */
-public class CapellaExternalIdentifier extends ExternalIdentifier
+public interface IPhysicalArchitectureDiagramGenerator
 {
     /**
-     * Gets or sets the target architecture
+     * Generates or regenerates the Physical Architecture Diagram 
      */
-    public CapellaArchitecture TargetArchitecture;
-    
-    /**
-     * Gets or sets the option id
-     */
-    public UUID optionId;
+    void Generate();
 }

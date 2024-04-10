@@ -23,19 +23,21 @@
  */
 package ViewModels.Rows;
 
+import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
 
 import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import Reactive.ObservableValue;
 import ViewModels.Interfaces.IHaveTargetArchitecture;
+import cdp4common.engineeringmodeldata.ElementBase;
 import cdp4common.engineeringmodeldata.ElementDefinition;
 import io.reactivex.Observable;
 
 /**
  * The {@linkplain MappedElementDefinitionRowViewModel} is the row view model that represents a mapping between an {@linkplain ElementDefinition} and a {@linkplain Component}
  */
-public class MappedElementDefinitionRowViewModel extends MappedElementRowViewModel<ElementDefinition, Component> implements IHaveTargetArchitecture
+public class MappedElementDefinitionRowViewModel extends MappedElementRowViewModel<ElementBase, NamedElement> implements IHaveTargetArchitecture
 {
     /**
      * Backing field for {@linkplain #GetTargetArchitecture()}, {@linkplain #SetTargetArchitecture(Object)} and {@linkplain #GetTargetArchitectureObservable()}
@@ -85,9 +87,9 @@ public class MappedElementDefinitionRowViewModel extends MappedElementRowViewMod
      * @param dstElement the {@linkplain TDstElement} that is at the other end
      * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
      */
-    public MappedElementDefinitionRowViewModel(ElementDefinition thing, Component dstElement, MappingDirection mappingDirection)
+    public MappedElementDefinitionRowViewModel(ElementBase thing, NamedElement dstElement, MappingDirection mappingDirection)
     {
-        super(thing, ElementDefinition.class, dstElement, mappingDirection);
+        super(thing, ElementBase.class, dstElement, mappingDirection);
     }
 
     /**
@@ -96,9 +98,9 @@ public class MappedElementDefinitionRowViewModel extends MappedElementRowViewMod
      * @param thing the {@linkplain TThing} that is at one end of the mapping
      * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
      */
-    public MappedElementDefinitionRowViewModel(ElementDefinition thing, MappingDirection mappingDirection)
+    public MappedElementDefinitionRowViewModel(ElementBase thing, MappingDirection mappingDirection)
     {
-        super(thing, ElementDefinition.class, null, mappingDirection);
+        super(thing, ElementBase.class, null, mappingDirection);
     }
 
     /**
@@ -107,9 +109,9 @@ public class MappedElementDefinitionRowViewModel extends MappedElementRowViewMod
      * @param dstElement the {@linkplain TDstElement}
      * @param mappingDirection the {@linkplain MappingDirection} to which this mapping applies to
      */
-    public MappedElementDefinitionRowViewModel(Component dstElement, MappingDirection mappingDirection)
+    public MappedElementDefinitionRowViewModel(NamedElement dstElement, MappingDirection mappingDirection)
     {
-        super(ElementDefinition.class, dstElement, mappingDirection);
+        super(ElementBase.class, dstElement, mappingDirection);
     }
 
     /**
@@ -133,5 +135,16 @@ public class MappedElementDefinitionRowViewModel extends MappedElementRowViewMod
     public String GetHubElementRepresentation()
     {
         return this.GetHubElementRepresentation(ElementDefinition.class);
+    }
+
+    /**
+     * Gets a value indicating whether this {@linkplain MappedElementDefinitionRowViewModel} represents a mapping between an element definition and a component
+     * 
+     * @return An boolean
+     */
+    public boolean DoesRepresentAnElementDefinitionComponentMapping()
+    {
+        return (this.GetMappingDirection() == MappingDirection.FromHubToDst && this.GetHubElement() instanceof ElementDefinition)
+               || (this.GetMappingDirection() == MappingDirection.FromDstToHub && this.GetDstElement() instanceof Component);
     }
 }

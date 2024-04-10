@@ -25,6 +25,7 @@ package ViewModels.MappingListView;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import javax.swing.tree.TreeModel;
 
@@ -36,8 +37,14 @@ import DstController.IDstController;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaTransaction.ICapellaTransactionService;
+import Utils.StreamExtensions;
 import ViewModels.MappingListView.Interfaces.IMappingListViewViewModel;
+import ViewModels.Rows.MappedDstRequirementRowViewModel;
+import ViewModels.Rows.MappedElementDefinitionRowViewModel;
+import ViewModels.Rows.MappedElementRowViewModel;
+import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import Views.CapellaMappingListView;
+import cdp4common.commondata.DefinedThing;
 import cdp4common.commondata.Thing;
 
 /**
@@ -89,8 +96,19 @@ public class CapellaMappingListViewViewModel extends MappingListViewViewModel<ID
      */
     private Collection<Triple<? extends NamedElement, MappingDirection, ? extends Thing>> SortMappedElements()
     {
-        var allElements = new ArrayList<>(this.dstController.GetHubMapResult());            
-        allElements.addAll(this.dstController.GetDstMapResult());
+        var allElements = new ArrayList<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
+        
+        allElements.addAll(StreamExtensions.OfType(this.dstController.GetHubMapResult().stream(), MappedElementDefinitionRowViewModel.class)
+                .filter(x -> x.DoesRepresentAnElementDefinitionComponentMapping())
+                .collect(Collectors.toList()));
+        
+        allElements.addAll(StreamExtensions.OfType(this.dstController.GetHubMapResult(), MappedHubRequirementRowViewModel.class));
+        
+        allElements.addAll(StreamExtensions.OfType(this.dstController.GetDstMapResult().stream(), MappedElementDefinitionRowViewModel.class)
+                .filter(x -> x.DoesRepresentAnElementDefinitionComponentMapping())
+                .collect(Collectors.toList()));
+        
+        allElements.addAll(StreamExtensions.OfType(this.dstController.GetDstMapResult(), MappedDstRequirementRowViewModel.class));
         
         var result = new ArrayList<Triple<? extends NamedElement, MappingDirection, ? extends Thing>>();
         

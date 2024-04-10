@@ -54,6 +54,8 @@ import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
+import org.polarsys.capella.core.data.pa.PhysicalComponentPkg;
+import org.polarsys.capella.core.data.pa.deployment.PartDeploymentLink;
 import org.polarsys.capella.core.data.requirement.Requirement;
 import org.polarsys.capella.core.data.requirement.RequirementsPkg;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
@@ -62,10 +64,12 @@ import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import MappingRules.ComponentToElementMappingRule;
+import MappingRules.ElementToComponentMappingRule;
 import Reactive.ObservableCollection;
 import Reactive.ObservableValue;
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
+import Services.CapellaTransaction.ClonedReferenceElement;
 import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.CapellaUserPreference.ICapellaUserPreferenceService;
 import Services.CapellaUserPreference.UserPreferenceKey;
@@ -610,13 +614,14 @@ public final class DstController implements IDstController
             if(resultAsCollection != null && !resultAsCollection.isEmpty())
             {
                 if (mappingDirection == MappingDirection.FromDstToHub
-                        && resultAsCollection.stream().allMatch(x -> x.GetHubElement() instanceof Thing))
+                        && resultAsCollection.stream().allMatch(x -> x.GetHubElement() instanceof Thing || x.GetHubElement() == null))
                 {
                     this.dstMapResult.removeIf(x -> resultAsCollection.stream()
+                            .filter(d -> d.GetHubElement() == null)
                             .anyMatch(d -> AreTheseEquals(((Thing) d.GetHubElement()).getIid(), x.GetHubElement().getIid())));
         
                     this.selectedDstMapResultForTransfer.clear();                
-                    return this.dstMapResult.addAll(resultAsCollection);
+                    return this.dstMapResult.addAll(resultAsCollection.stream().filter(x -> x != null).collect(Collectors.toList()));
                 }
                 else if (mappingDirection == MappingDirection.FromHubToDst
                         && resultAsCollection.stream().allMatch(x -> x.GetDstElement() instanceof CapellaElement))
@@ -739,7 +744,7 @@ public final class DstController implements IDstController
     {
         try
         {
-            var result = this.transactionService.Commit(() -> PrepareElementsForTransferToCapella());
+            var result = this.transactionService.Commit(() -> this.PrepareElementsForTransferToCapella());
             this.logService.Append(String.format("Transfered %s elements to Capella", this.selectedHubMapResultForTransfer.size()), result);
             
             return result;
@@ -759,9 +764,11 @@ public final class DstController implements IDstController
     {
         this.AddOrRemoveTracesForTransfer();
         
+        var targetArchitecture = CapellaArchitecture.PhysicalArchitecture;
+        
         for (var element : this.selectedHubMapResultForTransfer)
         {
-            var targetArchitecture = this.transactionService.GetTargetArchitecture(element);
+            targetArchitecture = this.transactionService.GetTargetArchitecture(element);
             
             if(element instanceof Requirement)
             {
@@ -774,7 +781,7 @@ public final class DstController implements IDstController
                     this.PrepareComponent((Component)element);
                 }
                 else if(this.transactionService.IsCloned(element.eContainer()))
-                {
+                {   
                     this.PrepareComponentContainer((Component)element);
                 }
 
@@ -786,6 +793,78 @@ public final class DstController implements IDstController
                 this.PrepareTraces((Namespace) element);
             }
         }
+
+        this.PrepareDeployementLinks(targetArchitecture);
+    }
+
+
+    /**
+     * Prepares the deployement link by updating the part
+     * 
+     * @param element
+     */
+    private void PrepareDeployementLinks(CapellaArchitecture architecture)
+    {
+        var topElement = architecture != null ? this.capellaSessionService.GetTopElement(architecture) : this.capellaSessionService.GetTopElement();
+        
+        for(var part : topElement.eContents().stream().filter(x -> x instanceof Part).map(x -> (Part)x).collect(Collectors.toList()))
+        {
+            var partsToDeploy = this.hubMapResult.stream()
+                    .map(x -> this.transactionService.GetOriginal(x.GetDstElement()))
+                    .filter(x -> x.eContainer() != null && x.eContainer() instanceof Component && AreTheseEquals(((Component)x.eContainer()).getId(), topElement.getId()))
+                    .flatMap(x -> x.eContents().stream().filter(p -> p instanceof Part).map(p -> (Part)p))
+                    .collect(Collectors.toList());
+            
+            part.getOwnedDeploymentLinks().clear();
+            
+            for(var partToDeploy : partsToDeploy)
+            {
+                var newLink = this.transactionService.Create(PartDeploymentLink.class);
+                newLink.setLocation(part);
+                newLink.setDeployedElement(partToDeploy);
+                part.getOwnedDeploymentLinks().add(newLink);
+            }
+        }        
+    }
+    
+    /**
+     * Prepares the deployement link by updating the part
+     * 
+     * @param element
+     */
+    private void PrepareDeployementLinks(Component element)
+    {
+        if(element.eContainer() instanceof PhysicalComponent)
+        {
+            var originalContainer = this.transactionService.GetOriginal((PhysicalComponent)element.eContainer());
+            
+            var part = originalContainer.eContents().stream()
+                    .filter(x -> x instanceof Part)
+                    .map(x -> (Part)x)
+                    .filter(x -> x.getAbstractType() != null && x.getAbstractType().getId().equals(element.getId()) 
+                            && AreTheseEquals(x.getName(), element.getName()))
+                    .findFirst()
+                    .orElse(null);
+            
+            if(part == null)
+            {
+                return;
+            }
+            
+            for(var containedPart : element.getOwnedFeatures().stream().filter(x -> x instanceof Part).map(x -> (Part)x).collect(Collectors.toList()))
+            {
+                if(part.getOwnedDeploymentLinks().stream().filter(x -> AreTheseEquals(x.getDeployedElement().getId(), containedPart.getId())).findFirst().isPresent())
+                {
+                    return;
+                }
+                
+                var newLink = this.transactionService.Create(PartDeploymentLink.class);
+                newLink.setLocation(part);
+                newLink.setDeployedElement(containedPart);
+                part.getOwnedDeploymentLinks().add(newLink);
+            }
+        }
+        
     }
 
     /**
@@ -943,7 +1022,14 @@ public final class DstController implements IDstController
     {
         if(element instanceof PhysicalComponent)
         {
-            this.PrepareComponentContainer((PhysicalComponent)element.eContainer(), (PhysicalComponent)element, x -> x.getOwnedPhysicalComponents());
+            if(element.eContainer() instanceof PhysicalComponent)
+            {
+                this.PrepareComponentContainer((PhysicalComponent)element.eContainer(), (PhysicalComponent)element, x -> x.getOwnedPhysicalComponents());
+            }
+            else if(element.eContainer() instanceof PhysicalComponentPkg)
+            {
+                this.PrepareComponentContainer((PhysicalComponentPkg)element.eContainer(), (PhysicalComponent)element, x -> x.getOwnedPhysicalComponents());
+            }
         }
         else if(element instanceof LogicalComponent)
         {
@@ -960,7 +1046,7 @@ public final class DstController implements IDstController
      * @param childrenSelector a {@linkplain Function} that returns a {@linkplain Collection} of {@linkplain #TElement}, 
      * used to query the contained {@linkplain #TElement} regardless of whether the input {@linkplain #TElement} is a clone or an original
      */
-    private <TElement extends Component> void PrepareComponentContainer(TElement container, TElement element, Function<TElement, EList<TElement>> childrenSelector)
+    private <TElement extends Component, TElementContainer extends NamedElement> void PrepareComponentContainer(TElementContainer container, TElement element, Function<TElementContainer, EList<TElement>> childrenSelector)
     {
         var original = this.transactionService.GetClone(container).GetOriginal();
         childrenSelector.apply(original).removeIf(x -> AreTheseEquals(x.getId(), element.getId()));
@@ -968,7 +1054,7 @@ public final class DstController implements IDstController
         this.exchangeHistory.Append(container, ChangeKind.UPDATE);
         this.exchangeHistory.Append(element, ChangeKind.CREATE);
 
-        if(container instanceof Component 
+        if(container instanceof PhysicalComponentPkg || container instanceof Component 
                 && container.eContents().stream()
                 .anyMatch(x -> x instanceof Part 
                         && ((Part)x).getAbstractType() != null 
@@ -979,8 +1065,9 @@ public final class DstController implements IDstController
         }
         
         var part = this.transactionService.Create(Part.class, element.getName());
-        part.setAbstractType(original);
-        original.getOwnedFeatures().add(part);
+        part.setAbstractType(element);
+        
+        ((Component)original).getOwnedFeatures().add(part);
     }
     
     /**
@@ -1014,6 +1101,8 @@ public final class DstController implements IDstController
     {
         var clonedReference = this.transactionService.GetClone(element);
         
+        clonedReference.GetOriginal().setName(clonedReference.GetClone().getName());
+        
         for (var clonedProperty : clonedReference.GetClone().getContainedProperties().stream().collect(Collectors.toList()))
         {
             var optionalProperty = clonedReference.GetOriginal().getContainedProperties().stream()
@@ -1043,11 +1132,7 @@ public final class DstController implements IDstController
             childrenSelector.apply(clonedReference.GetOriginal()).add(containedElement);
         }
         
-        for (var part : clonedReference.GetClone().getContainedParts())
-        {
-            clonedReference.GetOriginal().getOwnedFeatures().removeIf(x -> x instanceof Part && AreTheseEquals(x.getId(), part.getId()));
-            clonedReference.GetOriginal().getOwnedFeatures().add(part);
-        }
+        this.PrepareParts(clonedReference);
         
         for (var clonedPort : clonedReference.GetClone().getContainedComponentPorts())
         {
@@ -1064,8 +1149,75 @@ public final class DstController implements IDstController
                 continue;
             }
             
-            clonedReference.GetOriginal().getContainedComponentPorts().add(clonedPort);
+            clonedReference.GetOriginal().getOwnedFeatures().add(clonedPort);
             this.exchangeHistory.Append(clonedPort, ChangeKind.CREATE);
+        }
+    }
+
+    /**
+     * Prepares the owned parts and its deploymnent links
+     * 
+     * @param <TElement> The type of element
+     * @param clonedReference TYhe {@linkplain ClonedReferenceElement}
+     */
+    private <TElement extends Component> void PrepareParts(ClonedReferenceElement<TElement> clonedReference)
+    {
+        for (var part : clonedReference.GetClone().getContainedParts())
+        {            
+            if(this.transactionService.IsCloned(part))
+            {
+                var clonedPart = this.transactionService.GetClone(part);
+                
+                clonedPart.GetOriginal().setName(clonedPart.GetClone().getName());
+                
+                for (var clonedProperty : clonedPart.GetClone().getOwnedPropertyValues().stream().collect(Collectors.toList()))
+                {
+                    var optionalProperty = clonedPart.GetOriginal().getOwnedPropertyValues().stream()
+                            .filter(x -> AreTheseEquals(x.getId(), clonedProperty.getId()))
+                            .findFirst();
+                    
+                    if(optionalProperty.isPresent())
+                    {
+                        ElementToComponentMappingRule.UpdatePartPropertyValue(optionalProperty.get(), clonedProperty);
+                        continue;
+                    }
+                    
+                    part.getOwnedPropertyValues().add(clonedProperty);
+                    this.exchangeHistory.Append(clonedProperty, ChangeKind.CREATE);
+                }
+
+                for (var deploymentLink : clonedPart.GetClone().getOwnedDeploymentLinks().stream().collect(Collectors.toList()))
+                {
+                    var existingDeploymentLink = clonedPart.GetOriginal().getOwnedDeploymentLinks().stream()
+                            .filter(x -> AreTheseEquals(x.getId(), deploymentLink.getId()))
+                            .findFirst();
+                    
+                    if(existingDeploymentLink.isPresent())
+                    {                        
+                        if(existingDeploymentLink.get().getDeployedElement() == null)
+                        {
+                            part.getOwnedDeploymentLinks().remove(existingDeploymentLink.get());
+                        }
+                    }
+
+                    var optionalDeployedPart = this.hubMapResult.stream()
+                            .filter(x -> x.GetDstElement() instanceof Part && deploymentLink.getDeployedElement() != null 
+                                                                           && AreTheseEquals(x.GetDstElement().getId(), deploymentLink.getDeployedElement().getId()))
+                            .map(x -> (Part)x.GetDstElement())
+                            .findFirst();
+                    
+                    if(optionalDeployedPart.isPresent())
+                    {
+                        deploymentLink.setDeployedElement(optionalDeployedPart.get());
+                    }
+                    
+                    part.getOwnedDeploymentLinks().removeIf(x -> AreTheseEquals(x.getId(), deploymentLink.getId()));
+                    part.getOwnedDeploymentLinks().add(deploymentLink);
+                }                
+            }
+            
+            clonedReference.GetOriginal().getOwnedFeatures().removeIf(x -> x instanceof Part && AreTheseEquals(x.getId(), part.getId()));
+            clonedReference.GetOriginal().getOwnedFeatures().add(part);
         }
     }
 
@@ -1484,6 +1636,7 @@ public final class DstController implements IDstController
         {
             this.selectedDstMapResultForTransfer.addAll(
                     this.dstMapResult.stream()
+                        .filter(x -> x.GetHubElement() != null)
                         .map(MappedElementRowViewModel::GetHubElement)
                         .filter(predicateClassKind)
                         .collect(Collectors.toList()));

@@ -58,6 +58,8 @@ import Services.CapellaTransaction.CapellaTransactionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.CapellaUserPreference.CapellaUserPreferenceService;
 import Services.CapellaUserPreference.ICapellaUserPreferenceService;
+import Services.Diagram.IPhysicalArchitectureDiagramGenerator;
+import Services.Diagram.PhysicalArchitectureDiagramGenerator;
 import Services.HistoryService.CapellaLocalExchangeHistoryService;
 import Services.HistoryService.ICapellaLocalExchangeHistoryService;
 import Services.Mapping.IMapCommandService;
@@ -178,6 +180,7 @@ public class App extends AbstractUIPlugin
             AppContainer.Container.addComponent(IAdapterInfoService.class, CapellaAdapterInfoService.class);
             AppContainer.Container.as(CACHE).addComponent(ICapellaLocalExchangeHistoryService.class, CapellaLocalExchangeHistoryService.class);
             AppContainer.Container.addComponent(ICapellaUserPreferenceService.class, CapellaUserPreferenceService.class);
+            AppContainer.Container.addComponent(IPhysicalArchitectureDiagramGenerator.class, PhysicalArchitectureDiagramGenerator.class);
 
             AppContainer.Container.addComponent(ComponentToElementMappingRule.class.getName(), ComponentToElementMappingRule.class);
             AppContainer.Container.addComponent(ElementToComponentMappingRule.class.getName(), ElementToComponentMappingRule.class);

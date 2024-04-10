@@ -37,7 +37,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain IMagicDrawObjectBrowserViewModel} is the interface definition for the {@linkplain CapellaObjectBrowserViewModel}
  */
-public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewModel<ElementRowViewModel<? extends NamedElement>>
+public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>>
 {
     /**
      * Compute eligible rows where the represented {@linkplain Class} can be transfered,
@@ -45,7 +45,7 @@ public interface ICapellaObjectBrowserViewModel extends IObjectBrowserBaseViewMo
      * 
      * @param selectedRow the collection of selected view model {@linkplain ClassRowViewModel}
      */
-    void OnSelectionChanged(ElementRowViewModel<? extends NamedElement> selectedRow);
+    void OnSelectionChanged(ElementRowViewModel<? extends CapellaElement> selectedRow);
 
     /**
      * Creates the {@linkplain OutlineModel} tree from the provided {@linkplain Collection} of {@linkplain EObject}

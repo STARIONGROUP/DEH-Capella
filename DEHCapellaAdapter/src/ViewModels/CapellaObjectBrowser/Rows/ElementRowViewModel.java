@@ -42,7 +42,7 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
  * @param <TElement> the type of {@linkplain CapellaElement} this row view model represents
  */
 @Annotations.ExludeFromCodeCoverageGeneratedReport
-public abstract class ElementRowViewModel<TElement extends NamedElement> implements IElementRowViewModel<TElement>
+public abstract class ElementRowViewModel<TElement extends CapellaElement> implements IElementRowViewModel<TElement>
 {    
     /**
      * The value indicating whether this row should be highlighted as "selected for transfer"
