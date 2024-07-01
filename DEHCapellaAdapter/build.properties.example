@@ -12,5 +12,5 @@ bin.includes = plugin.xml,\
 source.. = src/
 jar.sign=true
 jarsigner.alias=capella-plugin
-jarsigner.keystore=C:\keystore\capella.keystore
-jarsigner.storepass=lilolilo0
+jarsigner.keystore=../capella.keystore
+jarsigner.storepass=your-keystore-password
