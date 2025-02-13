@@ -25,8 +25,8 @@ package Utils.Stereotypes;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.polarsys.capella.basic.requirement.*;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.requirement.*;
 
 /**
  * The {@linkplain RequirementType} is an enumerations of all Capella requirements type

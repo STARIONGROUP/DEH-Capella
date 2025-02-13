@@ -35,8 +35,8 @@ import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.SystemUserRequirement;
+import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.SystemUserRequirement;
 
 import DstController.IDstController;
 import Enumerations.CapellaArchitecture;
@@ -54,7 +54,6 @@ import ViewModels.Interfaces.IHaveTargetArchitecture;
 import ViewModels.Interfaces.IObjectBrowserBaseViewModel;
 import ViewModels.Interfaces.IRequirementBrowserViewModel;
 import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListViewViewModel;
-import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;

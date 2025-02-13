@@ -25,7 +25,7 @@ package ViewModels.MappingListView.Rows.CapellaElementRows;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
-import org.polarsys.capella.core.data.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.Requirement;
 
 import Reactive.ObservableCollection;
 import ViewModels.MappingListView.Rows.MappingListViewBaseRowViewModel;

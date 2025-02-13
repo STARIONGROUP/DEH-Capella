@@ -40,7 +40,7 @@ import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.core.data.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.Requirement;
 
 import DstController.IDstController;
 import Enumerations.MappingDirection;

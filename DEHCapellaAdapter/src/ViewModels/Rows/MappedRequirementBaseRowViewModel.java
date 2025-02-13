@@ -23,7 +23,7 @@
  */
 package ViewModels.Rows;
 
-import org.polarsys.capella.core.data.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.Requirement;
 
 import Enumerations.MappingDirection;
 import cdp4common.commondata.NamedThing;

@@ -23,56 +23,16 @@
  */
 package Services.Diagram;
 
-import java.util.ArrayList;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.apache.log4j.lf5.LogLevel;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.sirius.diagram.DDiagram;
+import org.eclipse.sirius.diagram.DNodeContainer;
+import org.polarsys.capella.core.data.cs.Part;
+import org.polarsys.capella.core.sirius.analysis.DiagramServices;
 
 import Services.CapellaLog.ICapellaLogService;
 import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
-
-import org.eclipse.emf.common.util.EList;
-import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.sirius.business.api.modelingproject.ModelingProject;
-import org.eclipse.sirius.business.api.query.DRepresentationQuery;
-import org.eclipse.sirius.business.api.query.DViewQuery;
-import org.eclipse.sirius.diagram.DDiagram;
-import org.eclipse.sirius.diagram.DDiagramElement;
-import org.eclipse.sirius.diagram.DNode;
-import org.eclipse.sirius.diagram.DNodeContainer;
-import org.eclipse.sirius.diagram.business.api.query.DDiagramElementQuery;
-import org.eclipse.sirius.diagram.business.api.query.DNodeQuery;
-import org.eclipse.sirius.diagram.business.api.query.NodeStyleQuery;
-import org.eclipse.sirius.diagram.description.DescriptionPackage;
-import org.eclipse.sirius.diagram.description.Layer;
-import org.eclipse.sirius.diagram.description.Layout;
-import org.eclipse.sirius.diagram.description.NodeMapping;
-import org.eclipse.sirius.viewpoint.DRepresentation;
-import org.eclipse.sirius.viewpoint.DRepresentationElement;
-import org.eclipse.sirius.viewpoint.description.RepresentationDescription;
-import org.eclipse.sirius.viewpoint.description.Viewpoint;
-import org.eclipse.ui.internal.misc.UIStats;
-import org.polarsys.capella.core.data.capellamodeller.Project;
-import org.polarsys.capella.core.data.cs.Component;
-import org.polarsys.capella.core.data.cs.DeployableElement;
-import org.polarsys.capella.core.data.cs.Part;
-import org.polarsys.capella.core.data.fa.ComponentExchange;
-import org.polarsys.capella.core.data.la.LogicalArchitecture;
-import org.polarsys.capella.core.data.pa.PhysicalArchitecture;
-import org.polarsys.capella.core.data.pa.PaPackage;
-import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.core.model.helpers.ModelQueryHelper;
-
-import org.polarsys.capella.core.sirius.analysis.CapellaServices;
-import org.polarsys.capella.core.sirius.analysis.DiagramServices;
-
-import Enumerations.CapellaArchitecture;
 
 
 /**

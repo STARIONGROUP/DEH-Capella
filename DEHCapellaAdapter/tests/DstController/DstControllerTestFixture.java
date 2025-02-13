@@ -58,10 +58,11 @@ import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.data.information.datavalue.DataValue;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.RequirementsPkg;
-import org.polarsys.capella.core.data.requirement.SystemFunctionalRequirement;
-import org.polarsys.capella.core.data.requirement.SystemUserRequirement;
+import org.polarsys.kitalpha.emde.model.ElementExtension;
+import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.capella.basic.requirement.SystemFunctionalRequirement;
+import org.polarsys.capella.basic.requirement.SystemUserRequirement;
 
 import com.google.common.collect.ImmutableList;
 
@@ -495,7 +496,7 @@ public class DstControllerTestFixture
         when(this.capellaSessionService.GetArchitectureInstance(any(CapellaArchitecture.class))).thenAnswer(x -> 
         {
             var architectureInstance = mock(BlockArchitecture.class);
-            when(architectureInstance.getOwnedRequirementPkgs()).thenReturn(new BasicEList<RequirementsPkg>());
+            when(architectureInstance.getOwnedExtensions()).thenReturn(new BasicEList<ElementExtension>());
             return architectureInstance;
         });
         

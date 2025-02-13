@@ -37,8 +37,8 @@ import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.fa.ComponentPort;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.DataValue;
-import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.RequirementsPkg;
+import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.RequirementsPkg;
 
 import Utils.ImageLoader.ImageLoader;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;

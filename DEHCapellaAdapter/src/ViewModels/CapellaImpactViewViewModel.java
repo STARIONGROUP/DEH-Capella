@@ -43,8 +43,11 @@ import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.la.LogicalComponentPkg;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponentPkg;
-import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.RequirementsPkg;
+import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.RequirementPackage;
+import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.capella.basic.requirement.helpers.RequirementModelHelper;
+import org.polarsys.capella.basic.requirement.impl.RequirementsPkgImpl;
 
 import DstController.IDstController;
 import Enumerations.CapellaArchitecture;
@@ -270,8 +273,8 @@ public class CapellaImpactViewViewModel extends CapellaObjectBrowserViewModel im
                         ((IHaveTargetArchitecture)mappedElementRowViewModel).GetTargetArchitecture().GetArchitectureClass(), refRowViewModel))
         {
             var architectureRowViewModel = this.transactionService.Clone((BlockArchitecture)refRowViewModel.Get().GetElement());
-            architectureRowViewModel.getOwnedRequirementPkgs().removeIf(x -> AreTheseEquals(x.getId(), parent.getId()));
-            architectureRowViewModel.getOwnedRequirementPkgs().add((RequirementsPkg)parent);
+            architectureRowViewModel.getOwnedExtensions().removeIf(x -> x instanceof RequirementsPkg && AreTheseEquals(((RequirementsPkg)x).getId(), parent.getId()));
+            architectureRowViewModel.getOwnedExtensions().add((RequirementsPkg)parent);
             refRowViewModel.Get().UpdateElement(architectureRowViewModel, true);
         }
         else if(mappedElementRowViewModel.GetDstElement() instanceof PhysicalComponent 

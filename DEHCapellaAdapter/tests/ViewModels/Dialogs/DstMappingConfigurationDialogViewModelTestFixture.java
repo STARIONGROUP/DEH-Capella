@@ -38,7 +38,7 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.core.data.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.Requirement;
 
 import DstController.IDstController;
 import Enumerations.MappedElementRowStatus;

@@ -36,13 +36,8 @@ import java.util.stream.Stream;
 
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.Structure;
-import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.RequirementsPkg;
-import org.polarsys.capella.core.data.requirement.SystemFunctionalInterfaceRequirement;
-import org.polarsys.capella.core.data.requirement.SystemFunctionalRequirement;
-import org.polarsys.capella.core.data.requirement.SystemNonFunctionalInterfaceRequirement;
-import org.polarsys.capella.core.data.requirement.SystemNonFunctionalRequirement;
-import org.polarsys.capella.core.data.requirement.SystemUserRequirement;
+import org.polarsys.capella.basic.requirement.*;
+import org.polarsys.capella.basic.requirement.RequirementsPkg;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;

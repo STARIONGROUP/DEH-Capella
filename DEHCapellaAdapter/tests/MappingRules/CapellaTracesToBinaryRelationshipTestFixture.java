@@ -51,7 +51,7 @@ import org.polarsys.capella.core.data.information.datatype.BooleanType;
 import org.polarsys.capella.core.data.information.datatype.NumericType;
 import org.polarsys.capella.core.data.information.datatype.StringType;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.core.data.requirement.SystemUserRequirement;
+import org.polarsys.capella.basic.requirement.SystemUserRequirement;
 
 import DstController.IDstController;
 

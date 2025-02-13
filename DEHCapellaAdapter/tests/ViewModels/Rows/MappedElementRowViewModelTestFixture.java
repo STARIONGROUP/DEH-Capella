@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.la.LogicalComponent;
-import org.polarsys.capella.core.data.requirement.SystemUserRequirement;
+import org.polarsys.capella.basic.requirement.SystemUserRequirement;
 
 import Enumerations.MappingDirection;
 import Reactive.ObservableValue;

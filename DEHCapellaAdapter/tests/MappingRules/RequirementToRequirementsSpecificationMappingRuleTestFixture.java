@@ -39,8 +39,8 @@ import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.fa.FaPackage;
-import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.RequirementsPkg;
+import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.RequirementsPkg;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;

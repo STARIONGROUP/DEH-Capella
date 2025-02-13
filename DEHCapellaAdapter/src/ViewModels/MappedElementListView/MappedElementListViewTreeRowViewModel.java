@@ -23,6 +23,8 @@
  */
 package ViewModels.MappedElementListView;
 
+import javax.swing.ImageIcon;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,6 +32,7 @@ import org.netbeans.swing.outline.RowModel;
 
 import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
+import Utils.ImageLoader.ImageLoader;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.PropertyValueBaseRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RequirementRowViewModel;
@@ -73,10 +76,12 @@ public class MappedElementListViewTreeRowViewModel implements RowModel
                     ? Pair.of( mappedRowViewModel.GetDstElementRepresentation(), mappedRowViewModel.GetHubElementRepresentation())
                     : Pair.of(mappedRowViewModel.GetHubElementRepresentation(), mappedRowViewModel.GetDstElementRepresentation());
             
+            var arrowImageIcon = ImageLoader.GetIcon("arrow16.png");
+            
             switch (column)
             {
                 case 0 : return leftAndRightElements.getLeft();
-                case 1 : return "<html><body>&#x1F872;</body></html>";
+                case 1 : return arrowImageIcon;
                 case 2: 
                 {
                     if(rowViewModel instanceof IHaveTargetArchitecture)
@@ -106,7 +111,7 @@ public class MappedElementListViewTreeRowViewModel implements RowModel
         switch (column)
         {
             case 0 : return String.class;
-            case 1 : return String.class;
+            case 1 : return ImageIcon.class;
             case 2 : return CapellaArchitecture.class;
             case 3 : return String.class;
             default : return null;
