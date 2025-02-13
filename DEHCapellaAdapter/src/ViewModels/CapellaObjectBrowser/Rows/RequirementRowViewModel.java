@@ -24,7 +24,7 @@
 package ViewModels.CapellaObjectBrowser.Rows;
 
 import Utils.Stereotypes.CapellaTypeEnumerationUtility;
-import org.polarsys.capella.core.data.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.Requirement;
 import Utils.Stereotypes.RequirementType;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;

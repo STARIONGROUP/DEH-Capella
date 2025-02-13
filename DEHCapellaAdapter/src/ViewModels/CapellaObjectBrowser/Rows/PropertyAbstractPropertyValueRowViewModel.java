@@ -25,6 +25,7 @@ package ViewModels.CapellaObjectBrowser.Rows;
 
 import org.polarsys.capella.core.data.capellacore.AbstractPropertyValue;
 import org.polarsys.capella.core.data.capellacore.BooleanPropertyValue;
+import org.polarsys.capella.core.data.capellacore.EnumerationPropertyValue;
 import org.polarsys.capella.core.data.capellacore.FloatPropertyValue;
 import org.polarsys.capella.core.data.capellacore.IntegerPropertyValue;
 import org.polarsys.capella.core.data.capellacore.StringPropertyValue;
@@ -73,6 +74,17 @@ public class PropertyAbstractPropertyValueRowViewModel extends PropertyValueBase
         {
             return ((StringPropertyValue)this.GetElement()).getValue();
         }
+        else if(this.GetElement() instanceof EnumerationPropertyValue)
+        {
+            if(((EnumerationPropertyValue)this.GetElement()).getValue() != null)
+            {
+                return ((EnumerationPropertyValue)this.GetElement()).getValue().getName();
+            }
+            else
+            {
+                return "undefined";
+            }
+        }   
 
         return "";
     }

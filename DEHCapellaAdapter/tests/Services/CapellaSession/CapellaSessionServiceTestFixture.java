@@ -51,12 +51,12 @@ import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.NumericValue;
 import org.polarsys.capella.core.data.la.LogicalArchitecture;
 import org.polarsys.capella.core.data.la.LogicalComponent;
-import org.polarsys.capella.core.data.requirement.RequirementsPkg;
-import org.polarsys.capella.core.data.requirement.SystemFunctionalInterfaceRequirement;
-import org.polarsys.capella.core.data.requirement.SystemFunctionalRequirement;
-import org.polarsys.capella.core.data.requirement.SystemNonFunctionalInterfaceRequirement;
-import org.polarsys.capella.core.data.requirement.SystemNonFunctionalRequirement;
-import org.polarsys.capella.core.data.requirement.SystemUserRequirement;
+import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.capella.basic.requirement.SystemFunctionalInterfaceRequirement;
+import org.polarsys.capella.basic.requirement.SystemFunctionalRequirement;
+import org.polarsys.capella.basic.requirement.SystemNonFunctionalInterfaceRequirement;
+import org.polarsys.capella.basic.requirement.SystemNonFunctionalRequirement;
+import org.polarsys.capella.basic.requirement.SystemUserRequirement;
 
 import Reactive.ObservableValue;
 import Services.CapellaSelection.ICapellaSelectionService;

@@ -42,10 +42,10 @@ import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Namespace;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
-import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.RequirementsPkg;
-import org.polarsys.capella.core.data.requirement.SystemNonFunctionalInterfaceRequirement;
-import org.polarsys.capella.core.data.requirement.SystemNonFunctionalRequirement;
+import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.capella.basic.requirement.SystemNonFunctionalInterfaceRequirement;
+import org.polarsys.capella.basic.requirement.SystemNonFunctionalRequirement;
 
 import DstController.IDstController;
 import Enumerations.CapellaArchitecture;

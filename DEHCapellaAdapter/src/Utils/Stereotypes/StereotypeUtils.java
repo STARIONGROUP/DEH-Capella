@@ -44,6 +44,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.polarsys.capella.core.data.capellacommon.CapellacommonPackage;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.CapellacorePackage;
+import org.polarsys.capella.core.data.capellacore.EnumerationPropertyValue;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.CsPackage;
@@ -60,9 +61,8 @@ import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
 import org.polarsys.capella.core.data.la.LaPackage;
 import org.polarsys.capella.core.data.pa.PaPackage;
 import org.polarsys.capella.core.data.pa.deployment.DeploymentPackage;
-import org.polarsys.capella.core.data.requirement.Requirement;
-import org.polarsys.capella.core.data.requirement.RequirementPackage;
-import org.polarsys.capella.core.data.requirement.RequirementsPkg;
+import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.capella.basic.requirement.RequirementsPkg;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
 import org.polarsys.kitalpha.emde.model.Element;
 
@@ -279,7 +279,7 @@ public final class StereotypeUtils
      */
     private static List<EPackage> GetEPackages()
     {
-        return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementPackage.eINSTANCE, CapellacorePackage.eINSTANCE,
+        return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, org.polarsys.capella.basic.requirement.RequirementPackage.eINSTANCE, CapellacorePackage.eINSTANCE,
                 InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE, CapellacommonPackage.eINSTANCE, 
                 CsPackage.eINSTANCE, DeploymentPackage.eINSTANCE);
     }
@@ -392,7 +392,14 @@ public final class StereotypeUtils
         }
         else if(dataValue instanceof EnumerationLiteral)
         {
-            return ((EnumerationLiteral)dataValue).getDomainValue().getName();
+            if(((EnumerationLiteral)dataValue).getDomainValue() != null)
+            {
+                return ((EnumerationLiteral)dataValue).getDomainValue().getName();
+            }
+            else
+            {
+                return "undefined";
+            }
         }   
         
         return "";
