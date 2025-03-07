@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import Reactive.ObservableCollection;
 import Utils.Ref;
@@ -63,16 +63,16 @@ class ElementDefinitionImpactViewViewModelTestFixture
     private IDstController dstController;
     private IHubController hubController;
     private ElementDefinitionImpactViewViewModel viewModel;
-    private Collection<MappedElementRowViewModel<DefinedThing, NamedElement>> elements;
+    private Collection<MappedElementRowViewModel<DefinedThing, Element>> elements;
     private Iteration iteration;
     private ObservableCollection<Thing> selectedDstMapResultForTransfer;
-    private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> dstMapResult;
+    private ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>> dstMapResult;
     private ElementDefinition elementDefinition0;
     private ElementDefinition elementDefinition1;
     private ElementDefinition elementDefinition2;
-    private MappedElementRowViewModel<DefinedThing, NamedElement> mappedElement0;
-    private MappedElementRowViewModel<DefinedThing, NamedElement> mappedElement1;
-    private MappedElementRowViewModel<DefinedThing, NamedElement> mappedElement2;
+    private MappedElementRowViewModel<DefinedThing, Element> mappedElement0;
+    private MappedElementRowViewModel<DefinedThing, Element> mappedElement1;
+    private MappedElementRowViewModel<DefinedThing, Element> mappedElement2;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -87,7 +87,7 @@ class ElementDefinitionImpactViewViewModelTestFixture
         when(this.hubController.GetIsSessionOpen()).thenReturn(true);
         when(this.hubController.GetOpenIteration()).thenReturn(this.iteration);
         
-        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        this.dstMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>>();
         when(this.dstController.GetDstMapResult()).thenReturn(this.dstMapResult);
         
         this.selectedDstMapResultForTransfer = new ObservableCollection<Thing>();
@@ -185,16 +185,16 @@ class ElementDefinitionImpactViewViewModelTestFixture
         this.elementDefinition2.setOwner(owner);
         this.elementDefinition2.setName("elementDefinition2");
         
-        this.mappedElement0 = (MappedElementRowViewModel<DefinedThing, NamedElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement0 = (MappedElementRowViewModel<DefinedThing, Element>)mock(MappedElementRowViewModel.class);
         when(mappedElement0.GetHubElement()).thenReturn(elementDefinition0.clone(false));
-        this.mappedElement1 = (MappedElementRowViewModel<DefinedThing, NamedElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement1 = (MappedElementRowViewModel<DefinedThing, Element>)mock(MappedElementRowViewModel.class);
         when(mappedElement1.GetHubElement()).thenReturn(elementDefinition1);
-        this.mappedElement2 = (MappedElementRowViewModel<DefinedThing, NamedElement>)mock(MappedElementRowViewModel.class);
+        this.mappedElement2 = (MappedElementRowViewModel<DefinedThing, Element>)mock(MappedElementRowViewModel.class);
         when(mappedElement2.GetHubElement()).thenReturn(elementDefinition2);
 
         assertEquals(1, this.viewModel.GetBrowserTreeModel().getRowCount());
                 
-        this.elements = new ArrayList<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        this.elements = new ArrayList<MappedElementRowViewModel<DefinedThing, Element>>();
         elements.add(this.mappedElement0);
         elements.add(this.mappedElement1);
         elements.add(this.mappedElement2);

@@ -23,7 +23,7 @@
  */
 package ViewModels.Rows;
 
-import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import Enumerations.MappingDirection;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;

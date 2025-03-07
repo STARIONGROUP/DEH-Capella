@@ -45,6 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
@@ -94,9 +95,9 @@ public class CapellaMappingConfigurationServiceTestFixture extends CapellaSessio
 
         this.sessionUri = URI.createURI("t.e.s.t");
         var session = this.GetSession(this.sessionUri);
-        var elements = this.GetSessionElements(session, CapellaElement.class);
+        var elements = this.GetSessionElements(session, org.polarsys.kitalpha.emde.model.Element.class);
         
-        var sessionAndObjectsMap = new HashMap<URI, List<CapellaElement>>();
+        var sessionAndObjectsMap = new HashMap<URI, List<Element>>();
         
         sessionAndObjectsMap.putIfAbsent(this.sessionUri, elements);
         

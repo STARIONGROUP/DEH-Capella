@@ -27,11 +27,13 @@ import static Utils.Operators.Operators.AreTheseEquals;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.common.util.EList;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
-import org.polarsys.capella.basic.requirement.Requirement;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.RequirementType;
 
 import App.AppContainer;
 import DstController.IDstController;
@@ -43,8 +45,9 @@ import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Utils.Ref;
 import Utils.Stereotypes.CapellaRequirementCollection;
 import Utils.Stereotypes.CapellaTypeEnumerationUtility;
+import Utils.Stereotypes.ElementUtils;
 import Utils.Stereotypes.HubRequirementCollection;
-import Utils.Stereotypes.RequirementType;
+import Utils.Stereotypes.RequirementTypeEnumeration;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
 import cdp4common.commondata.NamedThing;
@@ -63,9 +66,9 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
     private ArrayList<RequirementsSpecification> requirementsSpecifications = new ArrayList<RequirementsSpecification>();
 
     /**
-     * The temporary collection of {@linkplain RequirementsPkg} that were created during this mapping
+     * The temporary collection of {@linkplain Folder} that were created during this mapping
      */
-    private ArrayList<RequirementsPkg> temporaryRequirementsContainer = new ArrayList<>();
+    private ArrayList<Folder> temporaryRequirementsContainer = new ArrayList<>();
 
     /**
      * Initializes a new {@linkplain RequirementToRequirementsSpecificationMappingRule}
@@ -147,56 +150,79 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
      */
     private <TRequirement extends Requirement> void UpdateProperties(cdp4common.engineeringmodeldata.Requirement hubRequirement, TRequirement dstRequirement)
     {
-        dstRequirement.setRequirementId(hubRequirement.getShortName());
-        dstRequirement.setName(hubRequirement.getName());
+        dstRequirement.setReqIFIdentifier(hubRequirement.getShortName());
+        dstRequirement.setReqIFName(hubRequirement.getName());
         this.UpdateOrCreateDefinition(hubRequirement, dstRequirement);
     }
 
     /**
-     * Gets or creates the {@linkplain RequirementsPkg} that can represent the {@linkplain RequirementsSpecification}
+     * Gets or creates the {@linkplain Folder} that can represent the {@linkplain RequirementsSpecification}
      * 
      * @param mappedRequirementRowViewModel the {@linkplain MappedDstRequirementRowViewModel}
-     * @return a {@linkplain RequirementsPkg}
+     * @return a {@linkplain Folder}
      */
     private Requirement GetOrCreateRequirement(MappedHubRequirementRowViewModel mappedRequirementRowViewModel)
     {
-        var refRequirementType = new Ref<RequirementType>(RequirementType.class);
+        var refRequirementType = new Ref<RequirementTypeEnumeration>(RequirementTypeEnumeration.class);
         
         if(!this.TryGetRequirementClass(mappedRequirementRowViewModel.GetHubElement(), refRequirementType))
         {
-            refRequirementType.Set(RequirementType.User);
+            refRequirementType.Set(RequirementTypeEnumeration.User);
         }
         
-        return this.GetOrCreateRequirement(mappedRequirementRowViewModel.GetHubElement(), mappedRequirementRowViewModel.GetTargetArchitecture(), refRequirementType.Get().ClassType());
+        return this.GetOrCreateRequirement(mappedRequirementRowViewModel.GetHubElement(), mappedRequirementRowViewModel.GetTargetArchitecture(), refRequirementType.Get());
     }
 
     /**
-     * Gets or creates the {@linkplain RequirementsPkg} that can represent the {@linkplain RequirementsSpecification}
+     * Gets or creates the {@linkplain Folder} that can represent the {@linkplain RequirementsSpecification}
      * 
      * @param <TRequirement> the type of {@linkplain Requirement} to get
      * @param hubRequirement the {@linkplain cdp4common.engineeringmodeldata.Requirement}
      * @param targetArchitecture the {@linkplain CapellaArchitecture}
      * @param requirementType the {@linkplain Class} of {@linkplain Requirement}
-     * @return a {@linkplain RequirementsPkg}
+     * @return a {@linkplain Folder}
      */
-    private <TRequirement extends Requirement> TRequirement GetOrCreateRequirement(cdp4common.engineeringmodeldata.Requirement hubRequirement, CapellaArchitecture targetArchitecture, Class<TRequirement> requirementType)
+    private Requirement GetOrCreateRequirement(cdp4common.engineeringmodeldata.Requirement hubRequirement, CapellaArchitecture targetArchitecture, RequirementTypeEnumeration requirementType)
     {
-        var refElement = new Ref<>(requirementType);
+        var refElement = new Ref<>(Requirement.class);
         
         if(!this.dstController.TryGetElementBy(x -> x instanceof NamedElement && 
                 AreTheseEquals(((NamedElement) x).getName(), hubRequirement.getName(), true) && targetArchitecture.AreSameArchitecture(x), refElement))
         {        
-            var newRequirement = this.transactionService.Create(requirementType, hubRequirement.getName(), targetArchitecture);
+            var newRequirement = this.transactionService.Create(Requirement.class, hubRequirement.getName(), targetArchitecture);
             refElement.Set(newRequirement);
         }
         else
         {
             refElement.Set(this.transactionService.Clone(refElement.Get()));
         }
+
+        this.UpdateRequirementType(refElement, requirementType);
         
         return refElement.Get();
     }
     
+    /**
+     * @param refElement
+     * @param requirementType
+     */
+    private void UpdateRequirementType(Ref<Requirement> refElement, RequirementTypeEnumeration requirementType)
+    {
+        var refRequirementType = new Ref<RequirementType>(RequirementType.class);
+        
+        if(this.dstController.TryGetElementBy(x -> x instanceof RequirementType && 
+                AreTheseEquals(((RequirementType) x).getReqIFLongName(), requirementType.name(), true), refElement))
+        {
+            refElement.Get().setRequirementType(refRequirementType.Get());
+        }
+        else
+        {
+            var newRequirementType = this.transactionService.Create(RequirementType.class, requirementType.name());
+            this.transactionService.AddReferenceDataToDataPackage(refRequirementType.Get());
+            refElement.Get().setRequirementType(newRequirementType);
+        }
+    }
+
     /**
      * Updates or creates the definition according to the provided {@linkplain Requirement} assignable to the {@linkplain Requirement}  
      * 
@@ -214,22 +240,24 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
                     .findFirst()
                     .orElse(hubRequirement.getDefinition().get(0));
             
-            requirement.setDescription(definition.getContent());
+            requirement.setReqIFDescription(definition.getContent());
+            requirement.setReqIFText(definition.getContent());
         }
         else
         {
-            requirement.setDescription("");
+            requirement.setReqIFDescription("");
+            requirement.setReqIFText("");
         }
     }
     
     /**
-     * Gets the {@linkplain RequirementType} based on the {@linkplain Category} applied to the provided {@linkplain cdp4common.engineeringmodeldata.Requirement}
+     * Gets the {@linkplain RequirementTypeEnumeration} based on the {@linkplain Category} applied to the provided {@linkplain cdp4common.engineeringmodeldata.Requirement}
      * 
      * @param requirement the {@linkplain cdp4common.engineeringmodeldata.Requirement}
-     * @param refRequirementType the {@linkplain Ref} of {@linkplain RequirementType}
-     * @return a {@linkplain boolean} indicating whether the {@linkplain RequirementType} is different than the default value
+     * @param refRequirementType the {@linkplain Ref} of {@linkplain RequirementTypeEnumeration}
+     * @return a {@linkplain boolean} indicating whether the {@linkplain RequirementTypeEnumeration} is different than the default value
      */
-    private boolean TryGetRequirementClass(cdp4common.engineeringmodeldata.Requirement requirement, Ref<RequirementType> refRequirementType)
+    private boolean TryGetRequirementClass(cdp4common.engineeringmodeldata.Requirement requirement, Ref<RequirementTypeEnumeration> refRequirementType)
     {
         for (var category : requirement.getCategory())
         {
@@ -246,7 +274,7 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
     }
     
     /**
-     * Gets or creates the {@linkplain RequirementsPkg} that can represent the {@linkplain RequirementsSpecification} or one of its {@linkplain RequirementsGroup}
+     * Gets or creates the {@linkplain Folder} that can represent the {@linkplain RequirementsSpecification} or one of its {@linkplain RequirementsGroup}
      * 
      * @param hubRequirement the {@linkplain cdp4common.engineeringmodeldata.Requirement} element that represents the requirement in the Hub
      * @param requirement the {@linkplain Requirement} to update
@@ -259,7 +287,7 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
         var requirementsSpecification = this.GetOrCreateRequirementContainer(hubRequirementSpecification, targetArchitecture);
                 
         var container = hubRequirement.getGroup();
-        CapellaElement lastChild = requirement;
+        Requirement lastChild = requirement;
         
         while(container != null && !AreTheseEquals(container.getIid(), hubRequirementSpecification.getIid()))
         {
@@ -279,14 +307,14 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
      * Adds or update the containedElement to the container
      * 
      * @param containedElement the {@linkplain CapellaElement} contained element
-     * @param container the {@linkplain RequirementsPkg} container
+     * @param container the {@linkplain Folder} container
      */
     @SuppressWarnings("unchecked")
-    private <TElement extends CapellaElement> void AddOrUpdateContainement(TElement containedElement, RequirementsPkg container)
+    private <TElement extends Requirement> void AddOrUpdateContainement(TElement containedElement, Folder container)
     {
-        var collection = (EList<TElement>)container.getOwnedRequirementPkgs();
+        var collection = (EList<TElement>)container.getOwnedRequirements();
         
-        if(containedElement instanceof Requirement)
+        if(!(containedElement instanceof Folder))
         {
             collection = (EList<TElement>)container.getOwnedRequirements();
         }
@@ -296,18 +324,18 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
     }
     
     /**
-     * Gets or creates the {@linkplain RequirementsPkg} that can represent the {@linkplain RequirementsSpecification} or one of its {@linkplain RequirementsGroup} 
+     * Gets or creates the {@linkplain Folder} that can represent the {@linkplain RequirementsSpecification} or one of its {@linkplain RequirementsGroup} 
      * 
      * @param thingContainer the {@linkplain cdp4common.engineeringmodeldata.Requirement} element that represents the requirement in the Hub
      * @param targetArchitecture the {@linkplain CapellaArchitecture}
-     * @return a {@linkplain RequirementsPkg}
+     * @return a {@linkplain Folder}
      */
-    private <TThing extends NamedThing> RequirementsPkg GetOrCreateRequirementContainer(TThing thingContainer, CapellaArchitecture targetArchitecture)
+    private <TThing extends NamedThing> Folder GetOrCreateRequirementContainer(TThing thingContainer, CapellaArchitecture targetArchitecture)
     {
-        var refElement = new Ref<>(RequirementsPkg.class);
+        var refElement = new Ref<>(Folder.class);
         
         var existingContainer = this.temporaryRequirementsContainer.stream()
-                .filter(x -> AreTheseEquals(((NamedElement) x).getName(), thingContainer.getName(), true))
+                .filter(x -> AreTheseEquals(ElementUtils.GetName(x), thingContainer.getName(), true))
                 .findFirst();
         
         if(existingContainer.isPresent())
@@ -319,7 +347,7 @@ public class RequirementsSpecificationToRequirementMappingRule extends HubToDstB
             if(!this.dstController.TryGetElementBy(x -> x instanceof NamedElement && 
                     AreTheseEquals(((NamedElement) x).getName(), thingContainer.getName(), true) && targetArchitecture.AreSameArchitecture(x), refElement))
             {        
-                var newRequirementsPackage = this.transactionService.Create(RequirementsPkg.class, thingContainer.getName(), targetArchitecture);
+                var newRequirementsPackage = this.transactionService.Create(Folder.class, thingContainer.getName(), targetArchitecture);
                 this.temporaryRequirementsContainer.add(newRequirementsPackage);
                 refElement.Set(newRequirementsPackage);
             }

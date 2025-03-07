@@ -25,6 +25,7 @@ package Services.CapellaTransaction;
 
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 /**
  * The ClonedReferenceElement is a POJO class that represents a cloned element with it's original reference
@@ -32,7 +33,7 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
  * @param <TElement> the type of the cloned {@linkplain CapellaElement}
  */
 @Annotations.ExludeFromCodeCoverageGeneratedReport
-public class ClonedReferenceElement<TElement extends CapellaElement>
+public class ClonedReferenceElement<TElement extends Element>
 {
     /**
      *  Backing field for {@linkplain #GetClone()}

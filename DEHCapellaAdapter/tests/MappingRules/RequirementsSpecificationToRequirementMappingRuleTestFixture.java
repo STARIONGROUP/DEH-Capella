@@ -42,10 +42,8 @@ import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Namespace;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
-import org.polarsys.capella.basic.requirement.Requirement;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
-import org.polarsys.capella.basic.requirement.SystemNonFunctionalInterfaceRequirement;
-import org.polarsys.capella.basic.requirement.SystemNonFunctionalRequirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
 
 import DstController.IDstController;
 import Enumerations.CapellaArchitecture;
@@ -57,7 +55,7 @@ import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingConfiguration.IMappingConfigurationService;
 import Utils.Stereotypes.CapellaRequirementCollection;
 import Utils.Stereotypes.HubRequirementCollection;
-import Utils.Stereotypes.RequirementType;
+import Utils.Stereotypes.RequirementTypeEnumeration;
 import Utils.Stereotypes.StereotypeUtils;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import ViewModels.Rows.MappedDstRequirementRowViewModel;
@@ -122,9 +120,8 @@ class RequirementsSpecificationToRequirementMappingRuleTestFixture
                             return mock(classArgument);
                         }
                         
-                        var packageMocked = mock(RequirementsPkg.class);
+                        var packageMocked = mock(Folder.class);
                         when(packageMocked.getOwnedRequirements()).thenReturn(new BasicEList<>());
-                        when(packageMocked.getOwnedRequirementPkgs()).thenReturn(new BasicEList<>());
                         return packageMocked;
                     });
                     
@@ -133,15 +130,15 @@ class RequirementsSpecificationToRequirementMappingRuleTestFixture
         var result = this.mappingRule.Transform(this.elements);
         assertEquals(6, result.size());
         assertTrue(result.get(0).GetDstElement() != null);
-        var requirement2Container = (RequirementsPkg)result.get(2).GetDstElement().eContainer();
+        var requirement2Container = (Folder)result.get(2).GetDstElement().eContainer();
         assertSame(result.get(1).GetDstElement().eContainer(), requirement2Container);
         
-        assertTrue(RequirementType.FunctionalInterface.ClassType().isInstance(result.get(0).GetDstElement()));
-        assertTrue(RequirementType.NonFunctionalInterface.ClassType().isInstance(result.get(1).GetDstElement()));
-        assertTrue(RequirementType.NonFunctional.ClassType().isInstance(result.get(2).GetDstElement()));
-        assertTrue(RequirementType.Functional.ClassType().isInstance(result.get(3).GetDstElement()));
-        assertTrue(RequirementType.NonFunctionalInterface.ClassType().isInstance(result.get(4).GetDstElement()));
-        assertTrue(RequirementType.User.ClassType().isInstance(result.get(5).GetDstElement()));
+        assertTrue(RequirementTypeEnumeration.FunctionalInterface.ClassType().isInstance(result.get(0).GetDstElement()));
+        assertTrue(RequirementTypeEnumeration.NonFunctionalInterface.ClassType().isInstance(result.get(1).GetDstElement()));
+        assertTrue(RequirementTypeEnumeration.NonFunctional.ClassType().isInstance(result.get(2).GetDstElement()));
+        assertTrue(RequirementTypeEnumeration.Functional.ClassType().isInstance(result.get(3).GetDstElement()));
+        assertTrue(RequirementTypeEnumeration.NonFunctionalInterface.ClassType().isInstance(result.get(4).GetDstElement()));
+        assertTrue(RequirementTypeEnumeration.User.ClassType().isInstance(result.get(5).GetDstElement()));
     }
 
     private void SetupElements()
@@ -219,7 +216,7 @@ class RequirementsSpecificationToRequirementMappingRuleTestFixture
         this.elements.add(new MappedHubRequirementRowViewModel(this.requirement3, MappingDirection.FromHubToDst));
         
         this.elements.add(new MappedHubRequirementRowViewModel(this.requirement4, 
-                new CapellaTransactionService(null).Create(SystemNonFunctionalInterfaceRequirement.class), MappingDirection.FromHubToDst));
+                new CapellaTransactionService(null).Create(Requirement.class), MappingDirection.FromHubToDst));
         
         this.elements.add(new MappedHubRequirementRowViewModel(this.requirement5, MappingDirection.FromHubToDst));
     }

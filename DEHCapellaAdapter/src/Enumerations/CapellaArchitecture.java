@@ -30,6 +30,7 @@ import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
+import org.polarsys.kitalpha.emde.model.Element;
 
 /**
  * The {@linkplain CapellaArchitecture} enumerates the possible Capella Architecture {@linkplain ComponentArchitecture} to use as target when mapping from the Hub
@@ -105,7 +106,7 @@ public enum CapellaArchitecture
      * @param element the {@linkplain TraceableElement} instance
      * @return the {@linkplain CapellaArchitecture}
      */
-    public static CapellaArchitecture From(TraceableElement element)
+    public static CapellaArchitecture From(Element element)
     {
         var architectureInstance = BlockArchitectureExt.getRootBlockArchitecture(element);
         
@@ -123,10 +124,10 @@ public enum CapellaArchitecture
     /**
      * Verifies whether this represented capella architecture is the same as the one containing the provided {@linkplain CapellaElement}
      * 
-     * @param element the {@linkplain CapellaElement}
+     * @param element the {@linkplain Element}
      * @return a {@linkplain boolean}
      */
-    public boolean AreSameArchitecture(CapellaElement element)
+    public boolean AreSameArchitecture(Element element)
     {
         return this.architectureClass.isInstance(BlockArchitectureExt.getRootBlockArchitecture(element));
     }

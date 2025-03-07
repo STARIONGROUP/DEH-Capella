@@ -25,38 +25,38 @@ package Utils.Stereotypes;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.polarsys.capella.basic.requirement.*;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 /**
- * The {@linkplain RequirementType} is an enumerations of all Capella requirements type
+ * The {@linkplain RequirementTypeEnumeration} is an enumerations of all Capella requirements type
  */
-public enum RequirementType implements ICapellaTypeEnumeration<RequirementType, Requirement>
+public enum RequirementTypeEnumeration implements ICapellaTypeEnumeration<RequirementTypeEnumeration, Requirement>
 {    
     /**
      * Represents a {@linkplain SystemNonFunctionalRequirement}
      */
-    NonFunctional("Non-Functional", SystemNonFunctionalRequirement.class),
+    NonFunctional("Non-Functional"),
     
     /**
      * Represents a {@linkplain SystemNonFunctionalInterfaceRequirement}
      */
-    NonFunctionalInterface("Non-Functional Interface", SystemNonFunctionalInterfaceRequirement.class),
+    NonFunctionalInterface("Non-Functional Interface"),
     
     /**
      * Represents a {@linkplain SystemFunctionalRequirement}
      */
-    Functional("Functional", SystemFunctionalRequirement.class),
+    Functional("Functional"),
     
     /**
      * Represents a {@linkplain SystemFunctionalInterfaceRequirement}
      */
-    FunctionalInterface("Functional Interface", SystemFunctionalInterfaceRequirement.class),
+    FunctionalInterface("Functional Interface"),
     
     /**
      * Represents a {@linkplain SystemUserRequirement}
      */
-    User("User Requirement", SystemUserRequirement.class);
+    User("User Requirement");
 
     /**
      * The current class logger
@@ -64,25 +64,19 @@ public enum RequirementType implements ICapellaTypeEnumeration<RequirementType, 
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The {@linkplain Class} represented by this enum value
-     */
-    private final Class<? extends Requirement> classType;
-    
-    /**
      * The display-able label that represent this enum value
      */
     private final String label;
     
     /**
-     * Initializes a new {@linkplain RequirementType}
+     * Initializes a new {@linkplain RequirementTypeEnumeration}
      * 
      * @param label the label associated to the enumeration value
      * @param classType the class associated to the enumeration value
      */
-    private RequirementType(String label, Class<? extends Requirement> classType)
+    private RequirementTypeEnumeration(String label)
     {
         this.label = label;
-        this.classType = classType;
     }
 
     /**
@@ -95,17 +89,6 @@ public enum RequirementType implements ICapellaTypeEnumeration<RequirementType, 
     {
         return this.label;
     }
-
-    /**
-     * Gets the {@linkplain Class} of the instance of the enumeration value
-     * 
-     * @return a {@linkplain Class} of {@linkplain CapellaElement}
-     */
-    @Override
-    public Class<? extends Requirement> ClassType()
-    {
-        return this.classType;
-    }
     
     /**
      * Gets the {@linkplain String} display-able label
@@ -116,5 +99,16 @@ public enum RequirementType implements ICapellaTypeEnumeration<RequirementType, 
     public String Label()
     {
         return this.label;
+    }
+
+    /**
+     * Gets the {@linkplain Class} of the instance of the enumeration value
+     * 
+     * @return a {@linkplain Class} of {@linkplain CapellaElement}
+     */
+    @Override
+    public Class<? extends Requirement> ClassType()
+    {
+        return Requirement.class;
     }
 }

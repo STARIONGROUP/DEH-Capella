@@ -28,7 +28,6 @@ import org.polarsys.capella.core.data.capellamodeller.Folder;
 import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.ComponentArchitecture;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
 
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
@@ -61,9 +60,9 @@ public class BlockArchitectureRowViewModel extends ProjectStructuralElementRowVi
         {    
             this.GetContainedRows().add(new ComponentPackageRowViewModel(this, (ComponentPkg)element));
         }
-        else if(element instanceof RequirementsPkg)
+        else if(element instanceof Folder)
         {
-            this.GetContainedRows().add(new RequirementPackageRowViewModel(this, (RequirementsPkg)element));
+            this.GetContainedRows().add(new RequirementPackageRowViewModel(this, (Folder)element));
         }
         else if(element instanceof Folder)
         {

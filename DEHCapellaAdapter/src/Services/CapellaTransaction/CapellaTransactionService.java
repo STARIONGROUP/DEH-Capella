@@ -23,6 +23,8 @@
  */
 package Services.CapellaTransaction;
 
+import static Utils.Operators.Operators.AreTheseEquals;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,10 +47,18 @@ import org.polarsys.capella.core.data.information.Unit;
 import org.polarsys.capella.core.data.information.datatype.DataType;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
+import org.polarsys.capella.vp.requirements.CapellaRequirements.CapellaModule;
+import org.polarsys.capella.vp.requirements.CapellaRequirements.CapellaTypesFolder;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.RequirementType;
+import org.polarsys.kitalpha.vp.requirements.Requirements.RequirementsPackage;
+import org.polarsys.kitalpha.vp.requirements.Requirements.TypesFolder;
 
 import Enumerations.CapellaArchitecture;
 import Services.CapellaSession.ICapellaSessionService;
 import Utils.Ref;
+import Utils.Stereotypes.ElementUtils;
 import Utils.Stereotypes.StereotypeUtils;
 
 /**
@@ -70,12 +80,12 @@ public class CapellaTransactionService implements ICapellaTransactionService
     /**
      * Backing field for {@linkplain #GetClones(Class)} and {@linkplain #GetClones()}
      */
-    private HashMap<String, ClonedReferenceElement<? extends CapellaElement>> cloneReferences = new HashMap<>();
+    private HashMap<String, ClonedReferenceElement<? extends Element>> cloneReferences = new HashMap<>();
     
     /**
      * Holds the newly created {@linkplain CapellaElement} for future reference such as in {@linkplain #IsClonedOrNew(EObject)}, {@linkplain #GetNew(String, Class)}
      */
-    private HashMap<String, CapellaElement> newReferences = new HashMap<>();
+    private HashMap<String, Element> newReferences = new HashMap<>();
 
     /**
      * Holds the associated target {@linkplain CapellaArchitecture} by {@linkplain CapellaElement} id. Typically {@linkplain Requirement}
@@ -88,7 +98,7 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * @return a {@linkplain Collection} of {@linkplain String} UUID and {@linkplain CapellaReferenceElement}
      */
     @Override
-    public Map<String, ClonedReferenceElement<? extends CapellaElement>> GetClones()
+    public Map<String, ClonedReferenceElement<? extends Element>> GetClones()
     {
         return Collections.unmodifiableMap(cloneReferences);
     }
@@ -101,7 +111,7 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * @return a {@linkplain Collection} of {@linkplain String} UUID and {@linkplain CapellaReferenceElement}
      */
     @Override
-    public <TElement extends CapellaElement> Collection<ClonedReferenceElement<? extends CapellaElement>> GetClones(Class<TElement> clazz)
+    public <TElement extends Element> Collection<ClonedReferenceElement<? extends Element>> GetClones(Class<TElement> clazz)
     {
         return Collections.unmodifiableCollection(cloneReferences.values().stream()
                 .filter(x -> clazz.isAssignableFrom(x.GetOriginal().getClass()))
@@ -126,9 +136,9 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * @return a {@linkplain ClonedReferenceElement} of type {@linkplain #TElement}
      */
     @SuppressWarnings("unchecked")
-    public <TElement extends CapellaElement> ClonedReferenceElement<TElement> GetClone(TElement element)
+    public <TElement extends Element> ClonedReferenceElement<TElement> GetClone(TElement element)
     {
-        return (ClonedReferenceElement<TElement>) this.cloneReferences.get(element.getId());
+        return (ClonedReferenceElement<TElement>) this.cloneReferences.get(ElementUtils.GetId(element));
     }
 
     /**
@@ -141,7 +151,7 @@ public class CapellaTransactionService implements ICapellaTransactionService
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <TElement extends CapellaElement> TElement GetNew(String id, Class<TElement> elementType)
+    public <TElement extends Element> TElement GetNew(String id, Class<TElement> elementType)
     {
         return (TElement) this.newReferences.get(id);
     }
@@ -155,21 +165,23 @@ public class CapellaTransactionService implements ICapellaTransactionService
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <TElement extends CapellaElement> TElement Clone(TElement original)
+    public <TElement extends Element> TElement Clone(TElement original)
     {
         if(original == null)
         {
             return null;
         }
         
-        if(this.cloneReferences.containsKey(original.getId()))
+        var elementId = ElementUtils.GetId(original);
+        
+        if(this.cloneReferences.containsKey(elementId))
         {
-            return (TElement) this.cloneReferences.get(original.getId()).GetClone();
+            return (TElement) this.cloneReferences.get(elementId).GetClone();
         }
         else
         {
             var clonedReference = new ClonedReferenceElement<TElement>(original);
-            this.cloneReferences.put(original.getId(), clonedReference);
+            this.cloneReferences.put(elementId, clonedReference);
             return clonedReference.GetClone();
         }
     }
@@ -184,13 +196,13 @@ public class CapellaTransactionService implements ICapellaTransactionService
     @Override
     public <TElement extends EObject> boolean IsCloned(TElement element)
     {
-        if(!(element instanceof CapellaElement))
+        if(!(element instanceof Element))
         {
             return false;
         }
         
-        return this.cloneReferences.containsKey(((CapellaElement)element).getId()) 
-                && this.cloneReferences.get(((CapellaElement)element).getId()).GetClone() == element;
+        return this.cloneReferences.containsKey(ElementUtils.GetId((Element)element)) 
+                && this.cloneReferences.get(ElementUtils.GetId((Element)element)).GetClone() == element;
     }    
 
     /**
@@ -200,9 +212,9 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * @param element the {@linkplain #TElement} to check
      * @return an assert
      */
-    public <TElement extends EObject> boolean IsClonedOrNew(TElement element)
+    public <TElement extends Element> boolean IsClonedOrNew(TElement element)
     {
-        if(!(element instanceof CapellaElement))
+        if(!(element instanceof Element))
         {
             return false;
         }
@@ -212,7 +224,7 @@ public class CapellaTransactionService implements ICapellaTransactionService
             return true;
         }
 
-        return this.IsNew((CapellaElement)element);
+        return this.IsNew((Element)element);
     }
 
     /**
@@ -223,10 +235,12 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * @return an assert
      */
     @Override
-    public <TElement extends CapellaElement> boolean IsNew(TElement element)
+    public <TElement extends Element> boolean IsNew(TElement element)
     {
-        return this.newReferences.containsKey(((CapellaElement)element).getId())
-                && this.newReferences.get(((CapellaElement)element).getId()) == element;
+        var elementId = ElementUtils.GetId(element);
+        
+        return this.newReferences.containsKey(elementId)
+                && this.newReferences.get(elementId) == element;
     }
 
     /**
@@ -237,7 +251,7 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * @param element the element
      * @return a {@linkplain #TElement}
      */
-    public <TElement extends CapellaElement> TElement GetOriginal(TElement element)
+    public <TElement extends Element> TElement GetOriginal(TElement element)
     {
         return this.IsCloned(element) ? this.GetClone(element).GetOriginal() : element;
     }
@@ -252,31 +266,29 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * @return an instance of the provided type
      */
     @Override
-    public <TInstance extends NamedElement> TInstance Create(Class<TInstance> clazz, String name, CapellaArchitecture targetArchitecture)
+    public <TInstance extends Element> TInstance Create(Class<TInstance> clazz, String name, CapellaArchitecture targetArchitecture)
     {
         var newElement = this.Create(clazz, name);
         this.RegisterTargetArchitecture(newElement, targetArchitecture);
         return newElement;
     }
 
+
     /**
-     * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}
+     * Initializes a new {@linkplain Element} from the specified {@linkplain #Class}
      * 
-     * @param <TInstance> the {@linkplain Type} of {@linkplain CapellaElement}
+     * @param <TInstance> the {@linkplain Type} of {@linkplain Element}
      * @param clazz the {@linkplain Class} of {@linkplain #TInstance}
-     * @param name the name of the newly created {@linkplain CapellaElement}, used to query the {@linkplain #newReferences} collection
+     * @param name the name of the newly created {@linkplain Element}, used to query the {@linkplain #newReferences} collection
      * @return an instance of the provided type
      */
     @Override
-    public <TInstance extends NamedElement> TInstance Create(Class<TInstance> clazz, String name)
+    public <TInstance extends Element> TInstance Create(Class<TInstance> clazz, String name)
     {        
         var newElement = this.Create(clazz);
         
-        if(newElement != null)
-        {
-            newElement.setName(name);
-        }
-        
+        ElementUtils.SetName(newElement, name);
+                
         return newElement;
     }
     
@@ -288,14 +300,15 @@ public class CapellaTransactionService implements ICapellaTransactionService
      * @return an instance of the provided type
      */
     @Override
-    public <TInstance extends CapellaElement> TInstance Create(Class<TInstance> clazz)
+    public <TInstance extends Element> TInstance Create(Class<TInstance> clazz)
     {
         var eClassAndFactory = StereotypeUtils.GetEClassAndFactory(clazz.getSimpleName());
         
         if (eClassAndFactory.getLeft() != null && eClassAndFactory.getRight() != null && eClassAndFactory.getLeft() instanceof EClass) 
         {
             var reference = clazz.cast(eClassAndFactory.getRight().create((EClass)eClassAndFactory.getLeft()));
-            this.newReferences.put(reference.getId(), reference);
+            this.newReferences.put(ElementUtils.GetId(reference), reference);            
+            
             return reference;
         }
         
@@ -306,25 +319,25 @@ public class CapellaTransactionService implements ICapellaTransactionService
     /**
      * Gets the registered target {@linkplain CapellaArchitecture} for the specified {@linkplain CapellaElement}
      * 
-     * @param capellaElement the {@linkplain CapellaElement}
+     * @param capellaElement the {@linkplain Element}
      * @return the {@linkplain CapellaArchitecture}
      */
     @Override
-    public CapellaArchitecture GetTargetArchitecture(CapellaElement capellaElement)
+    public CapellaArchitecture GetTargetArchitecture(Element capellaElement)
     {
-        return this.registeredTargetArchitecture.get(capellaElement.getId());
+        return this.registeredTargetArchitecture.get(ElementUtils.GetId(capellaElement));
     }    
 
     /**
      * Register the target {@linkplain CapellaArchitecture} for the specified {@linkplain CapellaElement}
      * 
-     * @param capellaElement the {@linkplain CapellaElement}
+     * @param element the {@linkplain Element}
      * @param targetArchitecture the target {@linkplain CapellaArchitecture}
      */
     @Override
-    public void RegisterTargetArchitecture(CapellaElement capellaElement, CapellaArchitecture targetArchitecture)
+    public void RegisterTargetArchitecture(Element element, CapellaArchitecture targetArchitecture)
     {
-        this.registeredTargetArchitecture.putIfAbsent(capellaElement.getId(), targetArchitecture);
+        this.registeredTargetArchitecture.putIfAbsent(ElementUtils.GetId(element), targetArchitecture);
     }
     
     /**
@@ -358,6 +371,40 @@ public class CapellaTransactionService implements ICapellaTransactionService
     public void AddReferenceDataToDataPackage(Unit newUnit)
     {
         this.AddReferenceDataToDataPackage(x -> x.getOwnedUnits(), newUnit);
+    }
+    
+    /**
+     * Adds the provided {@linkplain RequirementType} to the {@linkplain DataPackage} of the current project
+     * 
+     * @param newRequirementType the new {@linkplain RequirementType}
+     */
+    public void AddReferenceDataToDataPackage(RequirementType newRequirementType)
+    {
+        var project = this.sessionService.GetProject(this.sessionService.GetCurrentSession());
+        
+        TransactionHelper.getExecutionManager(project).execute(new AbstractReadWriteCommand()
+        {
+            @Override
+            public void run()
+            {
+                var architecture = BlockArchitectureExt.getBlockArchitecture(Type.SA, project);
+                
+                var requirementTypeModule = architecture.getOwnedExtensions().stream()
+                        .filter(x -> x instanceof CapellaTypesFolder && AreTheseEquals(((CapellaTypesFolder) x).getReqIFLongName(), "RequirementTypes"))
+                        .map(x -> (TypesFolder)x)
+                        .findFirst()
+                        .orElseGet(() -> 
+                {
+                    var newModule = Create(CapellaTypesFolder.class, "RequirementTypes");
+                    architecture.getOwnedExtensions().add(newModule); 
+                    return newModule;
+                });
+                
+                requirementTypeModule.getOwnedTypes().add(newRequirementType);
+
+                Logger.info(String.format("%s %s has been added to %s", newRequirementType.getClass().getSimpleName(), newRequirementType.getReqIFLongName(), requirementTypeModule.getReqIFLongName()));
+            }
+        });
     }
 
     /**

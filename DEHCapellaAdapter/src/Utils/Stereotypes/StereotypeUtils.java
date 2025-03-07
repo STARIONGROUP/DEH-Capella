@@ -61,9 +61,12 @@ import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
 import org.polarsys.capella.core.data.la.LaPackage;
 import org.polarsys.capella.core.data.pa.PaPackage;
 import org.polarsys.capella.core.data.pa.deployment.DeploymentPackage;
-import org.polarsys.capella.basic.requirement.Requirement;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.RequirementsPackage;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
+import org.polarsys.capella.vp.requirements.CapellaRequirements.CapellaModule;
+import org.polarsys.capella.vp.requirements.CapellaRequirements.CapellaRequirementsPackage;
 import org.polarsys.kitalpha.emde.model.Element;
 
 import Enumerations.CapellaArchitecture;
@@ -116,12 +119,12 @@ public final class StereotypeUtils
      */
     public static String GetShortName(Requirement requirement)
     {
-        if(StringUtils.isBlank(requirement.getRequirementId()))
+        if(StringUtils.isBlank(requirement.getReqIFIdentifier()))
         {
-            return GetShortName(requirement.getName());
+            return GetShortName(requirement.getReqIFName());
         }
 
-        return requirement.getRequirementId();        
+        return requirement.getReqIFIdentifier();        
     }
     
     /**
@@ -170,14 +173,14 @@ public final class StereotypeUtils
      * @param parent the {@linkplain EObject} parent
      * @param child the {@linkplain CapellaElement} child
      * @return a value indicating whether the parent is one of the child,
-     * if true, it also means that the parent is {@linkplain RequirementsPkg}
+     * if true, it also means that the parent is {@linkplain Folder}
      */
-    public static boolean IsParentOf(EObject parent, CapellaElement child)
+    public static boolean IsParentOf(EObject parent, Requirement child)
     {
         try
         {
-            return child.eContainer() instanceof RequirementsPkg 
-                    && parent instanceof RequirementsPkg 
+            return child.eContainer() instanceof Folder 
+                    && parent instanceof Folder 
                     && EcoreUtil.isAncestor(parent, child);
         }
         catch(Exception exception)
@@ -226,19 +229,19 @@ public final class StereotypeUtils
      * However, this feature is only a nice to have.
      *  
      * @param requirement the {@linkplain Requirement} element to get the parent from
-     * @param possibleParent the {@linkplain Ref} of {@linkplain RequirementsPkg}
+     * @param possibleParent the {@linkplain Ref} of {@linkplain Folder}
      * @return a value indicating whether the name of the parent was retrieved with success
      */
-    public static boolean TryGetPossibleRequirementsSpecificationElement(Requirement requirement, Ref<RequirementsPkg> possibleParent)
+    public static boolean TryGetPossibleRequirementsSpecificationElement(Requirement requirement, Ref<Folder> possibleParent)
     {
-        RequirementsPkg lastElement = null;
+        Folder lastElement = null;
         EObject currentElement = requirement.eContainer();
         
         while(!possibleParent.HasValue() && currentElement != null)
         {  
-            if(currentElement instanceof RequirementsPkg)
+            if(currentElement instanceof Folder)
             {
-                lastElement = (RequirementsPkg)currentElement;
+                lastElement = (Folder)currentElement;
             }
             else
             {
@@ -279,9 +282,9 @@ public final class StereotypeUtils
      */
     private static List<EPackage> GetEPackages()
     {
-        return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, org.polarsys.capella.basic.requirement.RequirementPackage.eINSTANCE, CapellacorePackage.eINSTANCE,
+        return Arrays.asList(PaPackage.eINSTANCE, LaPackage.eINSTANCE, FaPackage.eINSTANCE, RequirementsPackage.eINSTANCE, CapellacorePackage.eINSTANCE,
                 InformationPackage.eINSTANCE, DatavaluePackage.eINSTANCE, DatatypePackage.eINSTANCE, CapellacommonPackage.eINSTANCE, 
-                CsPackage.eINSTANCE, DeploymentPackage.eINSTANCE);
+                CsPackage.eINSTANCE, DeploymentPackage.eINSTANCE, CapellaRequirementsPackage.eINSTANCE);
     }
 
     /**
@@ -291,7 +294,7 @@ public final class StereotypeUtils
      * @return the {@linkplain CapellaArchitecture}
      */
     @SuppressWarnings("null")
-    public static CapellaArchitecture GetArchitecture(CapellaElement capellaElement)
+    public static CapellaArchitecture GetArchitecture(Element capellaElement)
     {
         var parent = capellaElement.eContainer();
         BlockArchitecture architecture;
@@ -310,14 +313,14 @@ public final class StereotypeUtils
      * @param element the {@linkplain Requirement} from which to find the highest parent
      * @return a {@linkplain RequirementPkg}
      */
-    public static RequirementsPkg GetTopRequirementPakage(Requirement element)
+    public static Folder GetTopRequirementPakage(Requirement element)
     {
         var parent = element.eContainer();
-        RequirementsPkg previousParent = null;
+        Folder previousParent = null;
         
-        while(parent instanceof RequirementsPkg)
+        while(parent instanceof Folder)
         {
-            previousParent = (RequirementsPkg)parent;
+            previousParent = (Folder)parent;
             parent = parent.eContainer();
         }
         

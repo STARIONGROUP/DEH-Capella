@@ -47,7 +47,7 @@ import org.polarsys.capella.core.data.capellacore.EnumerationPropertyType;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Namespace;
 import org.polarsys.capella.core.data.capellacore.Trace;
-import org.polarsys.capella.core.data.capellacore.TypedElement;
+import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.Interface;
 import org.polarsys.capella.core.data.cs.Part;
@@ -57,9 +57,11 @@ import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponentPkg;
 import org.polarsys.capella.core.data.pa.deployment.PartDeploymentLink;
-import org.polarsys.capella.basic.requirement.Requirement;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
+import org.polarsys.capella.vp.requirements.CapellaRequirements.CapellaModule;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
@@ -75,7 +77,8 @@ import Services.CapellaTransaction.ICapellaTransactionService;
 import Services.CapellaUserPreference.ICapellaUserPreferenceService;
 import Services.CapellaUserPreference.UserPreferenceKey;
 import Services.HistoryService.ICapellaLocalExchangeHistoryService;
-import Services.MappingConfiguration.ICapellaMappingConfigurationService;import Services.MappingConfiguration.IMappingConfigurationService;
+import Services.MappingConfiguration.ICapellaMappingConfigurationService;
+import Services.MappingConfiguration.IMappingConfigurationService;
 import Services.MappingEngineService.IMappableThingCollection;
 import Services.MappingEngineService.IMappingEngineService;
 import Services.NavigationService.INavigationService;
@@ -83,6 +86,7 @@ import Utils.Ref;
 import Utils.Stereotypes.CapellaComponentCollection;
 import Utils.Stereotypes.CapellaRequirementCollection;
 import Utils.Stereotypes.CapellaTracedElementCollection;
+import Utils.Stereotypes.ElementUtils;
 import Utils.Stereotypes.HubElementCollection;
 import Utils.Stereotypes.HubRelationshipElementsCollection;
 import Utils.Stereotypes.HubRequirementCollection;
@@ -118,8 +122,6 @@ import cdp4common.types.ContainerList;
 import cdp4dal.exceptions.TransactionException;
 import cdp4dal.operations.ThingTransaction;
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
-import io.reactivex.schedulers.Schedulers;
 
 /**
  * The {@linkplain DstController} is a class that manage transfer and connection to attached running instance of Capella
@@ -221,7 +223,7 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetDstMapResult}
      */
-    private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> hubMapResult = new ObservableCollection<>();
+    private ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>> hubMapResult = new ObservableCollection<>();
     
     /**
      * Gets The {@linkplain ObservableCollection} of Hub map result
@@ -229,7 +231,7 @@ public final class DstController implements IDstController
      * @return an {@linkplain ObservableCollection} of {@linkplain Class}
      */
     @Override
-    public ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> GetHubMapResult()
+    public ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>> GetHubMapResult()
     {
         return this.hubMapResult;
     }
@@ -237,7 +239,7 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetDstMapResult}
      */
-    private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> dstMapResult = new ObservableCollection<>();
+    private ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>> dstMapResult = new ObservableCollection<>();
 
     /**
      * Gets The {@linkplain ObservableCollection} of DST map result
@@ -245,7 +247,7 @@ public final class DstController implements IDstController
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
     @Override
-    public ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> GetDstMapResult()
+    public ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>> GetDstMapResult()
     {
         return this.dstMapResult;
     }
@@ -253,7 +255,7 @@ public final class DstController implements IDstController
     /**
      * Backing field for {@linkplain GetSelectedHubMapResultForTransfer}
      */    
-    private ObservableCollection<CapellaElement> selectedHubMapResultForTransfer = new ObservableCollection<>();
+    private ObservableCollection<Element> selectedHubMapResultForTransfer = new ObservableCollection<>();
     
     /**
      * Gets the {@linkplain ObservableCollection} of that are selected for transfer to the Capella
@@ -261,7 +263,7 @@ public final class DstController implements IDstController
      * @return an {@linkplain ObservableCollection} {@linkplain CapellaElement}
      */
     @Override
-    public ObservableCollection<CapellaElement> GetSelectedHubMapResultForTransfer()
+    public ObservableCollection<Element> GetSelectedHubMapResultForTransfer()
     {
         return this.selectedHubMapResultForTransfer;
     }
@@ -438,8 +440,8 @@ public final class DstController implements IDstController
         this.selectedHubMapResultForTransfer.removeIf(x -> x instanceof Trace);
         
         var transferableTraces = this.mappedBinaryRelationshipsToTraces.stream()
-                .filter(x -> this.selectedHubMapResultForTransfer.stream().anyMatch(m -> AreTheseEquals(m.getId(), x.getTargetElement().getId()))
-                        && this.selectedHubMapResultForTransfer.stream().anyMatch(m -> AreTheseEquals(m.getId(), x.getSourceElement().getId())))
+                .filter(x -> this.selectedHubMapResultForTransfer.stream().anyMatch(m -> AreTheseEquals(ElementUtils.GetId(m), x.getTargetElement().getId()))
+                        && this.selectedHubMapResultForTransfer.stream().anyMatch(m -> AreTheseEquals(ElementUtils.GetId(m), x.getSourceElement().getId())))
                 .collect(Collectors.toList());
         
         this.selectedHubMapResultForTransfer.addAll(transferableTraces);
@@ -546,12 +548,12 @@ public final class DstController implements IDstController
         if(mappingDirection == MappingDirection.FromDstToHub)
         {
             input = new CapellaTracedElementCollection();
-            ((ArrayList<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>) input).addAll(this.dstMapResult);
+            ((ArrayList<MappedElementRowViewModel<? extends Thing, ? extends Element>>) input).addAll(this.dstMapResult);
         }
         else if(mappingDirection == MappingDirection.FromHubToDst)
         {
             input = new HubRelationshipElementsCollection();
-            ((ArrayList<MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>>) input).addAll(this.hubMapResult);
+            ((ArrayList<MappedElementRowViewModel<? extends Thing, ? extends Element>>) input).addAll(this.hubMapResult);
         }
 
         return this.MapTraces(input, mappingDirection);
@@ -610,7 +612,7 @@ public final class DstController implements IDstController
         
         if(this.TryMap(input, output, result));
         {
-            var resultAsCollection = (ArrayList<MappedElementRowViewModel<DefinedThing, NamedElement>>) output.Get();
+            var resultAsCollection = (ArrayList<MappedElementRowViewModel<DefinedThing, Element>>) output.Get();
             
             if(resultAsCollection != null && !resultAsCollection.isEmpty())
             {
@@ -625,10 +627,10 @@ public final class DstController implements IDstController
                     return this.dstMapResult.addAll(resultAsCollection.stream().filter(x -> x != null).collect(Collectors.toList()));
                 }
                 else if (mappingDirection == MappingDirection.FromHubToDst
-                        && resultAsCollection.stream().allMatch(x -> x.GetDstElement() instanceof CapellaElement))
+                        && resultAsCollection.stream().allMatch(x -> x.GetDstElement() instanceof Element))
                 {
                     this.hubMapResult.removeIf(x -> resultAsCollection.stream()
-                            .anyMatch(d -> AreTheseEquals(d.GetDstElement().getId(), x.GetDstElement().getId())));
+                            .anyMatch(d -> AreTheseEquals(ElementUtils.GetId(d.GetDstElement()), ElementUtils.GetId(x.GetDstElement()))));
     
                     this.selectedHubMapResultForTransfer.clear();
                     return this.hubMapResult.addAll(resultAsCollection);
@@ -899,58 +901,120 @@ public final class DstController implements IDstController
      */
     private void PrepareRequirement(Requirement element, CapellaArchitecture targetArchitecture)
     {
-        if(this.transactionService.IsCloned(element))
+        if (this.transactionService.IsCloned(element))
         {
-            var clonedReference = this.transactionService.GetClone(element);
-            clonedReference.GetOriginal().setDescription(clonedReference.GetClone().getDescription());
-            clonedReference.GetOriginal().setName(clonedReference.GetClone().getName());
-            clonedReference.GetOriginal().setRequirementId(element.getRequirementId());
-            this.exchangeHistory.Append(element, ChangeKind.UPDATE);
-        }
-        
-        var container = (RequirementsPkg)element.eContainer();
-        Boolean containerIsCloned = null;
-        
-        while(container != null && !(containerIsCloned = this.transactionService.IsCloned(container)) && container.eContainer() instanceof RequirementsPkg)
-        {                    
-            container = (RequirementsPkg)container.eContainer();
-        }
-
-        final RequirementsPkg containerToUpdate = container;
-        
-        if(containerToUpdate == null)
-        {
+            this.UpdateClonedElement(element);
             return;
         }
-        
-        if(containerIsCloned.booleanValue())
+
+        var container = this.FindRootContainer((Folder) element.eContainer());
+        var module = this.CreateOrUpdateRequirementModule(this.capellaSessionService.GetArchitectureInstance(targetArchitecture));
+
+        this.UpdateContainerAssociation(container, module);
+        this.RecordExchangeHistory(container, element);
+    }
+
+    /**
+     * Updates the original element's properties based on its cloned counterpart.
+     *
+     * @param element The cloned element.
+     */
+    private void UpdateClonedElement(Requirement element)
+    {
+        var clonedReference = this.transactionService.GetClone(element);
+
+        clonedReference.GetOriginal().setReqIFDescription(clonedReference.GetClone().getReqIFDescription());
+        clonedReference.GetOriginal().setReqIFName(clonedReference.GetClone().getReqIFName());
+        clonedReference.GetOriginal().setReqIFText(clonedReference.GetClone().getReqIFText());
+
+        this.exchangeHistory.Append(element.getReqIFName(), ChangeKind.UPDATE.name());
+    }
+
+    /**
+     * Finds the root container by traversing upwards in the folder hierarchy.
+     *
+     * @param container The starting container.
+     * @return The root container, which may be cloned or the original.
+     */
+    private Folder FindRootContainer(Folder container)
+    {
+        while (container != null && !this.transactionService.IsCloned(container) && container.eContainer() instanceof Folder)
         {
-            this.UpdateRequirementPackage(containerToUpdate);
-            this.exchangeHistory.Append(containerToUpdate, ChangeKind.UPDATE);
+            container = (Folder) container.eContainer();
+        }
+
+        return container;
+    }
+
+    /**
+     * Updates the association of the container with its parent or module.
+     * Avoids redundant updates for each requirement.
+     *
+     * @param container The container to update.
+     * @param module The module to associate with.
+     */
+    private void UpdateContainerAssociation(Folder container, CapellaModule module)
+    {
+        var originalContainer = this.transactionService.GetOriginal(container);
+
+        if (container.eContainer() instanceof Folder)
+        {
+            Folder parentFolder = (Folder) container.eContainer();
+            parentFolder.getOwnedRequirements().remove(originalContainer);
+            parentFolder.getOwnedRequirements().add(container);
         }
         else
         {
-            var architecture = this.capellaSessionService.GetArchitectureInstance(targetArchitecture);
-            
-            architecture.getOwnedExtensions().removeIf(x -> x instanceof RequirementsPkg && AreTheseEquals(((RequirementsPkg)x).getId(), containerToUpdate.getId()));
-            architecture.getOwnedExtensions().add(containerToUpdate);
-
-            this.exchangeHistory.Append(containerToUpdate, ChangeKind.CREATE);
-            this.exchangeHistory.Append(element, ChangeKind.CREATE);
+            module.getOwnedRequirements().remove(originalContainer);
+            module.getOwnedRequirements().add(container);
         }
     }
 
     /**
-     * Updates the provided cloned {@linkplain RequirementsPkg}
-     * 
-     * @param containerToUpdate the {@linkplain RequirementsPkg}
+     * Records the changes to the exchange history for the container and element.
+     *
+     * @param container The container whose change is recorded.
+     * @param element The element whose change is recorded.
      */
-    private void UpdateRequirementPackage(RequirementsPkg containerToUpdate)
+    private void RecordExchangeHistory(Folder container, Requirement element)
+    {
+        String changeType = this.transactionService.IsCloned(container) ? ChangeKind.CREATE.name() : ChangeKind.UPDATE.name();
+
+        this.exchangeHistory.Append(container.getReqIFName(), changeType);
+        this.exchangeHistory.Append(element.getReqIFName(), changeType);
+    }
+
+    /**
+     * Creates or updates a {@linkplain CapellaModule} within the given {@linkplain BlockArchitecture}.
+     * 
+     * @param architectureInstance The {@linkplain BlockArchitecture} in which the module is searched or created.
+     * @return The existing or newly created {@linkplain CapellaModule}.
+     */
+    private CapellaModule CreateOrUpdateRequirementModule(BlockArchitecture architectureInstance)
+    {
+          return architectureInstance.getOwnedExtensions().stream()
+                  .filter(x -> x instanceof CapellaModule)
+                  .map(x -> (CapellaModule)x)
+                  .findFirst()
+                  .orElseGet(() -> 
+                  {
+                      var newModule = this.transactionService.Create(CapellaModule.class, "Requirements");
+                      architectureInstance.getOwnedExtensions().add(newModule);
+                      return newModule;
+                  });
+    }
+    
+    /**
+     * Updates the provided cloned {@linkplain Folder}
+     * 
+     * @param containerToUpdate the {@linkplain Folder}
+     */
+    private void UpdateRequirementPackage(CapellaModule containerToUpdate)
     {
         var requirementPkgCloneReference = this.transactionService.GetClone(containerToUpdate);
         
-        this.UpdateChildrenOfType(requirementPkgCloneReference.GetOriginal().getOwnedRequirementPkgs(), 
-                requirementPkgCloneReference.GetClone().getOwnedRequirementPkgs());
+        this.UpdateChildrenOfType(requirementPkgCloneReference.GetOriginal().getOwnedRequirements(), 
+                requirementPkgCloneReference.GetClone().getOwnedRequirements());
         
         this.UpdateChildrenOfType(requirementPkgCloneReference.GetOriginal().getOwnedRequirements(), 
                 requirementPkgCloneReference.GetClone().getOwnedRequirements());
@@ -963,12 +1027,12 @@ public final class DstController implements IDstController
      * @param originalCollection the original collection
      * @param clonedCollection the cloned collection
      */
-    private <TElement extends CapellaElement> void UpdateChildrenOfType(EList<TElement> originalCollection,
+    private <TElement extends Requirement> void UpdateChildrenOfType(EList<TElement> originalCollection,
             EList<TElement> clonedCollection)
     {
         var childrenPackagesToAdd = clonedCollection.stream()
                 .filter(x -> originalCollection.stream()
-                            .noneMatch(e -> AreTheseEquals(x.getId(), e.getId(), true)))
+                            .noneMatch(e -> AreTheseEquals(x.getReqIFIdentifier(), e.getReqIFIdentifier(), true)))
                 .collect(Collectors.toList());
 
         originalCollection.addAll(childrenPackagesToAdd);
@@ -1181,7 +1245,7 @@ public final class DstController implements IDstController
                 {
                     var optionalDeployedPart = this.hubMapResult.stream()
                             .filter(x -> x.GetDstElement() instanceof Part && deploymentLink.getDescription() != null 
-                                                                           && AreTheseEquals(x.GetDstElement().getId(), deploymentLink.getDescription()))
+                                                                           && AreTheseEquals(ElementUtils.GetId(x.GetDstElement()), deploymentLink.getDescription()))
                             .map(x -> (Part)x.GetDstElement())
                             .findFirst();
                                  
@@ -1392,7 +1456,7 @@ public final class DstController implements IDstController
         this.AddOrRemoveBinaryRelationshipForTransfer();
         ArrayList<Thing> thingsToTransfer = new ArrayList<>(this.selectedDstMapResultForTransfer);
         
-        Predicate<? super MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>> selectedMappedElement = 
+        Predicate<? super MappedElementRowViewModel<? extends Thing, ? extends Element>> selectedMappedElement = 
                 x -> this.selectedDstMapResultForTransfer.stream().anyMatch(t -> AreTheseEquals(t.getIid(), x.GetHubElement().getIid()));
                 
         Collection<Relationship> relationships = this.dstMapResult.stream()
@@ -1661,11 +1725,26 @@ public final class DstController implements IDstController
      * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
      * @return a value indicating whether the {@linkplain CapellaElement} has been found
      */
-    public <TElement extends CapellaElement> boolean TryGetElementByName(DefinedThing thing, Ref<TElement> refElement)
+    public <TElement extends Element> boolean TryGetElementByName(DefinedThing thing, Ref<TElement> refElement)
     {
         return this.TryGetElementBy(x -> x instanceof NamedElement
                 && (AreTheseEquals(thing.getName(), ((NamedElement)x).getName(), true)
-                || AreTheseEquals(thing.getShortName(), ((NamedElement)x).getName(), true)), refElement);
+                        || AreTheseEquals(thing.getShortName(), ((NamedElement)x).getName(), true)), refElement);
+    }
+    
+    /**
+     * Tries to get the corresponding element based on the provided {@linkplain DefinedThing} name or short name. 
+     * 
+     * @param thing the {@linkplain DefinedThing} that can potentially match a {@linkplain #TElement} 
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+    public boolean TryGetRequirementByName(cdp4common.engineeringmodeldata.Requirement thing, Ref<Requirement> refElement)
+    {
+        return this.TryGetElementBy(x -> x instanceof Requirement
+                && (AreTheseEquals(thing.getName(), ElementUtils.GetName(x), true)
+                && AreTheseEquals(thing.getShortName(), ((Requirement)x).getReqIFIdentifier(), true))
+                && thing.getContainer() instanceof cdp4common.commondata.NamedThing, refElement);
     }
         
     /**
@@ -1676,9 +1755,12 @@ public final class DstController implements IDstController
      * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
      * @return a value indicating whether the {@linkplain CapellaElement} has been found
      */
-    public <TElement extends CapellaElement> boolean TryGetElementById(String elementId, Ref<TElement> refElement)
+    public <TElement extends Element> boolean TryGetElementById(String elementId, Ref<TElement> refElement)
     {
-        return this.TryGetElementBy(x -> AreTheseEquals(elementId, x.getId()), refElement);
+        return this.TryGetElementBy(x -> AreTheseEquals(elementId, 
+                (x instanceof Requirement 
+                        ? ((Requirement)x).getReqIFIdentifier() 
+                        : ((CapellaElement)x).getId())), refElement);
     }
     
     /**
@@ -1691,7 +1773,7 @@ public final class DstController implements IDstController
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <TElement extends CapellaElement> boolean TryGetElementBy(Predicate<? super CapellaElement> predicate, Ref<TElement> refElement)
+    public <TElement extends Element> boolean TryGetElementBy(Predicate<? super Element> predicate, Ref<TElement> refElement)
     {
         var elementsBySession = this.capellaSessionService.GetAllCapellaElementsFromOpenSessions();
         
@@ -1719,7 +1801,7 @@ public final class DstController implements IDstController
      * @return a {@linkplain boolean}
      */
     @Override
-    public boolean TryGetEnumerationPropertyType(EnumerationParameterType thing, CapellaElement referenceElement, Ref<EnumerationPropertyType> refDataType)
+    public boolean TryGetEnumerationPropertyType(EnumerationParameterType thing, Element referenceElement, Ref<EnumerationPropertyType> refDataType)
     {
         var sessionUri = this.capellaSessionService.GetSession(referenceElement).getSessionResource().getURI();
         
@@ -1753,7 +1835,7 @@ public final class DstController implements IDstController
      * @return a {@linkplain boolean}
      */
     @Override
-    public <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, CapellaElement referenceElement, Ref<DataType> refDataType)
+    public <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, Element referenceElement, Ref<DataType> refDataType)
     {
         var sessionUri = this.capellaSessionService.GetSession(referenceElement).getSessionResource().getURI();
         

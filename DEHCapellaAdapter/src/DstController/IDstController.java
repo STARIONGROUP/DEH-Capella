@@ -32,6 +32,8 @@ import org.polarsys.capella.core.data.capellacore.EnumerationPropertyType;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Trace;
 import org.polarsys.capella.core.data.information.datatype.DataType;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import Enumerations.MappingDirection;
 import Reactive.ObservableCollection;
@@ -50,7 +52,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain IDstController} is the interface definition for the {@linkplain DstController}
  */
-public interface IDstController extends IDstControllerBase<NamedElement>
+public interface IDstController extends IDstControllerBase<Element>
 {
     /**
      * Gets the {@linkplain ObservableCollection} of mapped {@linkplain Trace}s
@@ -127,23 +129,23 @@ public interface IDstController extends IDstControllerBase<NamedElement>
     /**
      * Gets the {@linkplain ObservableCollection} of that are selected for transfer to the 
      * 
-     * @return an {@linkplain ObservableCollection} of {@linkplain CapellaElement}
+     * @return an {@linkplain ObservableCollection} of {@linkplain Element}
      */
-    ObservableCollection<CapellaElement> GetSelectedHubMapResultForTransfer();
+    ObservableCollection<Element> GetSelectedHubMapResultForTransfer();
 
     /**
      * Gets The {@linkplain ObservableCollection} of DST map result
      * 
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
-    ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> GetDstMapResult();
+    ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>> GetDstMapResult();
 
     /**
      * Gets The {@linkplain ObservableCollection} of Hub map result
      * 
      * @return an {@linkplain ObservableCollection} of {@linkplain MappedElementRowViewModel}
      */
-    ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> GetHubMapResult();
+    ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>> GetHubMapResult();
 
     /**
      * Gets an {@linkplain Observable} of value indicating whether there is any session open in Capella
@@ -160,7 +162,7 @@ public interface IDstController extends IDstControllerBase<NamedElement>
      * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
      * @return a value indicating whether the {@linkplain CapellaElement} has been found
      */
-    <TElement extends CapellaElement> boolean TryGetElementBy(Predicate<? super CapellaElement> predicate, Ref<TElement> refElement);
+    <TElement extends Element> boolean TryGetElementBy(Predicate<? super Element> predicate, Ref<TElement> refElement);
     
     /**
      * Tries to get the corresponding element that has the provided Id
@@ -170,7 +172,7 @@ public interface IDstController extends IDstControllerBase<NamedElement>
      * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
      * @return a value indicating whether the {@linkplain CapellaElement} has been found
      */
-    <TElement extends CapellaElement> boolean TryGetElementById(String elementId, Ref<TElement> refElement);
+    <TElement extends Element> boolean TryGetElementById(String elementId, Ref<TElement> refElement);
     
     /**
      * Tries to get the corresponding element based on the provided {@linkplain DefinedThing} name or short name. 
@@ -180,7 +182,16 @@ public interface IDstController extends IDstControllerBase<NamedElement>
      * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
      * @return a value indicating whether the {@linkplain CapellaElement} has been found
      */
-    <TElement extends CapellaElement> boolean TryGetElementByName(DefinedThing thing, Ref<TElement> refElement);
+    <TElement extends Element> boolean TryGetElementByName(DefinedThing thing, Ref<TElement> refElement);
+
+    /**
+     * Tries to get the corresponding element based on the provided {@linkplain DefinedThing} name or short name. 
+     * 
+     * @param thing the {@linkplain DefinedThing} that can potentially match a {@linkplain #TElement} 
+     * @param refElement the {@linkplain Ref} of {@linkplain #TElement}
+     * @return a value indicating whether the {@linkplain CapellaElement} has been found
+     */
+     boolean TryGetRequirementByName(cdp4common.engineeringmodeldata.Requirement thing, Ref<Requirement> refElement);
 
     /**
      * Tries to get a {@linkplain DataType} that matches the provided {@linkplain MeasurementScale}
@@ -191,7 +202,7 @@ public interface IDstController extends IDstControllerBase<NamedElement>
      * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
      * @return a {@linkplain boolean}
      */
-    <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, CapellaElement referenceElement, Ref<DataType> refDataType);
+    <TThing extends NamedThing & ShortNamedThing> boolean TryGetDataType(TThing thing, Element referenceElement, Ref<DataType> refDataType);
 
     /**
      * Tries to get a {@linkplain EnumerationPropertyType} that matches the provided {@linkplain EnumerationParameterType}
@@ -201,7 +212,7 @@ public interface IDstController extends IDstControllerBase<NamedElement>
      * @param refDataType the {@linkplain Ref} of {@linkplain DataType}
      * @return a {@linkplain boolean}
      */
-    boolean TryGetEnumerationPropertyType(EnumerationParameterType thing, CapellaElement referenceElement, Ref<EnumerationPropertyType> refDataType);
+    boolean TryGetEnumerationPropertyType(EnumerationParameterType thing, Element referenceElement, Ref<EnumerationPropertyType> refDataType);
 
     /**
      * Gets a value indicating whether there is any session open in Capella

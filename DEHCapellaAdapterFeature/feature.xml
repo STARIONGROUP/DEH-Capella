@@ -2,7 +2,7 @@
 <feature
       id="DEHCapellaAdapterFeature"
       label="DEHCapellaAdapter"
-      version="1.9.0"
+      version="2.0.0"
       provider-name="STARION GROUP SA"
       plugin="eu.stariongroup.dehcapellaadapter">
 
@@ -1369,19 +1369,19 @@ Public License instead of this License.  But first, please read
    </url>
 
    <includes
-         id="org.polarsys.capella.basic.requirement.feature"
-         version="0.0.0"
-         search-location="both"/>
+         id="org.polarsys.capella.vp.requirements.feature"
+         version="0.0.0"/>
 
    <requires>
       <import plugin="org.eclipse.ui"/>
-      <import plugin="org.junit"/>
       <import plugin="org.polarsys.capella.core.model.handler" version="7.0.0" match="greaterOrEqual"/>
       <import plugin="org.polarsys.capella.core.model.helpers" version="7.0.0" match="greaterOrEqual"/>
+      <import plugin="org.junit"/>
       <import plugin="org.eclipse.emf.ecore"/>
       <import plugin="org.polarsys.capella.core.sirius.analysis"/>
-      <import plugin="org.polarsys.capella.basic.requirement.model" version="1.0.0" match="greaterOrEqual"/>
       <import plugin="junit-jupiter-api"/>
+      <import plugin="org.polarsys.capella.vp.requirements" version="0.14.0" match="greaterOrEqual"/>
+      <import plugin="org.polarsys.capella.vp.requirements.af" version="0.14.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin
@@ -1389,12 +1389,5 @@ Public License instead of this License.  But first, please read
          download-size="0"
          install-size="0"
          version="0.0.0"/>
-
-   <plugin
-         id="org.polarsys.capella.basic.requirement.model"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
 
 </feature>

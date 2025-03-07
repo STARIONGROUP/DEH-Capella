@@ -23,8 +23,7 @@
  */
 package ViewModels.Dialogs.Interfaces;
 
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 import cdp4common.commondata.Thing;
@@ -32,6 +31,6 @@ import cdp4common.commondata.Thing;
 /**
  * The IHubToDstMappingConfigurationDialogViewModel is the interface definition for the {@linkplain HubToDstMappingConfigurationDialogViewModel}
  */
-public interface IHubToDstMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends CapellaElement>>
+public interface IHubToDstMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<Thing, Element, ElementRowViewModel<? extends Element>>
 {
 }

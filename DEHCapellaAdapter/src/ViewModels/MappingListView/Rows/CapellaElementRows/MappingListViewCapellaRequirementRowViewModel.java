@@ -25,9 +25,10 @@ package ViewModels.MappingListView.Rows.CapellaElementRows;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
-import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import Reactive.ObservableCollection;
+import Utils.Stereotypes.ElementUtils;
 import ViewModels.MappingListView.Rows.MappingListViewBaseRowViewModel;
 import ViewModels.MappingListView.Rows.MappingListViewContainerBaseRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
@@ -45,8 +46,8 @@ public class MappingListViewCapellaRequirementRowViewModel extends MappingListVi
      */
     public MappingListViewCapellaRequirementRowViewModel(Requirement requirement)
     {
-        super(requirement, requirement.getId(), String.format("%s-%s", requirement.getRequirementId(), 
-                requirement.getName()), requirement.getDescription(), ClassKind.Requirement);
+        super(requirement, requirement.getId(), String.format("%s-%s", requirement.getReqIFIdentifier(), 
+                ElementUtils.GetName(requirement)), requirement.getReqIFDescription(), ClassKind.Requirement);
     }
     
     /**

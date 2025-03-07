@@ -26,12 +26,13 @@ package ViewModels.Dialogs.Interfaces;
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
 
 /**
  * The {@linkplain IDstToHubMappingConfigurationDialogViewModel} is the interface definition for the {@linkplain DstToHubMappingConfigurationDialogViewModel}
  */
-public interface IDstToHubMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<EObject, NamedElement, ElementRowViewModel<? extends CapellaElement>>
+public interface IDstToHubMappingConfigurationDialogViewModel extends IMappingConfigurationDialogViewModel<EObject, Element, ElementRowViewModel<? extends Element>>
 {
 }

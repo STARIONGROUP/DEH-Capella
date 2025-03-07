@@ -35,8 +35,8 @@ import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.basic.requirement.Requirement;
-import org.polarsys.capella.basic.requirement.SystemUserRequirement;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import DstController.IDstController;
 import Enumerations.CapellaArchitecture;
@@ -45,6 +45,7 @@ import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.CapellaTransaction.ICapellaTransactionService;
 import Utils.Ref;
+import Utils.Stereotypes.ElementUtils;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.ElementRowViewModel;
@@ -64,11 +65,12 @@ import cdp4common.engineeringmodeldata.ElementDefinition;
 import cdp4common.engineeringmodeldata.RequirementsSpecification;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
+import net.bytebuddy.asm.Advice.This;
 
 /**
  * The {@linkplain HubToDstMappingConfigurationDialogViewModel} is the main view model for the {@linkplain CapellaHubToDstMappingConfigurationDialog}
  */
-public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<Thing, NamedElement, ElementRowViewModel<? extends CapellaElement>> implements IHubToDstMappingConfigurationDialogViewModel
+public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<Thing, Element, ElementRowViewModel<? extends Element>> implements IHubToDstMappingConfigurationDialogViewModel
 {
     /**
      * The {@linkplain IDstController}
@@ -91,7 +93,7 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      * @return an {@linkplain IObjectBrowserViewModel}
      */
     @Override
-    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> GetDstObjectBrowserViewModel()
+    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends Element>> GetDstObjectBrowserViewModel()
     {
         return this.dstObjectBrowser;
     }
@@ -142,14 +144,14 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      * 
      * @param rowViewModel the {@linkplain IElementRowViewModel}
      */
-    private void UpdateMappedElements(ElementRowViewModel<? extends CapellaElement> rowViewModel)
+    private void UpdateMappedElements(ElementRowViewModel<? extends Element> rowViewModel)
     {
         if(this.selectedMappedElement.Value() == null)
         {
             return;
         }
         
-        if(AreTheseEquals(this.selectedMappedElement.Value().GetDstElement().getId(), rowViewModel.GetElement().getId()))
+        if(AreTheseEquals(ElementUtils.GetId(this.selectedMappedElement.Value().GetDstElement()), ElementUtils.GetId(rowViewModel.GetElement())))
         {
             return;
         }
@@ -171,7 +173,7 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      * 
      * @param capellaElement
      */
-    private void UpdateTargetArchitecture(CapellaElement capellaElement)
+    private void UpdateTargetArchitecture(Element capellaElement)
     {
         if(!(this.selectedMappedElement.Value() instanceof IHaveTargetArchitecture))
         {
@@ -218,7 +220,7 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
                 .collect(Collectors.toList()))
         {
             var subscription = ((IHaveTargetArchitecture)mappedElementRowViewModel).GetTargetArchitectureObservable()
-                    .subscribe(x -> this.UpdateComponent((MappedElementRowViewModel<? extends DefinedThing, NamedElement>)mappedElementRowViewModel));
+                    .subscribe(x -> this.UpdateComponent((MappedElementRowViewModel<? extends DefinedThing, Element>)mappedElementRowViewModel));
             
             this.disposables.add(subscription);
         }
@@ -231,10 +233,10 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      * @return a {@linkplain MappedElementRowViewModel}
      */
     @SuppressWarnings("unchecked")
-    protected MappedElementRowViewModel<DefinedThing, NamedElement> GetMappedElementRowViewModel(Thing thing)
+    protected MappedElementRowViewModel<DefinedThing, Element> GetMappedElementRowViewModel(Thing thing)
     {
         Ref<Boolean> refShouldCreateNewTargetElement = new Ref<>(Boolean.class, false);
-        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementRowViewModel = null;
+        MappedElementRowViewModel<? extends DefinedThing, ? extends Element> mappedElementRowViewModel = null;
         
         if(thing instanceof ElementDefinition)
         {
@@ -272,7 +274,7 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
                     ? MappedElementRowStatus.NewElement 
                     : MappedElementRowStatus.ExisitingElement);
             
-            return (MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElementRowViewModel;
+            return (MappedElementRowViewModel<DefinedThing, Element>) mappedElementRowViewModel;
         }
         
         return null;
@@ -316,7 +318,7 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
      * 
      * @param mappedElementRowViewModel the {@linkplain MappedElementDefinitionRowViewModel}
      */
-    private void UpdateComponent(MappedElementRowViewModel<? extends DefinedThing, NamedElement> mappedElementRowViewModel)
+    private void UpdateComponent(MappedElementRowViewModel<? extends DefinedThing, Element> mappedElementRowViewModel)
     {
         var refComponent = new Ref<>(Component.class);
         
@@ -348,15 +350,15 @@ public class HubToDstMappingConfigurationDialogViewModel extends MappingConfigur
     {
         if(this.mappedElements.stream().noneMatch(x-> AreTheseEquals(x.GetHubElement().getIid(), requirement.getIid())))
         {
-            if(this.dstController.TryGetElementByName(requirement, refRequirement))
+            if(this.dstController.TryGetRequirementByName(requirement, refRequirement))
             {
                 refArchitecture.Set(Utils.Stereotypes.StereotypeUtils.GetArchitecture(refRequirement.Get()));
                 refRequirement.Set(this.transactionService.Clone(refRequirement.Get()));
             }
             else
             {
-                var component = this.transactionService.Create(SystemUserRequirement.class, requirement.getName());
-                refRequirement.Set(component);
+                var newRequirement = this.transactionService.Create(Requirement.class, requirement.getName());
+                refRequirement.Set(newRequirement);
                 refArchitecture.Set(CapellaArchitecture.SystemAnalysis);
                 refShouldCreateNewTargetElement.Set(true);
             }

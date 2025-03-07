@@ -30,9 +30,10 @@ import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 /**
- * The {@linkplain CapellaTypeEnumerationUtility} is a utility class to help deal with java enumerators {@linkplain RequirementType} and {@linkplain ComponentType}
+ * The {@linkplain CapellaTypeEnumerationUtility} is a utility class to help deal with java enumerators {@linkplain RequirementTypeEnumeration} and {@linkplain ComponentType}
  */
 @Annotations.ExludeFromCodeCoverageGeneratedReport
 public final class CapellaTypeEnumerationUtility
@@ -55,7 +56,7 @@ public final class CapellaTypeEnumerationUtility
      * @return a {@linkplain #TEnum}
      */
     @SuppressWarnings("unchecked")
-    public static <TEnum extends Enum<?> & ICapellaTypeEnumeration<?, ?>> TEnum From(Class<? extends CapellaElement> classType)
+    public static <TEnum extends Enum<?> & ICapellaTypeEnumeration<?, ?>> TEnum From(Class<? extends Element> classType)
     {
         Function<TEnum[], Optional<TEnum>> result = x -> Arrays.asList(x)
                 .stream()
@@ -69,7 +70,7 @@ public final class CapellaTypeEnumerationUtility
             return component.get();
         }
         
-        var requirement = result.apply((TEnum[]) RequirementType.values());
+        var requirement = result.apply((TEnum[]) RequirementTypeEnumeration.values());
         
         if(requirement.isPresent())
         {
@@ -107,15 +108,15 @@ public final class CapellaTypeEnumerationUtility
     }
     
     /**
-     * Gets an instance of {@linkplain RequirementType} with the provided {@linkplain String}
+     * Gets an instance of {@linkplain RequirementTypeEnumeration} with the provided {@linkplain String}
      * 
      * @param valueOrLabel a {@linkplain String} that could potentially match the {@linkplain Label} of the enum value
-     * @return a {@linkplain RequirementType}
+     * @return a {@linkplain RequirementTypeEnumeration}
      */
     @SuppressWarnings("finally")
-    public static RequirementType RequirementTypeFrom(String valueOrLabel)
+    public static RequirementTypeEnumeration RequirementTypeFrom(String valueOrLabel)
     {
-        for(var value : RequirementType.values())
+        for(var value : RequirementTypeEnumeration.values())
         {
             if(VerifyEnumerationValue(valueOrLabel, value)) 
             {
@@ -125,7 +126,7 @@ public final class CapellaTypeEnumerationUtility
                 
         try
         {
-            return RequirementType.valueOf(valueOrLabel);
+            return RequirementTypeEnumeration.valueOf(valueOrLabel);
         }
         finally
         {

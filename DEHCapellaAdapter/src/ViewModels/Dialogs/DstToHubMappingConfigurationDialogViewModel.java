@@ -36,14 +36,16 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.capellacore.Structure;
 import org.polarsys.capella.core.data.cs.Component;
-import org.polarsys.capella.basic.requirement.Requirement;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
 
 import DstController.IDstController;
 import Enumerations.MappedElementRowStatus;
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Utils.Ref;
+import Utils.Stereotypes.ElementUtils;
 import Utils.Stereotypes.StereotypeUtils;
 import ViewModels.CapellaObjectBrowser.Interfaces.ICapellaObjectBrowserViewModel;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
@@ -66,7 +68,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain DstToHubMappingConfigurationDialogViewModel} is the main view model for the {@linkplain CapellaDstToHubMappingConfigurationDialog}
  */
-public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<EObject, NamedElement, ElementRowViewModel<? extends CapellaElement>> implements IDstToHubMappingConfigurationDialogViewModel
+public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigurationDialogViewModel<EObject, Element, ElementRowViewModel<? extends Element>> implements IDstToHubMappingConfigurationDialogViewModel
 {    
     /**
      * The {@linkplain IMagicDrawObjectBrowserViewModel}
@@ -79,7 +81,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      * @return an {@linkplain IObjectBrowserViewModel}
      */
     @Override
-    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> GetDstObjectBrowserViewModel()
+    public IObjectBrowserBaseViewModel<ElementRowViewModel<? extends Element>> GetDstObjectBrowserViewModel()
     {
         return this.dstObjectBrowser;
     }
@@ -122,15 +124,15 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      * @param rowViewModel the {@linkplain IElementRowViewModel}
      */
     @SuppressWarnings("unchecked")
-    private void UpdateMappedElements(ElementRowViewModel<? extends CapellaElement> rowViewModel)
+    private void UpdateMappedElements(ElementRowViewModel<? extends Element> rowViewModel)
     {
         var optionalMappedElement = this.mappedElements.stream()
-            .filter(x -> AreTheseEquals(x.GetDstElement().getId(), rowViewModel.GetElement().getId()))
+            .filter(x -> AreTheseEquals(ElementUtils.GetId(x.GetDstElement()), ElementUtils.GetId(rowViewModel.GetElement())))
             .findFirst();
         
         if(!optionalMappedElement.isPresent())
         {
-            MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElement;
+            MappedElementRowViewModel<? extends DefinedThing, ? extends Element> mappedElement;
             
             if(rowViewModel.GetElement() instanceof Component)
             {
@@ -141,8 +143,8 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
                 mappedElement = new MappedDstRequirementRowViewModel((Requirement) rowViewModel.GetElement(), MappingDirection.FromDstToHub);
             }
 
-            this.mappedElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElement);
-            this.SetSelectedMappedElement((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElement);
+            this.mappedElements.add((MappedElementRowViewModel<DefinedThing, Element>) mappedElement);
+            this.SetSelectedMappedElement((MappedElementRowViewModel<DefinedThing, Element>) mappedElement);
         }
         else
         {
@@ -182,7 +184,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
 
                 if(mappedElement != null)
                 {
-                    this.mappedElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElement);
+                    this.mappedElements.add((MappedElementRowViewModel<DefinedThing, Element>) mappedElement);
                 }
             }
         }
@@ -194,10 +196,10 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      * @param capellaElement the {@linkplain Class} element
      * @return a {@linkplain MappedElementRowViewModel}
      */
-    protected MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> GetMappedElementRowViewModel(NamedElement capellaElement)
+    protected MappedElementRowViewModel<? extends DefinedThing, ? extends Element> GetMappedElementRowViewModel(NamedElement capellaElement)
     {
         Ref<Boolean> refShouldCreateNewTargetElement = new Ref<>(Boolean.class, false);
-        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementRowViewModel = null;
+        MappedElementRowViewModel<? extends DefinedThing, ? extends Element> mappedElementRowViewModel = null;
         
         if(capellaElement instanceof Component)
         {
@@ -241,7 +243,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
      */
     private boolean TryGetElementDefinition(Component element, Ref<ElementDefinition> refElementDefinition, Ref<Boolean> refShouldCreateNewTargetElement)
     {
-        if(this.mappedElements.stream().noneMatch(x-> AreTheseEquals(x.GetDstElement().getId(), element.getId())))
+        if(this.mappedElements.stream().noneMatch(x-> AreTheseEquals(ElementUtils.GetId(x.GetDstElement()), element.getId())))
         {
             Optional<ElementDefinition> optionalElementDefinition =
                     this.hubController.GetOpenIteration().getElement().stream()
@@ -281,13 +283,13 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
         Optional<cdp4common.engineeringmodeldata.Requirement> optionalRequirement = 
               this.hubController.GetOpenIteration().getRequirementsSpecification().stream()
               .flatMap(x -> x.getRequirement().stream())
-              .filter(x -> AreTheseEquals(x.getName(), requirement.getName()) && !x.isDeprecated())
+              .filter(x -> AreTheseEquals(x.getName(), requirement.getReqIFName()) && !x.isDeprecated())
               .findFirst();
 
         if(optionalRequirement.isPresent())
         {
             if(this.mappedElements.stream().anyMatch(x -> AreTheseEquals(x.GetHubElement().getIid(), optionalRequirement.get().getIid())
-                    && AreTheseEquals(x.GetDstElement().getId(), requirement.getId())))
+                    && AreTheseEquals(ElementUtils.GetId(x.GetDstElement()), requirement.getId())))
             {
                 return false;
             }
@@ -302,7 +304,7 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
         {
             refShouldCreateNewTargetElement.Set(true);
             
-            var possibleParent = new Ref<>(RequirementsPkg.class);
+            var possibleParent = new Ref<>(Folder.class);
             
             if(StereotypeUtils.TryGetPossibleRequirementsSpecificationElement(requirement, possibleParent))
             {
@@ -313,15 +315,15 @@ public class DstToHubMappingConfigurationDialogViewModel extends MappingConfigur
                     .orElseGet(() ->
                 {
                     var newRequirementsSpecification = new RequirementsSpecification();
-                    newRequirementsSpecification.setName(possibleParent.HasValue() ? possibleParent.Get().getName() : "new RequirementsSpecification");
-                    newRequirementsSpecification.setShortName(GetShortName(possibleParent.HasValue() ? possibleParent.Get().getName() : newRequirementsSpecification.getName()));
+                    newRequirementsSpecification.setName(possibleParent.HasValue() ? possibleParent.Get().getReqIFName() : "new RequirementsSpecification");
+                    newRequirementsSpecification.setShortName(GetShortName(possibleParent.HasValue() ? possibleParent.Get().getReqIFName() : newRequirementsSpecification.getName()));
                     newRequirementsSpecification.setIid(UUID.randomUUID());
                     newRequirementsSpecification.setOwner(this.hubController.GetCurrentDomainOfExpertise());
                     return newRequirementsSpecification;
                 });
                 
                 var newRequirement = new cdp4common.engineeringmodeldata.Requirement();
-                newRequirement.setName(requirement.getName());
+                newRequirement.setName(requirement.getReqIFName());
                 requirementSpecification.getRequirement().add(newRequirement);
                 
                 refRequirement.Set(newRequirement);

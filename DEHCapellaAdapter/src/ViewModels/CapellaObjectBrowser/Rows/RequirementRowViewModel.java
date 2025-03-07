@@ -24,8 +24,8 @@
 package ViewModels.CapellaObjectBrowser.Rows;
 
 import Utils.Stereotypes.CapellaTypeEnumerationUtility;
-import org.polarsys.capella.basic.requirement.Requirement;
-import Utils.Stereotypes.RequirementType;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import Utils.Stereotypes.RequirementTypeEnumeration;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 
@@ -52,15 +52,15 @@ public class RequirementRowViewModel extends ElementRowViewModel<Requirement>
      */
     public String GetDescription()
     {
-        return this.GetElement().getDescription();
+        return this.GetElement().getReqIFDescription();
     }
     
     /**
-     * Gets the {@linkplain RequirementType} matching the {@linkplain TRequirement}
+     * Gets the {@linkplain RequirementTypeEnumeration} matching the {@linkplain TRequirement}
      * 
-     * @return the {@linkplain RequirementType}
+     * @return the {@linkplain RequirementTypeEnumeration}
      */
-    public RequirementType GetRequirementType()
+    public RequirementTypeEnumeration GetRequirementType()
     {
         return CapellaTypeEnumerationUtility.From(this.GetElement().getClass());
     }

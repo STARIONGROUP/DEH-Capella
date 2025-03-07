@@ -35,7 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import DstController.IDstController;
 import Enumerations.MappingDirection;
@@ -130,7 +131,7 @@ class MapCommandServiceTestFixture
         assertDoesNotThrow(() -> this.service.MapSelection(MappingDirection.FromDstToHub));
         var dialogResult = new Ref<Boolean>(Boolean.class, null);
         
-        var mappedElementResultFromTheMappingDialog = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        var mappedElementResultFromTheMappingDialog = new ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>>();
         when(this.dstMappingDialog.GetMappedElementCollection()).thenReturn(mappedElementResultFromTheMappingDialog);
         assertDoesNotThrow(() -> this.service.WhenDialogHasBeenClosed(dialogResult, MappingDirection.FromDstToHub));
         dialogResult.Set(false);
@@ -141,11 +142,11 @@ class MapCommandServiceTestFixture
         MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElement0 = 
                 new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(PhysicalComponent.class), MappingDirection.FromDstToHub);
         
-        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElement1 = 
+        MappedElementRowViewModel<? extends DefinedThing, ? extends Element> mappedElement1 = 
                 new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(Requirement.class), MappingDirection.FromDstToHub);
         
-        mappedElementResultFromTheMappingDialog.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElement0);
-        mappedElementResultFromTheMappingDialog.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElement1);
+        mappedElementResultFromTheMappingDialog.add((MappedElementRowViewModel<DefinedThing, Element>) mappedElement0);
+        mappedElementResultFromTheMappingDialog.add((MappedElementRowViewModel<DefinedThing, Element>) mappedElement1);
                 
         when(this.dstController.Map(any(), any())).thenReturn(false);
 

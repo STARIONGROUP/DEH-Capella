@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: DEH-CapellaAdapter
 Bundle-SymbolicName: eu.stariongroup.dehcapellaadapter;singleton:=true
-Bundle-Version: 1.9.0
+Bundle-Version: 2.0.0
 Bundle-Vendor: STARIONGROUP
 Require-Bundle: org.eclipse.ui,
  org.polarsys.capella.core.model.handler;bundle-version="7.0.0";visibility:=reexport,
@@ -10,8 +10,8 @@ Require-Bundle: org.eclipse.ui,
  org.junit,
  org.eclipse.emf.ecore,
  org.polarsys.capella.core.sirius.analysis,
- org.polarsys.capella.basic.requirement.model;bundle-version="1.0.0",
- junit-jupiter-api
+ junit-jupiter-api,
+ org.polarsys.capella.vp.requirements.model;bundle-version="0.14.0"
 Automatic-Module-Name: Test
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy

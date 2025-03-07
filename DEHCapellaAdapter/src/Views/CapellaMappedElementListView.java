@@ -27,6 +27,7 @@ import javax.swing.SwingUtilities;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import Enumerations.CapellaArchitecture;
 import Renderers.CapellaArchitectureCellEditor;
@@ -37,7 +38,7 @@ import ViewModels.MappedElementListView.Interfaces.ICapellaMappedElementListView
  * The CapellaMappedElementListView is the {@linkplain MappedElementListView}
  */
 @SuppressWarnings("serial")
-public class CapellaMappedElementListView extends MappedElementListView<NamedElement>
+public class CapellaMappedElementListView extends MappedElementListView<Element>
 {    
     /**
      * Initializes a new {@linkplain CapellaMappedElementListView}

@@ -37,8 +37,8 @@ import org.polarsys.capella.core.data.cs.Part;
 import org.polarsys.capella.core.data.fa.ComponentPort;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.DataValue;
-import org.polarsys.capella.basic.requirement.Requirement;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
 
 import Utils.ImageLoader.ImageLoader;
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
@@ -175,7 +175,7 @@ public class CapellaObjectBrowserRenderDataProvider extends ObjectBrowserRenderD
             {
                 return ImageLoader.GetIcon(ClassKind.Requirement);
             }
-            else if(element.GetElement() instanceof RequirementsPkg)
+            else if(element.GetElement() instanceof Folder)
             {
                 return ImageLoader.GetIcon(ClassKind.RequirementsSpecification);
             }

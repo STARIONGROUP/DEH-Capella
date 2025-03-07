@@ -30,7 +30,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
-import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import ViewModels.CapellaObjectBrowser.Interfaces.IElementRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
@@ -42,7 +43,7 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
  * @param <TElement> the type of {@linkplain CapellaElement} this row view model represents
  */
 @Annotations.ExludeFromCodeCoverageGeneratedReport
-public abstract class ElementRowViewModel<TElement extends CapellaElement> implements IElementRowViewModel<TElement>
+public abstract class ElementRowViewModel<TElement extends Element> implements IElementRowViewModel<TElement>
 {    
     /**
      * The value indicating whether this row should be highlighted as "selected for transfer"
@@ -223,10 +224,10 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
     {
         if(element != null)
         {
-            if(this.element instanceof Requirement && !StringUtils.isBlank(((Requirement)this.element).getRequirementId()))
+            if(this.element instanceof Requirement && !StringUtils.isBlank(((Requirement)this.element).getReqIFIdentifier()))
             {
                 var requirement = (Requirement)this.element;
-                this.name = String.format("%s - %s", requirement.getRequirementId(), requirement.getName());
+                this.name = String.format("%s - %s", requirement.getReqIFIdentifier(), requirement.getReqIFName());
             }
             else if(this.element instanceof NamedElement)
             {
@@ -245,7 +246,7 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
      * @return a {@linkplain Stereotypes}
      */
     @Override
-    public Class<? extends CapellaElement> GetClassKind()
+    public Class<? extends Element> GetClassKind()
     {
         return this.GetElement().getClass();
     }
@@ -257,7 +258,7 @@ public abstract class ElementRowViewModel<TElement extends CapellaElement> imple
      * @param shouldHighlight a value indicating whether the highlight should be updated
      */
     @SuppressWarnings("unchecked")
-    public void UpdateElement(CapellaElement capellaElement, boolean shouldHighlight)
+    public void UpdateElement(Element capellaElement, boolean shouldHighlight)
     {
         this.element = (TElement)capellaElement;
         this.UpdateProperties();

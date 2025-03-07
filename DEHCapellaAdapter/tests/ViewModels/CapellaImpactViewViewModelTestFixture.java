@@ -37,8 +37,8 @@ import org.eclipse.emf.common.util.URI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
-import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.la.LogicalComponent;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import DstController.IDstController;
 import Enumerations.MappingDirection;
@@ -59,7 +59,7 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
     private ICapellaSessionService sessionService;
     private IDstController dstController;
     private CapellaImpactViewViewModel viewModel;
-    private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> hubMapResult;
+    private ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>> hubMapResult;
     private ICapellaTransactionService transactionService;
 
     @BeforeEach
@@ -94,10 +94,10 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
         assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(rowViewModel));
         assertFalse(rowViewModel.GetIsSelected());
         
-        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementDefinitionRowViewModel = 
+        MappedElementRowViewModel<? extends DefinedThing, ? extends Element> mappedElementDefinitionRowViewModel = 
                 new MappedElementDefinitionRowViewModel(null, logicalComponent, MappingDirection.FromHubToDst);
         
-        this.hubMapResult.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElementDefinitionRowViewModel);
+        this.hubMapResult.add((MappedElementRowViewModel<DefinedThing, Element>) mappedElementDefinitionRowViewModel);
         assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(rowViewModel));
         assertTrue(rowViewModel.GetIsSelected());
         assertDoesNotThrow(() -> this.viewModel.OnSelectionChanged(rowViewModel));
@@ -108,25 +108,25 @@ public class CapellaImpactViewViewModelTestFixture extends CapellaSessionRelated
     @Test
     public void VerifyComputeDifferences()
     {
-        var newHubMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        var newHubMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>>();
         when(this.dstController.GetHubMapResult()).thenReturn(newHubMapResult);
         
-        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementDefinitionRowViewModel0 = 
+        MappedElementRowViewModel<? extends DefinedThing, ? extends Element> mappedElementDefinitionRowViewModel0 = 
                 new MappedElementDefinitionRowViewModel(this.LogicalComponent, MappingDirection.FromHubToDst);
         
-        newHubMapResult.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElementDefinitionRowViewModel0);
+        newHubMapResult.add((MappedElementRowViewModel<DefinedThing, Element>) mappedElementDefinitionRowViewModel0);
         when(this.sessionService.HasAnyOpenSession()).thenReturn(true);
         this.hubMapResult.clear();
         when(this.sessionService.HasAnyOpenSession()).thenReturn(false);
         this.hubMapResult.clear();
         when(this.sessionService.HasAnyOpenSession()).thenReturn(true);
-        var newNewHubMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        var newNewHubMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>>();
         when(this.dstController.GetHubMapResult()).thenReturn(newNewHubMapResult);
         this.viewModel.UpdateBrowserTrees(true);
         
-        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementDefinitionRowViewModel1 = 
+        MappedElementRowViewModel<? extends DefinedThing, ? extends Element> mappedElementDefinitionRowViewModel1 = 
                 new MappedElementDefinitionRowViewModel(this.LogicalComponent, MappingDirection.FromHubToDst);
         
-        newNewHubMapResult.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElementDefinitionRowViewModel1);
+        newNewHubMapResult.add((MappedElementRowViewModel<DefinedThing, Element>) mappedElementDefinitionRowViewModel1);
     }
 }
