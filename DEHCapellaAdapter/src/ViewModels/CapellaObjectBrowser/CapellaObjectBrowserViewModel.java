@@ -33,6 +33,7 @@ import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import Reactive.ObservableValue;
 import Services.CapellaSession.ICapellaSessionService;
@@ -45,7 +46,7 @@ import io.reactivex.Observable;
 /**
  * The {@linkplain CapellaObjectBrowserViewModel} is the view model for the Capella object browser {@linkplain CapellaObjectBrowser}
  */
-public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel<ElementRowViewModel<? extends CapellaElement>> implements ICapellaObjectBrowserViewModel
+public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel<ElementRowViewModel<? extends Element>> implements ICapellaObjectBrowserViewModel
 {
     /**
      * The {@linkplain ICapellaSessionService} instance
@@ -55,7 +56,7 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel<El
     /**
      * Backing field for {@linkplain GetSelectedElement}
      */
-    private ObservableValue<ElementRowViewModel<? extends CapellaElement>> selectedElement = new ObservableValue<>();
+    private ObservableValue<ElementRowViewModel<? extends Element>> selectedElement = new ObservableValue<>();
     
     /**
      * Gets the {@linkplain Observable} of {@linkplain ElementRowViewModel} that yields the selected element
@@ -63,7 +64,7 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel<El
      * @return an {@linkplain Observable} of {@linkplain ElementRowViewModel}
      */
     @Override
-    public Observable<ElementRowViewModel<? extends CapellaElement>> GetSelectedElement()
+    public Observable<ElementRowViewModel<? extends Element>> GetSelectedElement()
     {
         return this.selectedElement.Observable();
     }
@@ -84,7 +85,7 @@ public class CapellaObjectBrowserViewModel extends ObjectBrowserBaseViewModel<El
      * @param selectedRow the selected {@linkplain ClassRowViewModel}
      */
     @Override
-    public void OnSelectionChanged(ElementRowViewModel<? extends CapellaElement> selectedRow)
+    public void OnSelectionChanged(ElementRowViewModel<? extends Element> selectedRow)
     {
         this.selectedElement.Value(selectedRow);            
     }

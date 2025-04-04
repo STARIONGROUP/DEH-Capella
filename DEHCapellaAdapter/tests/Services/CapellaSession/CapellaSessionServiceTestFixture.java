@@ -51,17 +51,13 @@ import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.NumericValue;
 import org.polarsys.capella.core.data.la.LogicalArchitecture;
 import org.polarsys.capella.core.data.la.LogicalComponent;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
-import org.polarsys.capella.basic.requirement.SystemFunctionalInterfaceRequirement;
-import org.polarsys.capella.basic.requirement.SystemFunctionalRequirement;
-import org.polarsys.capella.basic.requirement.SystemNonFunctionalInterfaceRequirement;
-import org.polarsys.capella.basic.requirement.SystemNonFunctionalRequirement;
-import org.polarsys.capella.basic.requirement.SystemUserRequirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import Reactive.ObservableValue;
 import Services.CapellaSelection.ICapellaSelectionService;
 import Utils.Ref;
-import Utils.Stereotypes.RequirementType;
+import Utils.Stereotypes.RequirementTypeEnumeration;
 import ViewModels.CapellaObjectBrowser.Rows.RequirementRowViewModel;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
 import ViewModels.ObjectBrowser.Interfaces.IHaveContainedRows;
@@ -139,7 +135,7 @@ public class CapellaSessionServiceTestFixture extends CapellaSessionRelatedBaseT
         assertDoesNotThrow(() -> result.Set(this.service.GetModels()));
         assertNotNull(result.Get());
         
-        RequirementType requirementType = ((RequirementRowViewModel)
+        RequirementTypeEnumeration requirementType = ((RequirementRowViewModel)
                 ((IHaveContainedRows<?>)((IHaveContainedRows<?>)((IHaveContainedRows<?>)
                         result.Get().GetContainedRows().get(0)).GetContainedRows().get(0))
                             .GetContainedRows().get(1)).GetContainedRows().get(4)).GetRequirementType();
@@ -154,7 +150,7 @@ public class CapellaSessionServiceTestFixture extends CapellaSessionRelatedBaseT
         var sessions = Arrays.asList(this.GetSession(this.sessionUri));
         when(this.sessionManager.GetSessions()).thenReturn(sessions);
         
-        var result = new Ref<HashMap<URI, List<CapellaElement>>>(null);
+        var result = new Ref<HashMap<URI, List<Element>>>(null);
         assertDoesNotThrow(() -> result.Set(this.service.GetAllCapellaElementsFromOpenSessions()));
         assertTrue(result.Get().keySet().contains(this.sessionUri));
         assertEquals(16, result.Get().get(this.sessionUri).size());

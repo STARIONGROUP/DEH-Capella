@@ -26,12 +26,17 @@ package MappingRules;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import org.polarsys.capella.common.data.modellingcore.ModelElement;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.IdentifiableElement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.ReqIFElement;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
 import Services.MappingConfiguration.ICapellaMappingConfigurationService;
 import Services.MappingEngineService.MappingRule;
+import Utils.Stereotypes.ElementUtils;
 import ViewModels.Interfaces.IHaveTargetArchitecture;
 import ViewModels.Rows.MappedElementRowViewModel;
 
@@ -71,20 +76,20 @@ public abstract class CapellaBaseMappingRule<TInput extends Object, TOutput> ext
      * @param elements the {@linkplain Collection} of {@linkplain MappedElementRowViewModel} from which the DST element extends {@linkplain CapellaElement}
      * @param mappingDirection the {@linkplain MappingDirection} that applies to the provided mapped element 
      */
-    protected void SaveMappingConfiguration(Collection<? extends MappedElementRowViewModel<?, ? extends CapellaElement>> elements, MappingDirection mappingDirection)
+    protected void SaveMappingConfiguration(Collection<? extends MappedElementRowViewModel<?, ? extends Element>> elements, MappingDirection mappingDirection)
     {
         for (var element : elements.stream().filter(x -> x.GetHubElement() != null && x.GetDstElement() != null).collect(Collectors.toList()))
         {
             if(element instanceof IHaveTargetArchitecture)
             {
                 this.mappingConfiguration.AddToExternalIdentifierMap(
-                        element.GetHubElement().getIid(), element.GetDstElement().getId(), 
+                        element.GetHubElement().getIid(), ElementUtils.GetId(element.GetDstElement()), 
                         ((IHaveTargetArchitecture)element).GetTargetArchitecture(), mappingDirection);
             }
             else
             {
                 this.mappingConfiguration.AddToExternalIdentifierMap(
-                        element.GetHubElement().getIid(), element.GetDstElement().getId(), mappingDirection);
+                        element.GetHubElement().getIid(), ElementUtils.GetId(element.GetDstElement()), mappingDirection);
             }
         }
     }

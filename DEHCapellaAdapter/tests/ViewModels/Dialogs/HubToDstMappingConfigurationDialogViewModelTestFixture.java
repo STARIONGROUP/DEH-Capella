@@ -32,7 +32,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.Feature;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 
@@ -67,14 +66,16 @@ import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datatype.Enumeration;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.ReqIFElement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.SharedDirectAttributes;
 
 import DstController.IDstController;
 import Enumerations.MappedElementRowStatus;
@@ -114,10 +115,10 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
     private ICapellaObjectBrowserViewModel capellaObjectBrowser;
     private HubToDstMappingConfigurationDialogViewModel viewModel;
     private Iteration iteration;
-    private ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>> hubMapResult;
+    private ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>> hubMapResult;
     private ObservableValue<ThingRowViewModel<Thing>> selectedElementDefinitionObservable;
     private ObservableValue<ThingRowViewModel<Thing>> selectedRequirementObservable;
-    private ObservableValue<ElementRowViewModel<? extends CapellaElement>> selectedCapellaElementObservable;
+    private ObservableValue<ElementRowViewModel<? extends Element>> selectedElementObservable;
     private ICapellaMappedElementListViewViewModel mappedElementListViewViewModel;
     private ICapellaTransactionService transactionService;
     private Collection<Thing> elements;
@@ -134,11 +135,11 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
         this.transactionService = mock(ICapellaTransactionService.class);
         when(this.mappedElementListViewViewModel.GetSelectedElement()).thenReturn(Observable.empty());
         
-        this.hubMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        this.hubMapResult = new ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>>();
         when(this.dstController.GetHubMapResult()).thenReturn(this.hubMapResult);
         
-        this.selectedCapellaElementObservable = new ObservableValue<ElementRowViewModel<? extends CapellaElement>>();
-        when(this.capellaObjectBrowser.GetSelectedElement()).thenReturn(this.selectedCapellaElementObservable.Observable());
+        this.selectedElementObservable = new ObservableValue<ElementRowViewModel<? extends Element>>();
+        when(this.capellaObjectBrowser.GetSelectedElement()).thenReturn(this.selectedElementObservable.Observable());
         this.selectedElementDefinitionObservable = new ObservableValue<ThingRowViewModel<Thing>>();
         when(this.elementDefinitionBrowser.GetSelectedElement()).thenReturn(this.selectedElementDefinitionObservable.Observable());
         this.selectedRequirementObservable = new ObservableValue<ThingRowViewModel<Thing>>();
@@ -182,11 +183,23 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
         return this.MockElement("", type);
     }
 
-    private Object MockElement(String elementName, Class<? extends NamedElement> type)
+    private Object MockElement(String elementName, Class<? extends Element> type)
     {
         var mock = mock(type);
-        when(mock.getName()).thenReturn(elementName);
         
+        if(mock instanceof SharedDirectAttributes)
+        {
+            when(((SharedDirectAttributes)mock).getReqIFName()).thenReturn(elementName);
+        }
+        else if(mock instanceof ReqIFElement)
+        {
+            when(((ReqIFElement)mock).getReqIFLongName()).thenReturn(elementName);
+        }
+        else
+        {
+            when(((NamedElement)mock).getName()).thenReturn(elementName);
+        }
+
         if(Component.class.isAssignableFrom(type))
         {
             when(((Component)mock).getContainedProperties()).thenReturn(new BasicEList<Property>());
@@ -230,15 +243,15 @@ class HubToDstMappingConfigurationDialogViewModelTestFixture
         this.viewModel.SetMappedElement(this.elements);
         this.viewModel.SetSelectedMappedElement(this.viewModel.GetMappedElementCollection().get(0));
         
-        ElementRowViewModel<? extends NamedElement> componentRow = new ComponentRowViewModel(null, physicalComponent);
-        assertDoesNotThrow(() -> this.selectedCapellaElementObservable.Value((ElementRowViewModel<NamedElement>)componentRow));
+        ElementRowViewModel<? extends Element> componentRow = new ComponentRowViewModel(null, physicalComponent);
+        assertDoesNotThrow(() -> this.selectedElementObservable.Value((ElementRowViewModel<Element>)componentRow));
         
         this.viewModel.SetSelectedMappedElement(this.viewModel.GetMappedElementCollection().get(0));
         var requirement = mock(Requirement.class);
         when(requirement.getId()).thenReturn(UUID.randomUUID().toString());
         
-        ElementRowViewModel<? extends NamedElement> requirementRow = new RequirementRowViewModel(null, requirement);
-        assertDoesNotThrow(() -> this.selectedCapellaElementObservable.Value((ElementRowViewModel<NamedElement>) requirementRow));
+        ElementRowViewModel<? extends Element> requirementRow = new RequirementRowViewModel(null, requirement);
+        assertDoesNotThrow(() -> this.selectedElementObservable.Value((ElementRowViewModel<Element>) requirementRow));
     }
 
     @Test

@@ -39,8 +39,8 @@ import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.cs.ComponentPkg;
 import org.polarsys.capella.core.data.fa.FaPackage;
-import org.polarsys.capella.basic.requirement.Requirement;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
@@ -63,12 +63,12 @@ class RequirementToRequirementsSpecificationMappingRuleTestFixture
     private DomainOfExpertise domain;
     private Iteration iteration;
     private CapellaRequirementCollection elements;
-    private RequirementsPkg capellaRequirementPackage0;
+    private Folder capellaRequirementPackage0;
     private Requirement capellaRequirement2;    
     private Requirement capellaRequirement1;
     private Requirement capellaRequirement0;
-    private RequirementsPkg capellaRequirementPackage1;
-    private RequirementsPkg capellaRequirementPackage2;
+    private Folder capellaRequirementPackage1;
+    private Folder capellaRequirementPackage2;
     private cdp4common.engineeringmodeldata.Requirement requirement0;
     private ComponentPkg capellaPackage;
     private cdp4common.engineeringmodeldata.Requirement requirement1;
@@ -127,11 +127,11 @@ class RequirementToRequirementsSpecificationMappingRuleTestFixture
         
         this.capellaPackage = mock(ComponentPkg.class);
         when(this.capellaPackage.getName()).thenReturn("capellaPackage");
-        this.capellaRequirementPackage0 = mock(RequirementsPkg.class);
+        this.capellaRequirementPackage0 = mock(Folder.class);
         when(this.capellaRequirementPackage0.getName()).thenReturn("capellaRequirementPackage0");
-        this.capellaRequirementPackage1 = mock(RequirementsPkg.class);
+        this.capellaRequirementPackage1 = mock(Folder.class);
         when(this.capellaRequirementPackage1.getName()).thenReturn("capellaRequirementPackage1");
-        this.capellaRequirementPackage2 = mock(RequirementsPkg.class);
+        this.capellaRequirementPackage2 = mock(Folder.class);
         when(this.capellaRequirementPackage2.getName()).thenReturn("capellaRequirementPackage2");
         var containedElements = new BasicEList<EObject>();
         containedElements.add(this.capellaRequirementPackage1);

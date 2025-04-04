@@ -59,10 +59,11 @@ import org.polarsys.capella.core.data.information.datavalue.DataValue;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.kitalpha.emde.model.ElementExtension;
-import org.polarsys.capella.basic.requirement.Requirement;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
-import org.polarsys.capella.basic.requirement.SystemFunctionalRequirement;
-import org.polarsys.capella.basic.requirement.SystemUserRequirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.AbstractRelation;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
+import org.polarsys.capella.common.data.modellingcore.AbstractRelationship;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import com.google.common.collect.ImmutableList;
 
@@ -176,9 +177,9 @@ public class DstControllerTestFixture
                     (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
                     new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromHubToDst),
                     (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                    new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
+                    new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(Requirement.class), MappingDirection.FromDstToHub),
                     (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                    new MappedHubRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
+                    new MappedHubRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(Requirement.class), MappingDirection.FromHubToDst)
                     ));
         
         when(this.mappingConfigurationService.LoadMapping()).thenReturn(loadedMapping);
@@ -201,9 +202,9 @@ public class DstControllerTestFixture
                 (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
                 new MappedElementDefinitionRowViewModel(new ElementDefinition(), mock(LogicalComponent.class), MappingDirection.FromHubToDst),
                 (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(SystemUserRequirement.class), MappingDirection.FromDstToHub),
+                new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(Requirement.class), MappingDirection.FromDstToHub),
                 (MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>)
-                new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(SystemUserRequirement.class), MappingDirection.FromHubToDst)
+                new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), mock(Requirement.class), MappingDirection.FromHubToDst)
                 ));
         
         when(this.mappingEngine.Map(any())).thenReturn(mapResult);
@@ -386,8 +387,8 @@ public class DstControllerTestFixture
         when(sessionResource.getURI()).thenReturn(sessionUri);
         when(session.getSessionResource()).thenReturn(sessionResource);
         when(this.capellaSessionService.GetSession(any())).thenReturn(session);
-        var sessionElements = new HashMap<org.eclipse.emf.common.util.URI, List<CapellaElement>>();
-        sessionElements.put(sessionUri, Arrays.<CapellaElement>asList(elements));
+        var sessionElements = new HashMap<org.eclipse.emf.common.util.URI, List<Element>>();
+        sessionElements.put(sessionUri, Arrays.<Element>asList(elements));
         when(this.capellaSessionService.GetAllCapellaElementsFromOpenSessions()).thenReturn(sessionElements);
     }
     
@@ -447,16 +448,16 @@ public class DstControllerTestFixture
         when(component2.getOwnedTraces()).thenReturn(new BasicEList<Trace>());
         
         
-        var systemRequirement = mock(SystemFunctionalRequirement.class);
-        when(systemRequirement.getName()).thenReturn("component2");
+        var systemRequirement = mock(Requirement.class);
+        when(systemRequirement.getReqIFName()).thenReturn("component2");
         when(systemRequirement.getId()).thenReturn(UUID.randomUUID().toString());
-        when(systemRequirement.getOwnedTraces()).thenReturn(new BasicEList<Trace>());
+        when(systemRequirement.getOwnedRelations()).thenReturn(new BasicEList<AbstractRelation>());
         
-        var requirementPackage = mock(RequirementsPkg.class);
+        var requirementPackage = mock(Folder.class);
         when(requirementPackage.eContents()).thenReturn(new BasicEList<EObject>(Arrays.asList(systemRequirement)));
-        when(requirementPackage.getOwnedRequirementPkgs()).thenReturn(new BasicEList<RequirementsPkg>());
         when(requirementPackage.getOwnedRequirements()).thenReturn(new BasicEList<Requirement>());
-        when(requirementPackage.getOwnedTraces()).thenReturn(new BasicEList<Trace>());
+        when(requirementPackage.getOwnedRequirements()).thenReturn(new BasicEList<Requirement>());
+        when(requirementPackage.getOwnedRelations()).thenReturn(new BasicEList<AbstractRelation>());
         
         when(systemRequirement.eContainer()).thenReturn(requirementPackage);
         

@@ -38,6 +38,9 @@ import org.polarsys.capella.core.data.information.datatype.PhysicalQuantity;
 import org.polarsys.capella.core.data.la.LogicalComponent;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.RequirementType;
 
 import Enumerations.CapellaArchitecture;
 
@@ -62,7 +65,7 @@ public interface ICapellaTransactionService
      * @param original the original {@linkplain #TElement}
      * @return a clone of the {@linkplain #original}
      */
-    <TElement extends CapellaElement> TElement Clone(TElement original);
+    <TElement extends Element> TElement Clone(TElement original);
 
     /**
      * Gets a read only {@linkplain Collection} of the clones reference of type {@linkplain #TElement}
@@ -71,14 +74,14 @@ public interface ICapellaTransactionService
      * @param clazz the {@linkplain Class} type of element 
      * @return a {@linkplain Collection} of {@linkplain String} UUID and {@linkplain CapellaReferenceElement}
      */
-    <TElement extends CapellaElement> Collection<ClonedReferenceElement<? extends CapellaElement>> GetClones(Class<TElement> clazz);
+    <TElement extends Element> Collection<ClonedReferenceElement<? extends Element>> GetClones(Class<TElement> clazz);
 
     /**
      * Gets a read only {@linkplain Collection} of the clones reference
      * 
      * @return a {@linkplain Collection} of {@linkplain String} UUID and {@linkplain CapellaReferenceElement}
      */
-    Map<String, ClonedReferenceElement<? extends CapellaElement>> GetClones();
+    Map<String, ClonedReferenceElement<? extends Element>> GetClones();
 
     /**
      * Reset the clones references, the new ones and the registered target architecture
@@ -90,7 +93,14 @@ public interface ICapellaTransactionService
      * 
      * @param newUnit the new {@linkplain Unit}
      */
-    void AddReferenceDataToDataPackage(Unit newUnit);
+    void AddReferenceDataToDataPackage(Unit newUnit);    
+
+    /**
+     * Adds the provided {@linkplain RequirementType} to the {@linkplain DataPackage} of the current project
+     * 
+     * @param newRequirementType the new {@linkplain RequirementType}
+     */
+    void AddReferenceDataToDataPackage(RequirementType newRequirementType);
 
     /**
      * Adds the provided {@linkplain DataType} to the {@linkplain DataPackage} of the current project
@@ -113,7 +123,7 @@ public interface ICapellaTransactionService
      * @param element the element
      * @return a {@linkplain ClonedReferenceElement} of type {@linkplain #TElement}
      */
-    <TElement extends CapellaElement> ClonedReferenceElement<TElement> GetClone(TElement element);
+    <TElement extends Element> ClonedReferenceElement<TElement> GetClone(TElement element);
 
     /**
      * Commits the provided transaction
@@ -130,17 +140,7 @@ public interface ICapellaTransactionService
      * @param element the {@linkplain #TElement} to check
      * @return an assert
      */
-    <TElement extends EObject> boolean IsClonedOrNew(TElement element);
-
-    /**
-     * Initializes a new {@linkplain NamedElement} from the specified {@linkplain #Class}, also sets the name of the {@linkplain NamedElement} if the element does not exist yet
-     * 
-     * @param <TInstance> the {@linkplain Type} of {@linkplain CapellaElement}
-     * @param clazz the {@linkplain Class} of {@linkplain #TInstance}
-     * @param name the name of the newly created {@linkplain CapellaElement}, used to query the {@linkplain #newReferences} collection
-     * @return an instance of the provided type
-     */
-    <TInstance extends NamedElement> TInstance Create(Class<TInstance> clazz, String name);
+    <TElement extends Element> boolean IsClonedOrNew(TElement element);
 
     /**
      * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}
@@ -149,7 +149,7 @@ public interface ICapellaTransactionService
      * @param clazz the {@linkplain Class} of {@linkplain #TInstance}
      * @return an instance of the provided type
      */
-    <TInstance extends CapellaElement> TInstance Create(Class<TInstance> clazz);
+    <TInstance extends Element> TInstance Create(Class<TInstance> clazz);
 
     /**
      * Gets the {@linkplain CapellaElement} where the element id == the provided id
@@ -159,24 +159,34 @@ public interface ICapellaTransactionService
      * @param elementType the {@linkplain Class} of the queried element
      * @return a {@linkplain ClonedReferenceElement} of type {@linkplain #TElement}
      */
-    <TElement extends CapellaElement> TElement GetNew(String id, Class<TElement> elementType);
+    <TElement extends Element> TElement GetNew(String id, Class<TElement> elementType);
 
     /**
      * Register the target {@linkplain CapellaArchitecture} for the specified {@linkplain CapellaElement}
      * 
-     * @param capellaElement the {@linkplain CapellaElement}
+     * @param element the {@linkplain Element}
      * @param targetArchitecture the target {@linkplain CapellaArchitecture}
      */
-    void RegisterTargetArchitecture(CapellaElement capellaElement, CapellaArchitecture targetArchitecture);
+    void RegisterTargetArchitecture(Element element, CapellaArchitecture targetArchitecture);
 
     /**
      * Gets the registered target {@linkplain CapellaArchitecture} for the specified {@linkplain CapellaElement}
      * 
-     * @param capellaElement the {@linkplain CapellaElement}
+     * @param capellaElement the {@linkplain Element}
      * @return the {@linkplain CapellaArchitecture}
      */
-    CapellaArchitecture GetTargetArchitecture(CapellaElement capellaElement);
+    CapellaArchitecture GetTargetArchitecture(Element capellaElement);
 
+    /**
+     * Initializes a new {@linkplain Element} from the specified {@linkplain #Class}
+     * 
+     * @param <TInstance> the {@linkplain Type} of {@linkplain Element}
+     * @param clazz the {@linkplain Class} of {@linkplain #TInstance}
+     * @param name the name of the newly created {@linkplain Element}, used to query the {@linkplain #newReferences} collection
+     * @return an instance of the provided type
+     */
+    <TInstance extends Element> TInstance Create(Class<TInstance> clazz, String name);
+    
     /**
      * Initializes a new {@linkplain CapellaElement} from the specified {@linkplain #Class}, and registers the target {@linkplain CapellaArchitecture}
      * 
@@ -186,7 +196,7 @@ public interface ICapellaTransactionService
      * @param targetArchitecture the {@linkplain CapellaArchitecture} to register for the new element
      * @return an instance of the provided type
      */
-    <TInstance extends NamedElement> TInstance Create(Class<TInstance> clazz, String name, CapellaArchitecture targetArchitecture);
+    <TInstance extends Element> TInstance Create(Class<TInstance> clazz, String name, CapellaArchitecture targetArchitecture);
 
     /**
      *  Verifies that the provided {@linkplain #TElement} is a new element
@@ -195,7 +205,7 @@ public interface ICapellaTransactionService
      * @param element the {@linkplain #TElement} to check
      * @return an assert
      */
-    <TElement extends CapellaElement> boolean IsNew(TElement element);
+    <TElement extends Element> boolean IsNew(TElement element);
     
     /**
      * Gets the original reference from the {@linkplain ClonedReferenceElement} where the element id == the provided {@linkplain #TElement} id.
@@ -205,5 +215,5 @@ public interface ICapellaTransactionService
      * @param element the element
      * @return a {@linkplain #TElement}
      */
-    <TElement extends CapellaElement> TElement GetOriginal(TElement element);
+    <TElement extends Element> TElement GetOriginal(TElement element);
 }

@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import DstController.IDstController;
 import Enumerations.CapellaArchitecture;
@@ -82,7 +83,7 @@ class TransferControlViewModelTestFixture
         when(this.dstController.GetMappingDirection()).thenReturn(this.mappingDirections.Observable());
         
         when(this.dstController.GetSelectedDstMapResultForTransfer()).thenReturn(dstMapResult);
-        when(this.dstController.GetSelectedHubMapResultForTransfer()).thenReturn(new ObservableCollection<CapellaElement>());
+        when(this.dstController.GetSelectedHubMapResultForTransfer()).thenReturn(new ObservableCollection<Element>());
                 
         this.viewModel = new TransferControlViewModel(this.dstController, this.logService, this.transferHistory);
     }

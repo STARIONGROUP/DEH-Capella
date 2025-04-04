@@ -23,9 +23,10 @@
  */
 package ViewModels.Rows;
 
-import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import Enumerations.MappingDirection;
+import Utils.Stereotypes.ElementUtils;
 import cdp4common.commondata.NamedThing;
 import cdp4common.commondata.Thing;
 
@@ -67,7 +68,7 @@ public abstract class MappedRequirementBaseRowViewModel extends MappedElementRow
     @Override
     public String GetDstElementRepresentation()
     {
-        return this.GetElementRepresentation(this.GetDstElement() == null ? "-" : this.GetDstElement().getName(),
+        return this.GetElementRepresentation(this.GetDstElement() == null ? "-" : ElementUtils.GetName(this.GetDstElement()),
                 "Requirement", MappingDirection.FromHubToDst);
     }
     

@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.polarsys.capella.core.data.capellacommon.GenericTrace;
+import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.Trace;
 import org.polarsys.capella.core.data.cs.Interface;
 import org.polarsys.capella.core.data.fa.ComponentPort;
@@ -51,7 +52,7 @@ import org.polarsys.capella.core.data.information.datatype.BooleanType;
 import org.polarsys.capella.core.data.information.datatype.NumericType;
 import org.polarsys.capella.core.data.information.datatype.StringType;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.basic.requirement.SystemUserRequirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import DstController.IDstController;
 
@@ -72,6 +73,7 @@ import Utils.Stereotypes.CapellaComponentCollection;
 import Utils.Stereotypes.CapellaTracedElementCollection;
 import Utils.Stereotypes.HubRelationshipElementsCollection;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
+import ViewModels.Rows.MappedElementRowViewModel;
 import ViewModels.Rows.MappedHubRequirementRowViewModel;
 import cdp4common.commondata.Thing;
 import cdp4common.engineeringmodeldata.ActualFiniteState;
@@ -114,7 +116,7 @@ public class CapellaTracesToBinaryRelationshipTestFixture
     private IDstController dstController;
     private cdp4common.engineeringmodeldata.Requirement requirement0;
     private BinaryRelationship relationship0;
-    private SystemUserRequirement capellaRequirement;
+    private Requirement capellaRequirement;
     private GenericTrace trace0;
     private GenericTrace trace1;
 
@@ -261,12 +263,12 @@ public class CapellaTracesToBinaryRelationshipTestFixture
         when(this.component1.getContainedProperties()).thenReturn(properties);
         when(this.component2.getContainedProperties()).thenReturn(properties);
         
-        this.capellaRequirement = mock(SystemUserRequirement.class);
+        this.capellaRequirement = mock(Requirement.class);
         when(this.capellaRequirement.getId()).thenReturn(UUID.randomUUID().toString());
-        when(this.capellaRequirement.getOutgoingTraces()).thenReturn(new BasicEList());
-        when(this.capellaRequirement.getIncomingTraces()).thenReturn(new BasicEList(Arrays.asList(this.trace0)));
+        when(this.capellaRequirement.getOwnedRelations()).thenReturn(new BasicEList());
+        when(this.capellaRequirement.getOwnedRelations()).thenReturn(new BasicEList(Arrays.asList(this.trace0)));
         
-        when(this.trace0.getTargetElement()).thenReturn(this.capellaRequirement);
+//        when(this.trace0.getTargetElement()).thenReturn(this.capellaRequirement);
         when(this.trace0.getSourceElement()).thenReturn(this.component0);
         when(this.trace1.getTargetElement()).thenReturn(this.component0);
         when(this.trace1.getSourceElement()).thenReturn(this.component2);
@@ -297,7 +299,7 @@ public class CapellaTracesToBinaryRelationshipTestFixture
         when(this.component2.getContainedComponentPorts()).thenReturn(new BasicEList<ComponentPort>(Arrays.asList(port2, port3)));
         
         this.elements.add(new MappedElementDefinitionRowViewModel(this.elementDefinition0, this.component0, MappingDirection.FromHubToDst));
-        this.elements.add(new MappedHubRequirementRowViewModel(this.requirement0, this.capellaRequirement, MappingDirection.FromHubToDst));
+        this.elements.add((MappedElementRowViewModel<? extends Thing, ? extends CapellaElement>) new MappedHubRequirementRowViewModel(this.requirement0, this.capellaRequirement, MappingDirection.FromHubToDst));
         this.elements.add(new MappedElementDefinitionRowViewModel(this.elementDefinition2, this.component2, MappingDirection.FromHubToDst));
     }
 

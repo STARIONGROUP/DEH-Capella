@@ -36,8 +36,8 @@ import java.util.stream.Stream;
 
 import org.eclipse.emf.ecore.EObject;
 import org.polarsys.capella.core.data.capellacore.Structure;
-import org.polarsys.capella.basic.requirement.*;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import Enumerations.MappingDirection;
 import HubController.IHubController;
@@ -117,7 +117,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
         {            
             var refRequirementsSpecification = new Ref<>(RequirementsSpecification.class);
             
-            var refParent = new Ref<>(RequirementsPkg.class);
+            var refParent = new Ref<>(Folder.class);
             StereotypeUtils.TryGetPossibleRequirementsSpecificationElement(mappedRequirement.GetDstElement(), refParent);
             
             if(!mappedRequirement.GetShouldCreateNewTargetElementValue() && mappedRequirement.GetHubElement() != null)
@@ -132,8 +132,8 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             if(!refRequirementsSpecification.HasValue())
             {
                 this.logger.error(
-                        String.format("The mapping of the current requirement %s is no possible, because no eligible parent could be found current RequirementsPkg name %s", 
-                                mappedRequirement.GetDstElement().getName(), mappedRequirement.GetDstElement().eContainer()));
+                        String.format("The mapping of the current requirement %s is no possible, because no eligible parent could be found current Folder name %s", 
+                                mappedRequirement.GetDstElement().getReqIFName(), mappedRequirement.GetDstElement().eContainer()));
                 
                 continue;
             }
@@ -143,7 +143,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             
             if(!TryCreateRelevantGroupsAndTheRequirement(mappedRequirement.GetDstElement(), GetChildren(refParent.Get()), refRequirementsSpecification, refRequirementsGroup, refRequirement))
             {
-                this.logger.error(String.format("Could not map requirement %s", mappedRequirement.GetDstElement().getName()));
+                this.logger.error(String.format("Could not map requirement %s", mappedRequirement.GetDstElement().getReqIFName()));
             }
             
             if(refRequirement.HasValue())
@@ -160,7 +160,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
      * and creates the {@linkplain Requirement}. This method is called recursively until the methods reaches the {@linkplain Requirement}
      *
      * @param requirement the {@linkplain Requirement} requirement from Capella
-     * @param elements the children of the current {@linkplain RequirementsPkg} being processed
+     * @param elements the children of the current {@linkplain Folder} being processed
      * @param refRequirementsSpecification the {@linkplain Ref} of {@linkplain RequirementsSpecification}
      * @param refRequirementsGroup the {@linkplain Ref} of {@linkplain RequirementsGroup}, 
      * holds the last group that was created, also the closest to the {@linkplain Requirement}
@@ -176,10 +176,10 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
         {
             if(IsParentOf(element, requirement))
             {                
-                if(!this.TryGetOrCreateRequirementGroup((RequirementsPkg)element, refRequirementsSpecification, refRequirementsGroup))
+                if(!this.TryGetOrCreateRequirementGroup((Folder)element, refRequirementsSpecification, refRequirementsGroup))
                 {
                     this.logger.error(String.format("Could not create the requirement %s, because the creation/update of the requirement group %s failed", 
-                            requirement.getName(), ((RequirementsPkg)element).getName()));
+                            requirement.getReqIFName(), ((Folder)element).getReqIFName()));
                     
                     break;
                 }
@@ -190,7 +190,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
                 if(!this.TryGetOrCreateRequirement((Requirement)element, refRequirementsSpecification, refRequirementsGroup, refRequirement))
                 {
                     throw new UnsupportedOperationException(
-                            String.format("Could not create the requirement %s", requirement.getName()));
+                            String.format("Could not create the requirement %s", requirement.getReqIFName()));
                 }
             }
             
@@ -219,7 +219,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
                 .getRequirement()
                 .stream()
                 .filter(x -> !x.isDeprecated())
-                .filter(x -> this.AreShortNamesEquals(x, GetShortName(dstRequirement)) || AreTheseEquals(x.getName(), dstRequirement.getName(), true))
+                .filter(x -> this.AreShortNamesEquals(x, GetShortName(dstRequirement)) || AreTheseEquals(x.getName(), dstRequirement.getReqIFName(), true))
                 .findFirst();
         
         if(optionalRequirement.isPresent())
@@ -246,12 +246,10 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
      * @param refRequirementsSpecification the {@linkplain Ref} of {@linkplain RequirementsSpecification} container
      * @param refRequirement the {@linkplain Ref} of {@linkplain cdp4common.engineeringmodeldata.Requirement} target
      */
-    private void UpdateProperties(Requirement dstRequirement,
-            Ref<RequirementsSpecification> refRequirementsSpecification,
-            Ref<cdp4common.engineeringmodeldata.Requirement> refRequirement)
+    private void UpdateProperties(Requirement dstRequirement, Ref<RequirementsSpecification> refRequirementsSpecification, Ref<cdp4common.engineeringmodeldata.Requirement> refRequirement)
     {
         this.UpdateOrCreateDefinition(dstRequirement, refRequirement);
-        refRequirement.Get().setName(dstRequirement.getName());
+        refRequirement.Get().setName(dstRequirement.getReqIFName());
         refRequirement.Get().setShortName(GetShortName(dstRequirement));
 
         refRequirementsSpecification.Get().getRequirement().removeIf(x -> x.getIid().equals(refRequirement.Get().getIid()));
@@ -269,30 +267,9 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
      */
     private void MapCategories(Requirement dstRequirement, cdp4common.engineeringmodeldata.Requirement hubRequirement)
     {
-        if(dstRequirement instanceof SystemNonFunctionalRequirement)
+        if(dstRequirement.getRequirementType() != null)
         {
-            this.MapCategory(hubRequirement, SystemNonFunctionalRequirement.class.getSimpleName(), ClassKind.Requirement);
-        }
-        else if(dstRequirement instanceof SystemNonFunctionalInterfaceRequirement)
-        {
-            this.MapCategory(hubRequirement, SystemNonFunctionalInterfaceRequirement.class.getSimpleName(), ClassKind.Requirement);
-        }
-        else if(dstRequirement instanceof SystemFunctionalRequirement)
-        {
-            this.MapCategory(hubRequirement, SystemFunctionalRequirement.class.getSimpleName(), ClassKind.Requirement);
-        }
-        else if(dstRequirement instanceof SystemFunctionalInterfaceRequirement)
-        {
-            this.MapCategory(hubRequirement, SystemFunctionalInterfaceRequirement.class.getSimpleName(), ClassKind.Requirement);
-        }
-        else if(dstRequirement instanceof SystemUserRequirement)
-        {
-            this.MapCategory(hubRequirement, SystemUserRequirement.class.getSimpleName(), ClassKind.Requirement);
-        }
-        
-        if(dstRequirement.isIsObsolete())
-        {
-            this.MapCategory(hubRequirement, "Obsolete", ClassKind.Requirement);
+            this.MapCategory(hubRequirement, dstRequirement.getRequirementType().getReqIFLongName(), ClassKind.Requirement);
         }
     }
 
@@ -313,7 +290,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
                     .map(x -> x.clone(true))
                     .orElse(this.createDefinition());
 
-            definition.setContent(requirement.getDescription());
+            definition.setContent(requirement.getReqIFDescription());
             
             refRequirement.Get().getDefinition().removeIf(x -> x.getIid().equals(definition.getIid()));            
             refRequirement.Get().getDefinition().add(definition);
@@ -334,14 +311,14 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
     }
 
     /**
-     * Try to create the {@linkplain RequirementsSpecification} represented by the provided {@linkplain RequirementsPkg}
+     * Try to create the {@linkplain RequirementsSpecification} represented by the provided {@linkplain Folder}
      * 
-     * @param currentParent the {@linkplain RequirementsPkg} to create or retrieve the {@linkplain RequirementsSpecification} that represents it
+     * @param currentParent the {@linkplain Folder} to create or retrieve the {@linkplain RequirementsSpecification} that represents it
      * @param refRequirementsSpecification the {@linkplain Ref} parent {@linkplain RequirementsSpecification}
      * @param refRequirementsGroup the {@linkplain Ref} of {@linkplain RequirementsGroup}
      * @return a value indicating whether the {@linkplain RequirementsGroup} has been found or created
      */
-    private boolean TryGetOrCreateRequirementGroup(RequirementsPkg currentParent, Ref<RequirementsSpecification> refRequirementsSpecification, Ref<RequirementsGroup> refRequirementsGroup)
+    private boolean TryGetOrCreateRequirementGroup(Folder currentParent, Ref<RequirementsSpecification> refRequirementsSpecification, Ref<RequirementsGroup> refRequirementsGroup)
     {
         Ref<RequirementsGroup> refCurrentRequirementsGroup = new Ref<RequirementsGroup>(RequirementsGroup.class);
         
@@ -352,7 +329,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
         else
         {
             RequirementsGroup requirementsgroup = new RequirementsGroup();
-            requirementsgroup.setName(currentParent.getName());
+            requirementsgroup.setName(currentParent.getReqIFName());
             requirementsgroup.setShortName(GetShortName(currentParent));
             requirementsgroup.setIid(UUID.randomUUID());
             requirementsgroup.setOwner(this.hubController.GetCurrentDomainOfExpertise());
@@ -374,14 +351,14 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
     }
     
     /**
-     * Tries to find the group represented by / representing the provided {@linkplain RequirementsPkg}
+     * Tries to find the group represented by / representing the provided {@linkplain Folder}
      * 
-     * @param currentPackage the {@linkplain RequirementsPkg}
+     * @param currentPackage the {@linkplain Folder}
      * @param refRequirementsSpecification the {@linkplain Ref} of the current {@linkplain RequirementsSpecification}
      * @param refRequirementsGroup the {@linkplain Ref} of {@linkplain RequirementsGroup}
      * @return a value indicating whether the {@linkplain RequirementsGroup} has been found
      */
-    private boolean TryToFindGroup(RequirementsPkg currentPackage, Ref<RequirementsSpecification> refRequirementsSpecification, Ref<RequirementsGroup> refRequirementsGroup)
+    private boolean TryToFindGroup(Folder currentPackage, Ref<RequirementsSpecification> refRequirementsSpecification, Ref<RequirementsGroup> refRequirementsGroup)
     {
         Optional<RequirementsGroup> optionalRequirementsGroup = Stream.concat(this.temporaryRequirementsGroups.stream(), 
                 refRequirementsSpecification.Get().getAllContainedGroups().stream())
@@ -405,7 +382,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
      * @param refRequirementSpecification the {@linkplain Ref} of {@linkplain RequirementsSpecification}
      * @return a value indicating whether the {@linkplain RequirementsGroup} has been found or created
      */
-    private boolean TryGetOrCreateRequirementSpecification(Structure currentPackage, Ref<RequirementsSpecification> refRequirementSpecification)
+    private boolean TryGetOrCreateRequirementSpecification(Folder currentPackage, Ref<RequirementsSpecification> refRequirementSpecification)
     {
         Optional<RequirementsSpecification> optionalRequirementsSpecification = this.requirementsSpecifications
                 .stream()
@@ -431,7 +408,7 @@ public class RequirementToRequirementsSpecificationMappingRule extends DstToHubB
             else
             {
                 RequirementsSpecification requirementsSpecification = new RequirementsSpecification();
-                requirementsSpecification.setName(currentPackage.getName());
+                requirementsSpecification.setName(currentPackage.getReqIFName());
                 requirementsSpecification.setShortName(GetShortName(currentPackage));
                 requirementsSpecification.setIid(UUID.randomUUID());
                 requirementsSpecification.setOwner(this.hubController.GetCurrentDomainOfExpertise());

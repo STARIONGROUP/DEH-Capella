@@ -41,7 +41,8 @@ import org.polarsys.capella.core.data.capellacore.CapellaElement;
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.cs.Part;
-import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import Enumerations.CapellaArchitecture;
 import Enumerations.MappingDirection;
@@ -50,6 +51,7 @@ import Services.CapellaSession.ICapellaSessionService;
 import Services.CapellaTransaction.ICapellaTransactionService;
 import Utils.Ref;
 import Utils.StreamExtensions;
+import Utils.Stereotypes.ElementUtils;
 import ViewModels.Interfaces.IHaveTargetArchitecture;
 import ViewModels.Interfaces.IMappedElementRowViewModel;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
@@ -67,7 +69,7 @@ import cdp4common.engineeringmodeldata.RequirementsSpecification;
 /**
  * The {@linkplain CapellaMappingConfigurationService} is the implementation of {@linkplain MappingConfigurationService} for the Capella adapter
  */
-public class CapellaMappingConfigurationService extends MappingConfigurationService<CapellaElement, CapellaExternalIdentifier> implements ICapellaMappingConfigurationService
+public class CapellaMappingConfigurationService extends MappingConfigurationService<Element, CapellaExternalIdentifier> implements ICapellaMappingConfigurationService
 {
     /**
      * The {@linkplain ICapellaSessionService} instance
@@ -206,7 +208,7 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
      * @return a {@linkplain Collection} of {@linkplain IMappedElementRowViewModel}
      */
     @Override
-    public Collection<IMappedElementRowViewModel> LoadMapping(Collection<CapellaElement> elements)
+    public Collection<IMappedElementRowViewModel> LoadMapping(Collection<Element> elements)
     {
         var mappedElements = new ArrayList<IMappedElementRowViewModel>();
         
@@ -224,10 +226,10 @@ public class CapellaMappingConfigurationService extends MappingConfigurationServ
      * @param element The CapellaElement for which mapped elements are retrieved.
      * @return A collection of IMappedElementRowViewModel representing the mapped elements.
      */
-    private Collection<IMappedElementRowViewModel> GetMappedElements(CapellaElement element)
+    private Collection<IMappedElementRowViewModel> GetMappedElements(Element element)
     {
         var correspondences = this.correspondences.stream()
-                .filter(x -> AreTheseEquals(x.middle.Identifier, element.getId()))
+                .filter(x -> AreTheseEquals(x.middle.Identifier, ElementUtils.GetId(element)))
                 .collect(Collectors.toList());
         
         var result = new ArrayList<IMappedElementRowViewModel>();

@@ -43,6 +43,7 @@ import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import Enumerations.CapellaArchitecture;
 import Reactive.ObservableValue;
@@ -260,15 +261,15 @@ public class CapellaSessionService implements ICapellaSessionService
      * @return a {@linkplain HashMap} of {@linkplain URI} and a {@linkplain List} of {@linkplain CapellaElement}
      */
     @Override
-    public HashMap<URI, List<CapellaElement>> GetAllCapellaElementsFromOpenSessions()
+    public HashMap<URI, List<Element>> GetAllCapellaElementsFromOpenSessions()
     {
-        var sessionAndObjectsMap = new HashMap<URI, List<CapellaElement>>();
+        var sessionAndObjectsMap = new HashMap<URI, List<Element>>();
         
         this.ProcessSessionsElements((uri, notifiers) -> 
         {
             var elements = notifiers.stream()
-                    .filter(x -> x instanceof CapellaElement)
-                    .map(x -> (CapellaElement)x)
+                    .filter(x -> x instanceof Element)
+                    .map(x -> (Element)x)
                     .collect(Collectors.toList());
             
             sessionAndObjectsMap.putIfAbsent(uri, elements);

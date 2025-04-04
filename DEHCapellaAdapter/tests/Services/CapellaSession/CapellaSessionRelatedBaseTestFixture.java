@@ -169,13 +169,13 @@ public abstract class CapellaSessionRelatedBaseTestFixture
     }
 
     /**
-     * Initializes a mocked {@linkplain RequirementsPkg}
+     * Initializes a mocked {@linkplain Folder}
      * 
      * @return the {@linkplain RequirementPkg}
      */
-    protected RequirementsPkg GetRequirementPackage()
+    protected Folder GetRequirementPackage()
     {
-        var requirementPackage = mock(RequirementsPkg.class);
+        var requirementPackage = mock(Folder.class);
         var systemNonFunctionalRequirement = mock(SystemNonFunctionalRequirement.class);
         var systemNonFunctionalInterfaceRequirement = mock(SystemNonFunctionalInterfaceRequirement.class);
         var systemFunctionalRequirement = mock(SystemFunctionalRequirement.class);

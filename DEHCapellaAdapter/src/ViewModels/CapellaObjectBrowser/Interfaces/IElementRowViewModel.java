@@ -24,6 +24,7 @@
 package ViewModels.CapellaObjectBrowser.Interfaces;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
 
@@ -32,14 +33,14 @@ import ViewModels.ObjectBrowser.Interfaces.IRowViewModel;
  * 
  * @param <TElement> the type of {@linkplain CapellaElement} this row view model represents
  */
-public interface IElementRowViewModel<TElement extends CapellaElement> extends IRowViewModel
+public interface IElementRowViewModel<TElement extends Element> extends IRowViewModel
 {
     /**
      * Gets the type of thing represented
      * 
      * @return a {@linkplain Class}
      */
-    Class<? extends CapellaElement> GetClassKind();
+    Class<? extends Element> GetClassKind();
 
     /**
      * Gets the DST {@linkplain Element} represented by this row view model

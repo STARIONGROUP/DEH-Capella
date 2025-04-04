@@ -23,9 +23,9 @@
  */
 package ViewModels.MappingListView.Renderers;
 
-import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.cs.Component;
-import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.kitalpha.emde.model.Element;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 import ViewModels.MappingListView.Rows.CapellaElementRows.MappingListViewCapellaRequirementRowViewModel;
 import ViewModels.MappingListView.Rows.CapellaElementRows.MappingListViewComponentRowViewModel;
@@ -35,7 +35,7 @@ import ViewModels.MappingListView.Rows.CapellaElementRows.MappingListViewCompone
  */
 @SuppressWarnings("serial")
 @Annotations.ExludeFromCodeCoverageGeneratedReport
-public class MappingListViewCapellaElementCellRenderer extends MappingListViewElementBaseCellRenderer<NamedElement> 
+public class MappingListViewCapellaElementCellRenderer extends MappingListViewElementBaseCellRenderer<Element> 
 {
     /**
      * Initializes a new {@linkplain MappingListViewElementDefinitionCellRenderer}

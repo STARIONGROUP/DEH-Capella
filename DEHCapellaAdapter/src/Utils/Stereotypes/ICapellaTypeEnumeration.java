@@ -24,13 +24,14 @@
 package Utils.Stereotypes;
 
 import org.polarsys.capella.core.data.capellacore.CapellaElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 /**
- * The {@linkplain ICapellaTypeEnumeration} is the interface definition for the {@linkplain ComponentType} and the {@linkplain RequirementType}
+ * The {@linkplain ICapellaTypeEnumeration} is the interface definition for the {@linkplain ComponentType} and the {@linkplain RequirementTypeEnumeration}
  * @param <TEnum> the type of enumeration that implements this interface
  * @param <TElement> the type of {@linkplain CapellaElement} the implementing enumeration deals with
  */
-public interface ICapellaTypeEnumeration<TEnum, TElement extends CapellaElement>
+public interface ICapellaTypeEnumeration<TEnum, TElement extends Element>
 {
     /**
      * Gets the {@linkplain Class} of the instance of the enumeration value

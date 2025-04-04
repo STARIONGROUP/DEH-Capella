@@ -25,6 +25,7 @@ package Services.HistoryService;
 
 import org.polarsys.capella.core.data.capellacore.NamedElement;
 import org.polarsys.capella.core.data.information.Property;
+import org.polarsys.kitalpha.vp.requirements.Requirements.ReqIFElement;
 
 import Services.LocalExchangeHistory.ILocalExchangeHistoryService;
 import cdp4common.ChangeKind;

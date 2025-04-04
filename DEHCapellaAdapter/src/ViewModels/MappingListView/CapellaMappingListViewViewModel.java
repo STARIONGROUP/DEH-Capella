@@ -31,7 +31,7 @@ import javax.swing.tree.TreeModel;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.netbeans.swing.outline.DefaultOutlineModel;
-import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import DstController.IDstController;
 import Enumerations.MappingDirection;
@@ -84,8 +84,8 @@ public class CapellaMappingListViewViewModel extends MappingListViewViewModel<ID
         if(shouldDisplayTree)
         {
             this.browserTreeModel.Value(DefaultOutlineModel.createOutlineModel(
-                    new MappingListViewTreeViewModel<NamedElement>(this.SortMappedElements()), 
-                    new MappingListViewTreeRowViewModel<NamedElement>(NamedElement.class), true));
+                    new MappingListViewTreeViewModel<Element>(this.SortMappedElements()), 
+                    new MappingListViewTreeRowViewModel<Element>(Element.class), true));
         }
     }
 
@@ -94,9 +94,9 @@ public class CapellaMappingListViewViewModel extends MappingListViewViewModel<ID
      * 
      * @return a {@linkplain Collection} of {@linkplain Triple} of the {@linkplain #TDstElement} the {@linkplain MappingDirection} and the {@linkplain Thing}
      */
-    private Collection<Triple<? extends NamedElement, MappingDirection, ? extends Thing>> SortMappedElements()
+    private Collection<Triple<? extends Element, MappingDirection, ? extends Thing>> SortMappedElements()
     {
-        var allElements = new ArrayList<MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement>>();
+        var allElements = new ArrayList<MappedElementRowViewModel<? extends DefinedThing, ? extends Element>>();
         
         allElements.addAll(StreamExtensions.OfType(this.dstController.GetHubMapResult().stream(), MappedElementDefinitionRowViewModel.class)
                 .filter(x -> x.DoesRepresentAnElementDefinitionComponentMapping())
@@ -110,7 +110,7 @@ public class CapellaMappingListViewViewModel extends MappingListViewViewModel<ID
         
         allElements.addAll(StreamExtensions.OfType(this.dstController.GetDstMapResult(), MappedDstRequirementRowViewModel.class));
         
-        var result = new ArrayList<Triple<? extends NamedElement, MappingDirection, ? extends Thing>>();
+        var result = new ArrayList<Triple<? extends Element, MappingDirection, ? extends Thing>>();
         
         for (var mappedElement : allElements)
         {

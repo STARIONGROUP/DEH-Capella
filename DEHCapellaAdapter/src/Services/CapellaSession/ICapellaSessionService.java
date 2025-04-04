@@ -36,6 +36,7 @@ import org.polarsys.capella.core.data.cs.BlockArchitecture;
 import org.polarsys.capella.core.data.cs.Component;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
 import org.polarsys.capella.core.model.helpers.BlockArchitectureExt.Type;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import Enumerations.CapellaArchitecture;
 import ViewModels.CapellaObjectBrowser.Rows.RootRowViewModel;
@@ -80,7 +81,7 @@ public interface ICapellaSessionService
      * 
      * @return a {@linkplain HashMap} of {@linkplain URI} and a {@linkplain List} of {@linkplain CapellaElement}
      */
-    HashMap<URI, List<CapellaElement>> GetAllCapellaElementsFromOpenSessions();
+    HashMap<URI, List<Element>> GetAllCapellaElementsFromOpenSessions();
 
     /**
      * Gets the {@linkplain Observable} of {@linkplain Session} that indicates when the emitted session gets saved

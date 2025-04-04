@@ -23,12 +23,12 @@
  */
 package ViewModels.MappedElementListView.Interfaces;
 
-import org.polarsys.capella.core.data.capellacore.NamedElement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 /**
  * The ICapellaMappedElementListViewViewModel is {@link ThemeReader} interface definition for {@linkplain CapellaMappedEementListViewViewModel}
  */
-public interface ICapellaMappedElementListViewViewModel extends IMappedElementListViewViewModel<NamedElement>
+public interface ICapellaMappedElementListViewViewModel extends IMappedElementListViewViewModel<Element>
 {
     /**
      * Gets a value indicating whether the target architecture column should be displayed

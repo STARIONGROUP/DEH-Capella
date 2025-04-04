@@ -74,7 +74,7 @@ import org.polarsys.capella.core.data.pa.PhysicalComponentKind;
 import org.polarsys.capella.core.data.pa.PhysicalComponentNature;
 import org.polarsys.capella.core.data.pa.PhysicalComponentPkg;
 import org.polarsys.capella.core.data.pa.deployment.PartDeploymentLink;
-import org.polarsys.capella.basic.requirement.RequirementsPkg;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
 
 import App.AppContainer;
 import DstController.IDstController;
@@ -88,7 +88,7 @@ import Utils.Ref;
 import Utils.ValueSetUtils;
 import Utils.Stereotypes.CapellaTypeEnumerationUtility;
 import Utils.Stereotypes.HubElementCollection;
-import Utils.Stereotypes.RequirementType;
+import Utils.Stereotypes.RequirementTypeEnumeration;
 import ViewModels.Rows.MappedElementDefinitionRowViewModel;
 import cdp4common.commondata.DefinedThing;
 import cdp4common.engineeringmodeldata.BinaryRelationship;
@@ -1283,12 +1283,12 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
     }
 
     /**
-     * Gets the {@linkplain RequirementType} based on the {@linkplain Category} applied to the provided {@linkplain cdp4common.engineeringmodeldata.Requirement}
+     * Gets the {@linkplain RequirementTypeEnumeration} based on the {@linkplain Category} applied to the provided {@linkplain cdp4common.engineeringmodeldata.Requirement}
      * 
      * @param elementBase the {@linkplain ElementBase}
-     * @param refComponentType the {@linkplain Ref} of {@linkplain RequirementType}
+     * @param refComponentType the {@linkplain Ref} of {@linkplain RequirementTypeEnumeration}
      * @param targetArchitecture the {@linkplain CapellaArchitecture} that determines the type of the component
-     * @return a {@linkplain boolean} indicating whether the {@linkplain RequirementType} is different than the default value
+     * @return a {@linkplain boolean} indicating whether the {@linkplain RequirementTypeEnumeration} is different than the default value
      */
     private boolean TryGetComponentClass(ElementBase elementBase, Ref<Class<? extends Component>> refComponentType, CapellaArchitecture targetArchitecture)
     {
@@ -1319,12 +1319,12 @@ public class ElementToComponentMappingRule extends HubToDstBaseMappingRule<HubEl
     }
 
     /**
-     * Gets or creates the {@linkplain RequirementsPkg} that can represent the {@linkplain RequirementsSpecification}
+     * Gets or creates the {@linkplain Folder} that can represent the {@linkplain RequirementsSpecification}
      * 
      * @param <TComponent> the type of {@linkplain Component}
      * @param hubElementName the {@linkplain String} element name in the HUB side
      * @param componentType the {@linkplain Class} of {@linkplain #TComponent}
-     * @return a {@linkplain RequirementsPkg}
+     * @return a {@linkplain Folder}
      */
     private <TComponent extends Component> TComponent GetOrCreateComponent(String hubElementName, Class<TComponent> componentType)
     {

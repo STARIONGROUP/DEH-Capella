@@ -40,7 +40,8 @@ import org.polarsys.capella.core.data.information.datavalue.LiteralBooleanValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralNumericValue;
 import org.polarsys.capella.core.data.information.datavalue.LiteralStringValue;
 import org.polarsys.capella.core.data.pa.PhysicalComponent;
-import org.polarsys.capella.basic.requirement.Requirement;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+import org.polarsys.kitalpha.emde.model.Element;
 
 import DstController.IDstController;
 import Enumerations.MappingDirection;
@@ -121,17 +122,17 @@ class CapellaMappingListViewViewModelTestFixture
         when(this.component1.getContainedProperties()).thenReturn(properties);
 
         this.capellaRequirement0 = mock(Requirement.class);
-        when(this.capellaRequirement0.getName()).thenReturn("capellaRequirement0");
+        when(this.capellaRequirement0.getReqIFName()).thenReturn("capellaRequirement0");
         
-        var mappedDstElements = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        var mappedDstElements = new ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>>();
         MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementDefinitionRowViewModel = new MappedElementDefinitionRowViewModel(new ElementDefinition(), this.physicalComponent0, MappingDirection.FromDstToHub);
-        mappedDstElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElementDefinitionRowViewModel);
-        MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedDstRequirementRowViewModel = new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), this.capellaRequirement0, MappingDirection.FromDstToHub);
-        mappedDstElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedDstRequirementRowViewModel);
+        mappedDstElements.add((MappedElementRowViewModel<DefinedThing, Element>)mappedElementDefinitionRowViewModel);
+        MappedElementRowViewModel<? extends DefinedThing, ? extends Element> mappedDstRequirementRowViewModel = new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), this.capellaRequirement0, MappingDirection.FromDstToHub);
+        mappedDstElements.add((MappedElementRowViewModel<DefinedThing, Element>) mappedDstRequirementRowViewModel);
         
-        var mappedHubElements = new ObservableCollection<MappedElementRowViewModel<DefinedThing, NamedElement>>();
+        var mappedHubElements = new ObservableCollection<MappedElementRowViewModel<DefinedThing, Element>>();
         MappedElementRowViewModel<? extends DefinedThing, ? extends NamedElement> mappedElementDefinitionRowViewModel2 = new MappedElementDefinitionRowViewModel(new ElementDefinition(), this.physicalComponent0, MappingDirection.FromHubToDst);
-        mappedHubElements.add((MappedElementRowViewModel<DefinedThing, NamedElement>) mappedElementDefinitionRowViewModel2);
+        mappedHubElements.add((MappedElementRowViewModel<DefinedThing, Element>) mappedElementDefinitionRowViewModel2);
         
         when(this.dstController.GetDstMapResult()).thenReturn(mappedDstElements);
         when(this.dstController.GetHubMapResult()).thenReturn(mappedHubElements);
