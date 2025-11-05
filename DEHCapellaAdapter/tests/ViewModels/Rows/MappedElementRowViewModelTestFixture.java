@@ -35,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.polarsys.capella.core.data.la.LogicalComponent;
-import org.polarsys.capella.basic.requirement.SystemUserRequirement;
 
 import Enumerations.MappingDirection;
 import Reactive.ObservableValue;
@@ -50,6 +49,8 @@ import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.business.api.session.SessionManager;
 import org.eclipse.sirius.viewpoint.description.Viewpoint;
 
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
+
 public class MappedElementRowViewModelTestFixture
 {
     private MappedDstRequirementRowViewModel dstRequirementRowViewModel;
@@ -60,8 +61,8 @@ public class MappedElementRowViewModelTestFixture
     @BeforeEach
     public void Setup()
     {
-        var requirement = mock(SystemUserRequirement.class);
-        when(requirement.getName()).thenReturn("user requirement");
+        var requirement = mock(Requirement.class);
+        when(requirement.getReqIFName()).thenReturn("user requirement");
         this.dstRequirementRowViewModel = new MappedDstRequirementRowViewModel(requirement, MappingDirection.FromDstToHub);
         this.hubRequirementRowViewModel = new MappedDstRequirementRowViewModel(new cdp4common.engineeringmodeldata.Requirement(), requirement, MappingDirection.FromHubToDst);
         

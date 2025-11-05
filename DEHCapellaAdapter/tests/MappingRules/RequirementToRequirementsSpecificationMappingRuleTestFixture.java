@@ -119,20 +119,20 @@ class RequirementToRequirementsSpecificationMappingRuleTestFixture
         this.iteration.getRequirementsSpecification().add(requirementsSpecification);
         
         this.capellaRequirement0 = mock(Requirement.class);
-        when(this.capellaRequirement0.getName()).thenReturn("capellaRequirement0");
+        when(this.capellaRequirement0.getReqIFName()).thenReturn("capellaRequirement0");
         this.capellaRequirement1 = mock(Requirement.class);
-        when(this.capellaRequirement1.getName()).thenReturn("capellaRequirement1");
+        when(this.capellaRequirement1.getReqIFName()).thenReturn("capellaRequirement1");
         this.capellaRequirement2 = mock(Requirement.class);
-        when(this.capellaRequirement2.getName()).thenReturn("capellaRequirement2");
+        when(this.capellaRequirement2.getReqIFName()).thenReturn("capellaRequirement2");
         
         this.capellaPackage = mock(ComponentPkg.class);
         when(this.capellaPackage.getName()).thenReturn("capellaPackage");
         this.capellaRequirementPackage0 = mock(Folder.class);
-        when(this.capellaRequirementPackage0.getName()).thenReturn("capellaRequirementPackage0");
+        when(this.capellaRequirementPackage0.getReqIFName()).thenReturn("capellaRequirementPackage0");
         this.capellaRequirementPackage1 = mock(Folder.class);
-        when(this.capellaRequirementPackage1.getName()).thenReturn("capellaRequirementPackage1");
+        when(this.capellaRequirementPackage1.getReqIFName()).thenReturn("capellaRequirementPackage1");
         this.capellaRequirementPackage2 = mock(Folder.class);
-        when(this.capellaRequirementPackage2.getName()).thenReturn("capellaRequirementPackage2");
+        when(this.capellaRequirementPackage2.getReqIFName()).thenReturn("capellaRequirementPackage2");
         var containedElements = new BasicEList<EObject>();
         containedElements.add(this.capellaRequirementPackage1);
         containedElements.add(this.capellaRequirementPackage2);
