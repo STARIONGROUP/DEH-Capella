@@ -55,7 +55,8 @@ import org.polarsys.capella.core.data.information.Property;
 import org.polarsys.capella.core.data.information.datavalue.NumericValue;
 import org.polarsys.capella.core.data.la.LogicalArchitecture;
 import org.polarsys.capella.core.data.la.LogicalComponent;
-import org.polarsys.capella.basic.requirement.*;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Folder;
+import org.polarsys.kitalpha.vp.requirements.Requirements.Requirement;
 
 /**
  * The CapellaSessionSetupUtils is utility class for unit test that needs to access capella {@linkplain Session} object
@@ -176,11 +177,11 @@ public abstract class CapellaSessionRelatedBaseTestFixture
     protected Folder GetRequirementPackage()
     {
         var requirementPackage = mock(Folder.class);
-        var systemNonFunctionalRequirement = mock(SystemNonFunctionalRequirement.class);
-        var systemNonFunctionalInterfaceRequirement = mock(SystemNonFunctionalInterfaceRequirement.class);
-        var systemFunctionalRequirement = mock(SystemFunctionalRequirement.class);
-        var systemFunctionalInterfaceRequirement = mock(SystemFunctionalInterfaceRequirement.class);
-        var systemUserRequirement = mock(SystemUserRequirement.class);
+        var systemNonFunctionalRequirement = mock(Requirement.class);
+        var systemNonFunctionalInterfaceRequirement = mock(Requirement.class);
+        var systemFunctionalRequirement = mock(Requirement.class);
+        var systemFunctionalInterfaceRequirement = mock(Requirement.class);
+        var systemUserRequirement = mock(Requirement.class);
         when(systemUserRequirement.getId()).thenReturn(this.UserRequirementId);
         
         when(requirementPackage.eContents()).thenReturn(
